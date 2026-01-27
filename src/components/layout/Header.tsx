@@ -1,16 +1,32 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Home, Search, Heart, User, Sun, Moon, Scale, Newspaper, Building2, Key, DollarSign } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Home, 
+  Search, 
+  Heart, 
+  Sun, 
+  Moon, 
+  Scale, 
+  Newspaper, 
+  Building2, 
+  Key, 
+  MapPin,
+  ChevronDown,
+  TrendingUp,
+  Users
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { InboxButton } from '@/components/communication';
 import { cn } from '@/lib/utils';
 
-type UserType = 'buy' | 'rent' | 'sell';
+// Popular cities data
+const popularCities = [
+  'Mumbai', 'Bangalore', 'Delhi', 'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad'
+];
 
 const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -18,24 +34,21 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // User type state - could be moved to context for global state
-  const [userType, setUserType] = useState<UserType>('buy');
+  const [isDiscoverHovered, setIsDiscoverHovered] = useState(false);
 
-  const handleUserTypeChange = (type: string) => {
-    setUserType(type as UserType);
-    // Navigate to discover with appropriate filter
-    if (type === 'sell') {
-      navigate('/seller');
-    } else {
-      navigate(`/discover?type=${type}`);
-    }
+  const handleDiscoverClick = (type: 'buy' | 'rent', city?: string) => {
+    const params = new URLSearchParams();
+    params.set('type', type);
+    if (city) params.set('city', city);
+    navigate(`/discover?${params.toString()}`);
+    setIsDiscoverHovered(false);
   };
 
   const navLinks = [
     { to: '/', label: 'Home', icon: Home },
-    { to: '/discover', label: 'Discover', icon: Search },
     { to: '/news', label: 'News', icon: Newspaper },
     { to: '/favorites', label: 'Favorites', icon: Heart },
+    { to: '/seller', label: 'Post Property', icon: Building2 },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -46,45 +59,7 @@ const Header: React.FC = () => {
       animate={{ y: 0, opacity: 1 }}
       className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     >
-      {/* User Type Tabs - Top Row */}
-      <div className="border-b border-border bg-secondary/30">
-        <div className="container flex items-center justify-center py-1">
-          <Tabs value={userType} onValueChange={handleUserTypeChange} className="w-auto">
-            <TabsList className="h-8 bg-transparent">
-              <TabsTrigger 
-                value="buy" 
-                className={cn(
-                  "gap-1.5 text-xs px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                )}
-              >
-                <Building2 className="h-3.5 w-3.5" />
-                Buy
-              </TabsTrigger>
-              <TabsTrigger 
-                value="rent"
-                className={cn(
-                  "gap-1.5 text-xs px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                )}
-              >
-                <Key className="h-3.5 w-3.5" />
-                Rent
-              </TabsTrigger>
-              <TabsTrigger 
-                value="sell"
-                className={cn(
-                  "gap-1.5 text-xs px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                )}
-              >
-                <DollarSign className="h-3.5 w-3.5" />
-                Sell
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
-
-      {/* Main Header Row */}
-      <div className="container flex h-14 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
@@ -95,7 +70,123 @@ const Header: React.FC = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(({ to, label, icon: Icon }) => (
+          {/* Home Link */}
+          <Link to="/">
+            <Button
+              variant={isActive('/') ? 'secondary' : 'ghost'}
+              size="sm"
+              className="gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+          </Link>
+
+          {/* Discover with Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setIsDiscoverHovered(true)}
+            onMouseLeave={() => setIsDiscoverHovered(false)}
+          >
+            <Link to="/discover">
+              <Button
+                variant={location.pathname === '/discover' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-2"
+              >
+                <Search className="h-4 w-4" />
+                Discover
+                <ChevronDown className={cn(
+                  "h-3.5 w-3.5 transition-transform",
+                  isDiscoverHovered && "rotate-180"
+                )} />
+              </Button>
+            </Link>
+
+            {/* Mega Menu Dropdown */}
+            <AnimatePresence>
+              {isDiscoverHovered && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-full pt-2 z-50"
+                >
+                  <div className="bg-background border border-border rounded-lg shadow-xl p-6 min-w-[500px]">
+                    <div className="grid grid-cols-2 gap-8">
+                      {/* For Buyers */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Building2 className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">For Buyers</h3>
+                            <p className="text-xs text-muted-foreground">Properties for sale</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          {popularCities.slice(0, 6).map((city) => (
+                            <button
+                              key={city}
+                              onClick={() => handleDiscoverClick('buy', city)}
+                              className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-md transition-colors flex items-center gap-2"
+                            >
+                              <MapPin className="h-3.5 w-3.5" />
+                              Properties in {city}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => handleDiscoverClick('buy')}
+                            className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:bg-primary/10 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            <TrendingUp className="h-3.5 w-3.5" />
+                            View All Properties
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* For Tenants */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
+                          <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                            <Key className="h-4 w-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">For Tenants</h3>
+                            <p className="text-xs text-muted-foreground">Properties for rent</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          {popularCities.slice(0, 6).map((city) => (
+                            <button
+                              key={city}
+                              onClick={() => handleDiscoverClick('rent', city)}
+                              className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-md transition-colors flex items-center gap-2"
+                            >
+                              <MapPin className="h-3.5 w-3.5" />
+                              Rentals in {city}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => handleDiscoverClick('rent')}
+                            className="w-full text-left px-3 py-2 text-sm text-orange-500 font-medium hover:bg-orange-500/10 rounded-md transition-colors flex items-center gap-2"
+                          >
+                            <Users className="h-3.5 w-3.5" />
+                            View All Rentals
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Other Nav Links */}
+          {navLinks.slice(1).map(({ to, label, icon: Icon }) => (
             <Link key={to} to={to}>
               <Button
                 variant={isActive(to) ? 'secondary' : 'ghost'}
@@ -108,9 +199,6 @@ const Header: React.FC = () => {
                   <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
                     {favorites.length}
                   </Badge>
-                )}
-                {to === '/news' && (
-                  <Badge className="ml-1 h-4 text-[10px] bg-red-500 text-white">NEW</Badge>
                 )}
               </Button>
             </Link>
@@ -131,14 +219,6 @@ const Header: React.FC = () => {
               Compare ({compareList.length}/3)
             </Button>
           )}
-
-          {/* List Property Button */}
-          <Link to="/seller" className="hidden lg:block">
-            <Button size="sm" className="gap-2">
-              <DollarSign className="h-4 w-4" />
-              List Property
-            </Button>
-          </Link>
 
           {/* Inbox / Messages */}
           <InboxButton />
@@ -177,18 +257,46 @@ const Header: React.FC = () => {
       {/* Mobile Navigation */}
       <nav className="md:hidden border-t border-border">
         <div className="container flex items-center justify-around py-2">
-          {navLinks.map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex-col gap-1 h-auto py-2 ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-xs">{label}</span>
-              </Button>
-            </Link>
-          ))}
+          <Link to="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex-col gap-1 h-auto py-2 ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              <Home className="h-5 w-5" />
+              <span className="text-xs">Home</span>
+            </Button>
+          </Link>
+          <Link to="/discover">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex-col gap-1 h-auto py-2 ${isActive('/discover') ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              <Search className="h-5 w-5" />
+              <span className="text-xs">Discover</span>
+            </Button>
+          </Link>
+          <Link to="/news">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex-col gap-1 h-auto py-2 ${isActive('/news') ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              <Newspaper className="h-5 w-5" />
+              <span className="text-xs">News</span>
+            </Button>
+          </Link>
+          <Link to="/seller">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex-col gap-1 h-auto py-2 ${isActive('/seller') ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              <Building2 className="h-5 w-5" />
+              <span className="text-xs">Post</span>
+            </Button>
+          </Link>
         </div>
       </nav>
     </motion.header>
