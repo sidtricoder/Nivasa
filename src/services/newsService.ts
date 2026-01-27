@@ -37,34 +37,35 @@ const RSS_FEEDS = {
 // RSS to JSON converter (using rss2json.com - free tier: 10k requests/day)
 const RSS_TO_JSON_API = 'https://api.rss2json.com/v1/api.json';
 
-// Fallback placeholder images by category
-const placeholderImages: Record<string, string[]> = {
-  market: [
-    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=250&fit=crop',
-  ],
-  policy: [
-    'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400&h=250&fit=crop',
-  ],
-  investment: [
-    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=250&fit=crop',
-  ],
-  trends: [
-    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=400&h=250&fit=crop',
-  ],
-  city: [
-    'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400&h=250&fit=crop',
-    'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=400&h=250&fit=crop',
-  ],
+// Unsplash search terms by category for unique images
+const categorySearchTerms: Record<string, string[]> = {
+  market: ['real estate', 'apartment building', 'city skyline', 'modern architecture', 'housing development'],
+  policy: ['government building', 'legal documents', 'courthouse', 'business meeting', 'office building'],
+  investment: ['investment growth', 'money finance', 'real estate investment', 'property portfolio', 'financial charts'],
+  trends: ['smart home', 'modern interior', 'luxury apartment', 'green building', 'technology home'],
+  city: ['mumbai skyline', 'delhi cityscape', 'bangalore city', 'urban development', 'indian architecture'],
 };
+
+// Generate a simple hash from string for consistent but unique images
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Generate unique Unsplash image URL based on category and article title
+function getUniqueImageUrl(category: string, title: string, index: number): string {
+  const searchTerms = categorySearchTerms[category] || categorySearchTerms.market;
+  const searchTerm = searchTerms[simpleHash(title) % searchTerms.length];
+  const seed = simpleHash(title + index.toString());
+  
+  // Use Unsplash source API with sig for cache-busting to get unique images
+  return `https://source.unsplash.com/800x500/?${encodeURIComponent(searchTerm)}&sig=${seed}`;
+}
 
 // Keywords to categorize news
 const categoryKeywords: Record<string, string[]> = {
@@ -162,12 +163,12 @@ async function fetchFromRSS(feedUrl: string, sourceName: string): Promise<NewsAr
     return data.items.slice(0, 10).map((item: RSSItem, index: number) => {
       const { category, city } = categorizeArticle(item.title, item.description || '');
       const cleanDescription = cleanHtml(item.description || '');
+      const cleanTitle = cleanHtml(item.title);
       
-      // Get image or use placeholder
+      // Get image or generate unique one based on title
       let imageUrl = extractImageUrl(item);
       if (!imageUrl) {
-        const categoryImages = placeholderImages[category];
-        imageUrl = categoryImages[index % categoryImages.length];
+        imageUrl = getUniqueImageUrl(category, cleanTitle, index);
       }
       
       return {
