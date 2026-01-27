@@ -55,6 +55,7 @@ import AmenitiesDisplay from '@/components/property/AmenitiesDisplay';
 import VastuComplianceBadge from '@/components/property/VastuComplianceBadge';
 import GaussianSplatViewer from '@/components/property/GaussianSplatViewer';
 import Interactive360Panorama from '@/components/property/Interactive360Panorama';
+import Panoee3DTour from '@/components/property/Panoee3DTour';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
@@ -350,18 +351,24 @@ const PropertyDetailPage: React.FC = () => {
                     </div>
                   </TabsContent>
                   <TabsContent value="3d-tour" className="mt-0">
-                    {/* 
-                      To enable 3D Gaussian Splatting:
-                      1. Record a video walkthrough of the property
-                      2. Upload to Luma AI (lumalabs.ai)
-                      3. Add the lumaUrl prop with the share link
-                      Example: lumaUrl="https://lumalabs.ai/capture/abc123"
-                    */}
-                    <GaussianSplatViewer 
-                      title={property.title}
-                      // Uncomment and add your Luma AI URL:
-                      // lumaUrl="https://lumalabs.ai/capture/your-capture-id"
-                    />
+                    {property.panoee3DTourUrl ? (
+                      <Panoee3DTour 
+                        tourUrl={property.panoee3DTourUrl}
+                        title={`${property.title} - Virtual Tour`}
+                      />
+                    ) : (
+                      <div className="aspect-video bg-muted/50 rounded-lg flex items-center justify-center">
+                        <div className="text-center p-6">
+                          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                            <MapPin className="h-8 w-8 text-primary" />
+                          </div>
+                          <h3 className="font-semibold text-lg mb-2">3D Tour Not Available</h3>
+                          <p className="text-muted-foreground text-sm max-w-md">
+                            This property doesn't have a virtual tour yet. Contact the seller to request one!
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </TabsContent>
                 </CardContent>
               </Tabs>

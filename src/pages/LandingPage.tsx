@@ -14,8 +14,7 @@ import {
   Trees,
   Sparkles,
   Users,
-  FileCheck,
-  MapPin
+  FileCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,155 +76,76 @@ const LandingPage: React.FC = () => {
       <CompareModal />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-[#5E23DC]">
-        {/* Background Pattern/Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#5E23DC] to-[#7B46F6]" />
-        
-        {/* Decorative Circles */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
-          <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white blur-3xl" />
-          <div className="absolute top-1/2 right-0 w-64 h-64 rounded-full bg-indigo-300 blur-3xl" />
-        </div>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/20" />
+        <div className="container relative py-20 lg:py-32">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-3xl mx-auto text-center space-y-6"
+          >
+            <Badge variant="secondary" className="gap-1">
+              <Sparkles className="h-3 w-3" />
+              India's Most Trusted P2P Platform
+            </Badge>
 
-        <div className="container relative pt-16 pb-0 lg:pt-24 lg:pb-0">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* Left Content - Search & Text */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="z-10 pb-12 lg:pb-24"
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+              Find Your Perfect{' '}
+              <span className="text-primary">Haven</span>
+              <br />
+              Without the Middleman
+            </h1>
+
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              Connect directly with verified property owners. No brokerage fees, 
+              no hidden charges — just transparent home buying.
+            </p>
+
+            {/* Search Bar */}
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              onSubmit={handleSearch}
+              className="relative max-w-2xl mx-auto mt-8"
             >
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 leading-tight">
-                Properties to buy in <span className="inline-block relative">
-                  Bengaluru
-                  <svg className="absolute w-full h-2 bottom-1 left-0 text-yellow-400 opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
-                    <path d="M0,5 Q50,10 100,5" stroke="currentColor" strokeWidth="4" fill="none" />
-                  </svg>
-                </span>
-              </h1>
-              <p className="text-indigo-100 text-lg mb-8">
-                Yaha Search Khatam Karen
-              </p>
-
-              {/* Search Box Container */}
-              <div className="bg-white rounded-2xl shadow-2xl p-2 max-w-xl">
-                {/* Search Tabs */}
-                <div className="flex gap-4 px-4 py-2 border-b border-gray-100 mb-2 overflow-x-auto">
-                  {['Buy', 'Rent', 'Commercial', 'Plots'].map((tab, i) => (
-                    <button 
-                      key={tab}
-                      className={`text-sm font-semibold pb-2 border-b-2 transition-colors ${i === 0 ? 'text-[#5E23DC] border-[#5E23DC]' : 'text-gray-500 border-transparent hover:text-gray-800'}`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Search Input Area */}
-                <div className="flex flex-col sm:flex-row gap-2 p-2">
-                  <div className="flex-1 flex bg-gray-50 rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-[#5E23DC]/20 transition-all">
-                    {/* City Dropdown Trigger */}
-                    <div className="flex items-center gap-2 px-3 border-r border-gray-200 text-gray-700 min-w-[120px] cursor-pointer hover:bg-gray-100 rounded-l-lg transition-colors">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium">Bengaluru</span>
-                    </div>
-                    
-                    {/* Main Input */}
-                    <Input
-                      type="text"
-                      placeholder="Search for locality, landmark, project..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-base h-12 px-4 shadow-none"
-                    />
-                  </div>
-                  
-                  <Button 
-                    onClick={handleSearch}
-                    className="bg-[#2cdb9d] hover:bg-[#25c18a] text-white font-bold px-8 h-12 rounded-lg shadow-md transition-all hover:shadow-lg"
-                  >
-                    Search
-                  </Button>
-                </div>
+              <div className="flex items-center bg-card border border-border rounded-xl shadow-lg p-2">
+                <Search className="h-5 w-5 text-muted-foreground ml-3" />
+                <Input
+                  type="text"
+                  placeholder="Search by location, lifestyle, or property type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 border-0 focus-visible:ring-0 text-base"
+                />
+                <Button type="submit" size="lg" className="rounded-lg">
+                  Search
+                </Button>
               </div>
-              
-              {/* Quick Tags */}
-              <div className="mt-6 flex flex-wrap gap-3">
-                <span className="text-indigo-100/80 text-sm font-medium">Quick Links:</span>
-                {['New Launch', 'Owner Properties', 'Budget Homes'].map(tag => (
-                  <Badge 
-                    key={tag} 
-                    variant="outline" 
-                    className="bg-white/10 text-white border-white/20 hover:bg-white/20 cursor-pointer transition-colors"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </motion.div>
+            </motion.form>
 
-            {/* Right Content - Hero Image */}
+            {/* Lifestyle Filters */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="relative hidden lg:block h-full min-h-[500px]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="flex flex-wrap items-center justify-center gap-2 mt-4"
             >
-             {/* Main Masked Image */}
-              <div className="absolute right-0 bottom-0 w-[120%] h-[110%] z-0 translate-x-12 translate-y-12">
-                <div className="relative w-full h-full">
-                   {/* Abstract Shape Background */}
-                   <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/0 rounded-full blur-3xl transform scale-110" />
-                   
-                   {/* Couple Image with Cutout Effect */}
-                   <img 
-                      src="https://images.unsplash.com/photo-1516156008625-3a9d60da480f?q=80&w=1000&auto=format&fit=crop" 
-                      alt="Happy family looking at dream home"
-                      className="absolute right-0 bottom-0 max-h-[600px] object-contain drop-shadow-2xl z-10"
-                      style={{
-                        maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
-                      }}
-                   />
-                   
-                   {/* Floating Card 1 */}
-                   <motion.div 
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute top-20 left-10 bg-white p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-20 max-w-[200px]"
-                   >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
-                        <span className="text-xs font-bold text-gray-600">Verified Listing</span>
-                      </div>
-                      <div className="h-16 w-full bg-gray-100 rounded-lg mb-2 overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=300&h=200&fit=crop" className="w-full h-full object-cover" alt="Property" />
-                      </div>
-                      <div className="text-xs font-medium text-gray-800">3BHK in Indiranagar</div>
-                      <div className="text-xs text-[#5E23DC] font-bold mt-1">₹1.2 Cr</div>
-                   </motion.div>
-
-                   {/* Floating Card 2 */}
-                   <motion.div 
-                      animate={{ y: [0, 15, 0] }}
-                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                      className="absolute bottom-40 right-10 bg-white p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-20"
-                   >
-                      <div className="flex items-center gap-2">
-                         <div className="bg-green-100 p-2 rounded-full">
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                         </div>
-                         <div>
-                            <div className="text-sm font-bold text-gray-800">500+</div>
-                            <div className="text-xs text-gray-500">New Listings</div>
-                         </div>
-                      </div>
-                   </motion.div>
-                </div>
-              </div>
+              <span className="text-sm text-muted-foreground">Popular:</span>
+              {lifestyleFilters.map(({ label, icon: Icon, query }) => (
+                <Link key={query} to={`/discover?filter=${query}`}>
+                  <Badge
+                    variant="outline"
+                    className="gap-1 cursor-pointer hover:bg-secondary transition-colors"
+                  >
+                    <Icon className="h-3 w-3" />
+                    {label}
+                  </Badge>
+                </Link>
+              ))}
             </motion.div>
-          </div>
+          </motion.div>
         </div>
       </section>
 

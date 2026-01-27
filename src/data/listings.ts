@@ -52,6 +52,9 @@ export interface Property {
   isNewListing: boolean;
   listedAt: string;
   updatedAt: string;
+  // Virtual tour & media
+  panoee3DTourUrl?: string;
+  videoUrl?: string;
 }
 
 export interface Seller {
@@ -170,6 +173,7 @@ export const mockListings: Property[] = [
     isNewListing: true,
     listedAt: "2024-01-15T10:30:00Z",
     updatedAt: "2024-01-20T15:45:00Z",
+    panoee3DTourUrl: "https://tour.panoee.net/6978ea2270f11a38ef1098be",
   },
   {
     id: "prop-002",
