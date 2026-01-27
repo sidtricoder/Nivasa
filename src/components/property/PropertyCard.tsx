@@ -33,7 +33,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="group overflow-hidden h-full hover:shadow-lg transition-shadow">
+      <Card className="group overflow-hidden h-full border-0 shadow-none rounded-none">
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden">
           <Link to={`/property/${property.id}`}>

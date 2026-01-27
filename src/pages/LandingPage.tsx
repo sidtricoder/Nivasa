@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import PropertyCard from '@/components/property/PropertyCard';
+import MinimalPropertyCard from '@/components/property/MinimalPropertyCard';
 import CompareModal from '@/components/property/CompareModal';
 import { mockListings } from '@/data/listings';
 
@@ -60,9 +60,59 @@ const howItWorks = [
   },
 ];
 
+// CountUp Component for animated counting
+const CountUp: React.FC<{ end: number; suffix?: string; prefix?: string; duration?: number }> = ({ 
+  end, 
+  suffix = '', 
+  prefix = '', 
+  duration = 1200 
+}) => {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let startTime: number;
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      
+      // Easing function for smooth animation
+      const easeOutQuad = 1 - (1 - progress) * (1 - progress);
+      setCount(Math.floor(easeOutQuad * end));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [isVisible, end, duration]);
+
+  return <span ref={ref}>{prefix}{count}{suffix}</span>;
+};
+
 const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const featuredListings = mockListings.filter(p => p.isNewListing).slice(0, 6);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,155 +125,178 @@ const LandingPage: React.FC = () => {
       <Header />
       <CompareModal />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/20" />
-        <div className="container relative py-20 lg:py-32">
+      {/* Hero Section with Video Background */}
+      <section className="relative h-screen w-full overflow-hidden">
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ willChange: 'transform' }}
+        >
+          <source src="/vid 1.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Dark Overlay - Slightly darker */}
+        <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Content */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-3xl mx-auto text-center space-y-6"
+            transition={{ duration: 0.8 }}
+            className="max-w-4xl mx-auto space-y-6"
           >
-            <Badge variant="secondary" className="gap-1">
-              <Sparkles className="h-3 w-3" />
-              India's Most Trusted P2P Platform
-            </Badge>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-              Find Your Perfect{' '}
-              <span className="text-primary">Haven</span>
-              <br />
-              Without the Middleman
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-light italic leading-tight">
+              Your Dream Home, Direct From Owner-Zero Brokerage, 100% Trust
             </h1>
-
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Connect directly with verified property owners. No brokerage fees, 
-              no hidden charges — just transparent home buying.
-            </p>
-
-            {/* Search Bar */}
-            <motion.form
+            
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              onSubmit={handleSearch}
-              className="relative max-w-2xl mx-auto mt-8"
-            >
-              <div className="flex items-center bg-card border border-border rounded-xl shadow-lg p-2">
-                <Search className="h-5 w-5 text-muted-foreground ml-3" />
-                <Input
-                  type="text"
-                  placeholder="Search by location, lifestyle, or property type..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 border-0 focus-visible:ring-0 text-base"
-                />
-                <Button type="submit" size="lg" className="rounded-lg">
-                  Search
-                </Button>
-              </div>
-            </motion.form>
-
-            {/* Lifestyle Filters */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="flex flex-wrap items-center justify-center gap-2 mt-4"
             >
-              <span className="text-sm text-muted-foreground">Popular:</span>
-              {lifestyleFilters.map(({ label, icon: Icon, query }) => (
-                <Link key={query} to={`/discover?filter=${query}`}>
-                  <Badge
-                    variant="outline"
-                    className="gap-1 cursor-pointer hover:bg-secondary transition-colors"
-                  >
-                    <Icon className="h-3 w-3" />
-                    {label}
-                  </Badge>
-                </Link>
-              ))}
+              <Link to="/discover">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="px-8 py-6 text-base font-medium border border-white text-white bg-transparent rounded-none hover:bg-white hover:text-black transition-all duration-300"
+                >
+                  EXPLORE
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Trust Indicators */}
-      <section className="py-12 bg-secondary/30">
+      {/* Selling Fast Section */}
+      <section className="py-24 lg:py-32 bg-background">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {stats.map(({ value, label, icon: Icon }, index) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-center gap-4 p-6"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                  <Icon className="h-7 w-7 text-primary" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-foreground">{value}</p>
-                  <p className="text-sm text-muted-foreground">{label}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Listings */}
-      <section className="py-16 lg:py-24">
-        <div className="container">
+          {/* Section Header - Minimal like HavenHub */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="flex items-end justify-between mb-8"
+            className="text-center mb-10"
           >
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">
-                Featured Properties
-              </h2>
-              <p className="text-muted-foreground">
-                Hand-picked homes from verified owners
-              </p>
-            </div>
-            <Link to="/discover">
-              <Button variant="outline" className="gap-2 hidden sm:flex">
-                View All
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <h2 className="text-3xl md:text-4xl font-semibold text-foreground">
+              Selling Fast
+            </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredListings.map((property, index) => (
+          {/* Property Grid - Only 3 properties, seamless cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {mockListings.slice(0, 3).map((property, index) => (
               <motion.div
                 key={property.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15, duration: 0.5 }}
               >
-                <PropertyCard property={property} />
+                <MinimalPropertyCard property={property} />
               </motion.div>
             ))}
           </div>
 
-          <div className="flex justify-center mt-8 sm:hidden">
+          {/* CTA Button - Centered */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="flex justify-center mt-12"
+          >
             <Link to="/discover">
-              <Button variant="outline" className="gap-2">
-                View All Properties
-                <ArrowRight className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="px-8 py-6 text-base font-medium border border-foreground rounded-none hover:bg-foreground hover:text-background transition-all duration-300"
+              >
+                VIEW INVENTORY
               </Button>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
+
+      {/* Stats Section with Background Image */}
+      <section className="relative py-24 lg:py-32 overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/Whisk_c33eab9a8ec0f7aa3044aa8957f6e418dr.jpeg')" }}
+        />
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
+        
+        {/* Content */}
+        <div className="container relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center text-white max-w-4xl mx-auto"
+          >
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light italic mb-6">
+              Building Dreams Into Reality — One Home At A Time
+            </h2>
+            <p className="text-lg md:text-xl text-white/80 mb-16">
+              With a commitment to transparency and trust, we connect homebuyers directly with verified property owners across India's most sought-after locations.
+            </p>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-center"
+              >
+                <p className="text-5xl md:text-6xl font-light mb-2">
+                  <CountUp end={500} suffix="+" />
+                </p>
+                <p className="text-sm uppercase tracking-widest text-white/70">HAPPY HOMEOWNERS</p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="text-center"
+              >
+                <p className="text-5xl md:text-6xl font-light mb-2">
+                  <CountUp end={0} prefix="₹" />
+                </p>
+                <p className="text-sm uppercase tracking-widest text-white/70">BROKERAGE FEES</p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="text-center"
+              >
+                <p className="text-5xl md:text-6xl font-light mb-2">
+                  <CountUp end={100} suffix="%" />
+                </p>
+                <p className="text-sm uppercase tracking-widest text-white/70">VERIFIED PROPERTIES</p>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* White Spacer */}
+      <div className="py-12 lg:py-16 bg-background" />
 
       {/* How It Works */}
       <section className="py-16 lg:py-24 bg-secondary/30">
@@ -275,25 +348,49 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 lg:py-24">
-        <div className="container">
+      {/* White Spacer before CTA */}
+      <div className="py-12 lg:py-16 bg-background" />
+
+      {/* CTA Section with Video Background */}
+      <section className="relative py-32 lg:py-44 overflow-hidden">
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ willChange: 'transform' }}
+        >
+          <source src="/vid 2.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Content */}
+        <div className="container relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-8 lg:p-12 text-center"
+            className="text-center text-white max-w-3xl mx-auto"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold text-primary-foreground mb-4">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light italic mb-6">
               Ready to Find Your Haven?
             </h2>
-            <p className="text-primary-foreground/80 max-w-xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-white/80 max-w-xl mx-auto mb-10">
               Join thousands of happy homeowners who found their perfect property 
               through direct connections.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/discover">
-                <Button size="lg" variant="secondary" className="gap-2">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="gap-2 px-8 py-6 text-base font-medium border border-white text-white bg-transparent rounded-none hover:bg-white hover:text-black transition-all duration-300"
+                >
                   <Search className="h-5 w-5" />
                   Browse Homes
                 </Button>
@@ -302,7 +399,7 @@ const LandingPage: React.FC = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="gap-2 bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                  className="gap-2 px-8 py-6 text-base font-medium border border-white text-white bg-transparent rounded-none hover:bg-white hover:text-black transition-all duration-300"
                 >
                   <Home className="h-5 w-5" />
                   List Your Property
@@ -312,6 +409,9 @@ const LandingPage: React.FC = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* White Spacer before Footer */}
+      <div className="py-12 lg:py-16 bg-background" />
 
       <Footer />
     </div>

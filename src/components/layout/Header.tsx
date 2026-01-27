@@ -53,20 +53,28 @@ const Header: React.FC = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+  
+  // Check if on homepage for transparent header with white text
+  const isHomePage = location.pathname === '/';
+  
+  // Dynamic classes based on page
+  const headerBg = isHomePage ? 'bg-transparent' : 'bg-background/95 backdrop-blur border-b border-border';
+  const textColor = isHomePage ? 'text-white' : 'text-foreground';
+  const hoverBg = isHomePage ? 'hover:bg-white/40 hover:text-white' : 'hover:bg-secondary';
 
   return (
     <motion.header 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      className={`${isHomePage ? 'absolute' : 'sticky'} top-0 left-0 right-0 z-50 w-full ${headerBg}`}
     >
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Home className="h-5 w-5 text-primary-foreground" />
+          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${isHomePage ? 'bg-white/20 border border-white/30' : 'bg-primary'}`}>
+            <Home className={`h-5 w-5 ${isHomePage ? 'text-white' : 'text-primary-foreground'}`} />
           </div>
-          <span className="text-xl font-bold text-foreground">HavenHub</span>
+          <span className={`text-xl font-bold ${textColor}`}>HavenHub</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -74,9 +82,9 @@ const Header: React.FC = () => {
           {/* Home Link */}
           <Link to="/">
             <Button
-              variant={isActive('/') ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
-              className="gap-2"
+              className={`gap-2 ${textColor} ${hoverBg}`}
             >
               <Home className="h-4 w-4" />
               Home
@@ -91,9 +99,9 @@ const Header: React.FC = () => {
           >
             <Link to="/discover">
               <Button
-                variant={location.pathname === '/discover' ? 'secondary' : 'ghost'}
+                variant="ghost"
                 size="sm"
-                className="gap-2"
+                className={`gap-2 ${textColor} ${hoverBg}`}
               >
                 <Search className="h-4 w-4" />
                 Discover
@@ -194,9 +202,9 @@ const Header: React.FC = () => {
           >
             <Link to="/news">
               <Button
-                variant={location.pathname === '/news' ? 'secondary' : 'ghost'}
+                variant="ghost"
                 size="sm"
-                className="gap-2"
+                className={`gap-2 ${textColor} ${hoverBg}`}
               >
                 <Newspaper className="h-4 w-4" />
                 News
@@ -307,9 +315,9 @@ const Header: React.FC = () => {
           {/* Favorites */}
           <Link to="/favorites">
             <Button
-              variant={isActive('/favorites') ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
-              className="gap-2"
+              className={`gap-2 ${textColor} ${hoverBg}`}
             >
               <Heart className="h-4 w-4" />
               Favorites
@@ -324,9 +332,9 @@ const Header: React.FC = () => {
           {/* Post Property */}
           <Link to="/seller">
             <Button
-              variant={isActive('/seller') ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
-              className="gap-2"
+              className={`gap-2 ${textColor} ${hoverBg}`}
             >
               <Building2 className="h-4 w-4" />
               Post Property
@@ -350,14 +358,14 @@ const Header: React.FC = () => {
           )}
 
           {/* Inbox / Messages */}
-          <InboxButton />
+          <InboxButton className={`${textColor} ${hoverBg}`} />
 
           {/* Theme Toggle */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="h-9 w-9"
+            className={`h-9 w-9 ${textColor} ${hoverBg}`}
           >
             {theme === 'light' ? (
               <Moon className="h-4 w-4" />
