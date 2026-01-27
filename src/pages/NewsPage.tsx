@@ -370,17 +370,44 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
 const NewsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [news, setNews] = useState<NewsArticle[]>(mockNews);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
   
   // Read category from URL, default to 'all'
   const categoryFromUrl = searchParams.get('category') || 'all';
   const [activeCategory, setActiveCategory] = useState<string>(categoryFromUrl);
+
+  // Fetch real news on component mount
+  useEffect(() => {
+    fetchNews();
+  }, []);
 
   // Sync with URL params
   useEffect(() => {
     const category = searchParams.get('category') || 'all';
     setActiveCategory(category);
   }, [searchParams]);
+
+  const fetchNews = async () => {
+    setIsLoading(true);
+    try {
+      const { fetchRealEstateNews } = await import('@/services/newsService');
+      const realNews = await fetchRealEstateNews();
+      
+      if (realNews.length > 0) {
+        setNews(realNews as NewsArticle[]);
+        setLastFetched(new Date());
+      } else {
+        // If API fails, keep mock data
+        console.log('Using mock data as fallback');
+      }
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      // Keep mock data on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
@@ -399,11 +426,7 @@ const NewsPage: React.FC = () => {
   const restArticles = filteredNews.filter(article => article.id !== featuredArticle?.id);
 
   const refreshNews = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    fetchNews();
   };
 
   return (
