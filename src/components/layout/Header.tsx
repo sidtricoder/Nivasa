@@ -1,23 +1,41 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Search, Heart, User, Sun, Moon, Scale } from 'lucide-react';
+import { Home, Search, Heart, User, Sun, Moon, Scale, Newspaper, Building2, Key, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { InboxButton } from '@/components/communication';
+import { cn } from '@/lib/utils';
+
+type UserType = 'buy' | 'rent' | 'sell';
 
 const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { favorites, compareList, setIsCompareOpen } = useFavorites();
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  // User type state - could be moved to context for global state
+  const [userType, setUserType] = useState<UserType>('buy');
+
+  const handleUserTypeChange = (type: string) => {
+    setUserType(type as UserType);
+    // Navigate to discover with appropriate filter
+    if (type === 'sell') {
+      navigate('/seller');
+    } else {
+      navigate(`/discover?type=${type}`);
+    }
+  };
 
   const navLinks = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/discover', label: 'Discover', icon: Search },
+    { to: '/news', label: 'News', icon: Newspaper },
     { to: '/favorites', label: 'Favorites', icon: Heart },
-    { to: '/seller', label: 'List Property', icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -28,7 +46,45 @@ const Header: React.FC = () => {
       animate={{ y: 0, opacity: 1 }}
       className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     >
-      <div className="container flex h-16 items-center justify-between">
+      {/* User Type Tabs - Top Row */}
+      <div className="border-b border-border bg-secondary/30">
+        <div className="container flex items-center justify-center py-1">
+          <Tabs value={userType} onValueChange={handleUserTypeChange} className="w-auto">
+            <TabsList className="h-8 bg-transparent">
+              <TabsTrigger 
+                value="buy" 
+                className={cn(
+                  "gap-1.5 text-xs px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                )}
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                Buy
+              </TabsTrigger>
+              <TabsTrigger 
+                value="rent"
+                className={cn(
+                  "gap-1.5 text-xs px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                )}
+              >
+                <Key className="h-3.5 w-3.5" />
+                Rent
+              </TabsTrigger>
+              <TabsTrigger 
+                value="sell"
+                className={cn(
+                  "gap-1.5 text-xs px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                )}
+              >
+                <DollarSign className="h-3.5 w-3.5" />
+                Sell
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* Main Header Row */}
+      <div className="container flex h-14 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
@@ -43,6 +99,7 @@ const Header: React.FC = () => {
             <Link key={to} to={to}>
               <Button
                 variant={isActive(to) ? 'secondary' : 'ghost'}
+                size="sm"
                 className="gap-2"
               >
                 <Icon className="h-4 w-4" />
@@ -51,6 +108,9 @@ const Header: React.FC = () => {
                   <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
                     {favorites.length}
                   </Badge>
+                )}
+                {to === '/news' && (
+                  <Badge className="ml-1 h-4 text-[10px] bg-red-500 text-white">NEW</Badge>
                 )}
               </Button>
             </Link>
@@ -71,6 +131,14 @@ const Header: React.FC = () => {
               Compare ({compareList.length}/3)
             </Button>
           )}
+
+          {/* List Property Button */}
+          <Link to="/seller" className="hidden lg:block">
+            <Button size="sm" className="gap-2">
+              <DollarSign className="h-4 w-4" />
+              List Property
+            </Button>
+          </Link>
 
           {/* Inbox / Messages */}
           <InboxButton />

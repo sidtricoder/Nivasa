@@ -11,6 +11,7 @@ import DiscoveryPage from "./pages/DiscoveryPage";
 import PropertyDetailPage from "./pages/PropertyDetailPage";
 import SellerDashboard from "./pages/SellerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
+import NewsPage from "./pages/NewsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/property/:id" element={<PropertyDetailPage />} />
               <Route path="/seller" element={<SellerDashboard />} />
               <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/news" element={<NewsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
