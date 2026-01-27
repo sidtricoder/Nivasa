@@ -37,13 +37,38 @@ const RSS_FEEDS = {
 // RSS to JSON converter (using rss2json.com - free tier: 10k requests/day)
 const RSS_TO_JSON_API = 'https://api.rss2json.com/v1/api.json';
 
-// Unsplash search terms by category for unique images
-const categorySearchTerms: Record<string, string[]> = {
-  market: ['real estate', 'apartment building', 'city skyline', 'modern architecture', 'housing development'],
-  policy: ['government building', 'legal documents', 'courthouse', 'business meeting', 'office building'],
-  investment: ['investment growth', 'money finance', 'real estate investment', 'property portfolio', 'financial charts'],
-  trends: ['smart home', 'modern interior', 'luxury apartment', 'green building', 'technology home'],
-  city: ['mumbai skyline', 'delhi cityscape', 'bangalore city', 'urban development', 'indian architecture'],
+// Curated Unsplash photo IDs by category (reliable direct links)
+const categoryPhotoIds: Record<string, string[]> = {
+  market: [
+    'photo-1486406146926-c627a92ad1ab', 'photo-1560518883-ce09059eeffa', 'photo-1545324418-cc1a3fa10c00',
+    'photo-1560448204-e02f11c3d0e2', 'photo-1582407947304-fd86f028f716', 'photo-1512917774080-9991f1c4c750',
+    'photo-1494526585095-c41746248156', 'photo-1560185893-a55cbc8c57e8', 'photo-1600596542815-ffad4c1539a9',
+    'photo-1600607687939-ce8a6c25118c'
+  ],
+  policy: [
+    'photo-1554224155-6726b3ff858f', 'photo-1450101499163-c8848c66ca85', 'photo-1434626881859-194d67b2b86f',
+    'photo-1589829545856-d10d557cf95f', 'photo-1507003211169-0a1dd7228f2d', 'photo-1521791136064-7986c2920216',
+    'photo-1575505586569-646b2ca898fc', 'photo-1568992687947-868a62a9f521', 'photo-1497366811353-6870744d04b2',
+    'photo-1486312338219-ce68d2c6f44d'
+  ],
+  investment: [
+    'photo-1560518883-ce09059eeffa', 'photo-1579532537598-459ecdaf39cc', 'photo-1551836022-d5d88e9218df',
+    'photo-1611974789855-9c2a0a7236a3', 'photo-1590283603385-17ffb3a7f29f', 'photo-1567427017947-545c5f8d16ad',
+    'photo-1604594849809-dfedbc827105', 'photo-1460925895917-afdab827c52f', 'photo-1553729459-efe14ef6055d',
+    'photo-1518186285589-2f7649de83e0'
+  ],
+  trends: [
+    'photo-1558618666-fcd25c85cd64', 'photo-1522708323590-d24dbb6b0267', 'photo-1518005020951-eccb494ad742',
+    'photo-1617802690992-15d93263d3a9', 'photo-1558002038-1055907df827', 'photo-1585771724684-38269d6639fd',
+    'photo-1600585154340-be6161a56a0c', 'photo-1600566753190-17f0baa2a6c3', 'photo-1600210492493-0946911123ea',
+    'photo-1600573472592-401b489a3cdc'
+  ],
+  city: [
+    'photo-1567157577867-05ccb1388e66', 'photo-1582407947304-fd86f028f716', 'photo-1570168007204-dfb528c6958f',
+    'photo-1477959858617-67f85cf4f1df', 'photo-1514565131-fce0801e5785', 'photo-1449824913935-59a10b8d2000',
+    'photo-1444723121867-7a241cacace9', 'photo-1480714378408-67cf0d13bc1b', 'photo-1519501025264-65ba15a82390',
+    'photo-1496568816309-51d7c20e3b21'
+  ],
 };
 
 // Generate a simple hash from string for consistent but unique images
@@ -57,14 +82,15 @@ function simpleHash(str: string): number {
   return Math.abs(hash);
 }
 
-// Generate unique Unsplash image URL based on category and article title
+// Generate unique image URL based on category and article title
 function getUniqueImageUrl(category: string, title: string, index: number): string {
-  const searchTerms = categorySearchTerms[category] || categorySearchTerms.market;
-  const searchTerm = searchTerms[simpleHash(title) % searchTerms.length];
-  const seed = simpleHash(title + index.toString());
+  const photoIds = categoryPhotoIds[category] || categoryPhotoIds.market;
+  // Use hash of title + index to get a unique but consistent photo for each article
+  const photoIndex = (simpleHash(title) + index) % photoIds.length;
+  const photoId = photoIds[photoIndex];
   
-  // Use Unsplash source API with sig for cache-busting to get unique images
-  return `https://source.unsplash.com/800x500/?${encodeURIComponent(searchTerm)}&sig=${seed}`;
+  // Use direct Unsplash CDN link which is reliable
+  return `https://images.unsplash.com/${photoId}?w=800&h=500&fit=crop&auto=format`;
 }
 
 // Keywords to categorize news
