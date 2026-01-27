@@ -64,14 +64,56 @@ export interface Seller {
   createdAt: string;
 }
 
-// Mock property images using placeholder
-const generatePropertyImages = (id: number) => [
-  `https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop`,
-  `https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop`,
-  `https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop`,
-  `https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&h=600&fit=crop`,
-  `https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800&h=600&fit=crop`,
+// Mock property images using verified Unsplash CDN links
+// 30 unique property photos that rotate based on property ID
+const propertyImagePool = [
+  // Modern apartments & interiors
+  'photo-1600596542815-ffad4c1539a9',
+  'photo-1600585154340-be6161a56a0c',
+  'photo-1600607687939-ce8a6c25118c',
+  'photo-1600566753086-00f18fb6b3ea',
+  'photo-1600573472550-8090b5e0745e',
+  'photo-1560448204-e02f11c3d0e2',
+  'photo-1512917774080-9991f1c4c750',
+  'photo-1600585154526-990dced4db0d',
+  'photo-1602343168117-bb8ffe3e2e9f',
+  'photo-1600047509807-ba8f99d2cdde',
+  // Luxury homes & villas
+  'photo-1613490493576-7fde63acd811',
+  'photo-1613977257363-707ba9348227',
+  'photo-1604014237800-1c9102c219da',
+  'photo-1600210492486-724fe5c67fb0',
+  'photo-1600573472592-401b489a3cdc',
+  'photo-1600566753190-17f0baa2a6c3',
+  'photo-1600210491892-03d54c0aaf87',
+  'photo-1600607687644-c7171b42498f',
+  'photo-1600585153490-76fb20a32601',
+  'photo-1600563438938-a9a27216b4f5',
+  // Interiors & rooms
+  'photo-1522708323590-d24dbb6b0267',
+  'photo-1502672260266-1c1ef2d93688',
+  'photo-1560185007-c5ca9d2c014d',
+  'photo-1560185008-b033106af5c3',
+  'photo-1560184897-ae75f418493e',
+  'photo-1560185127-6a2a4a0a834c',
+  'photo-1600121848594-d8644e57abab',
+  'photo-1600585152220-90363fe7e115',
+  'photo-1600585152915-d208bec867a1',
+  'photo-1600607688969-a5bfcd646154',
 ];
+
+const generatePropertyImages = (id: number) => {
+  // Use id to pick starting index for variety
+  const startIndex = (id * 3) % propertyImagePool.length;
+  const images = [];
+  
+  for (let i = 0; i < 5; i++) {
+    const photoId = propertyImagePool[(startIndex + i) % propertyImagePool.length];
+    images.push(`https://images.unsplash.com/${photoId}?w=800&h=600&fit=crop&auto=format`);
+  }
+  
+  return images;
+};
 
 export const mockListings: Property[] = [
   {
