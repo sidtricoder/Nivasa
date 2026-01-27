@@ -53,6 +53,8 @@ import { PropertyViewsTracker, PriceTrendsChart, LocalityInsights, InvestmentCal
 import { PropertyBrochure } from '@/components/pdf';
 import AmenitiesDisplay from '@/components/property/AmenitiesDisplay';
 import VastuComplianceBadge from '@/components/property/VastuComplianceBadge';
+import GaussianSplatViewer from '@/components/property/GaussianSplatViewer';
+import Interactive360Panorama from '@/components/property/Interactive360Panorama';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
@@ -348,13 +350,18 @@ const PropertyDetailPage: React.FC = () => {
                     </div>
                   </TabsContent>
                   <TabsContent value="3d-tour" className="mt-0">
-                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <Building className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-muted-foreground">3D Virtual Tour Placeholder</p>
-                        <p className="text-xs text-muted-foreground mt-1">model-viewer integration ready</p>
-                      </div>
-                    </div>
+                    {/* 
+                      To enable 3D Gaussian Splatting:
+                      1. Record a video walkthrough of the property
+                      2. Upload to Luma AI (lumalabs.ai)
+                      3. Add the lumaUrl prop with the share link
+                      Example: lumaUrl="https://lumalabs.ai/capture/abc123"
+                    */}
+                    <GaussianSplatViewer 
+                      title={property.title}
+                      // Uncomment and add your Luma AI URL:
+                      // lumaUrl="https://lumalabs.ai/capture/your-capture-id"
+                    />
                   </TabsContent>
                 </CardContent>
               </Tabs>
