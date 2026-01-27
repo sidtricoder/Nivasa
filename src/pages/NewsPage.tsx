@@ -273,7 +273,7 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
           rel="noopener noreferrer"
           className="block"
         >
-          <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="overflow-hidden border-0 rounded-none hover:shadow-lg transition-shadow cursor-pointer">
             <div className="grid md:grid-cols-2 gap-0">
               <div className="relative aspect-video md:aspect-auto">
                 <img
@@ -301,7 +301,7 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
                     </Badge>
                   )}
                 </div>
-                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-3">
                   {article.title}
                 </h2>
                 <p className="text-muted-foreground mb-4">{article.summary}</p>
@@ -340,7 +340,7 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
         rel="noopener noreferrer"
         className="block h-full"
       >
-        <Card className="overflow-hidden hover:shadow-md transition-shadow h-full cursor-pointer">
+        <Card className="overflow-hidden border-0 rounded-none hover:shadow-md transition-shadow h-full cursor-pointer">
           <div className="relative aspect-video">
             <img
               src={article.imageUrl}
@@ -362,7 +362,7 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
             </div>
           </div>
           <CardContent className="p-4">
-            <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
               {article.title}
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{article.summary}</p>
@@ -475,7 +475,7 @@ const NewsPage: React.FC = () => {
 
         {/* Category Tabs */}
         <Tabs value={activeCategory} className="mb-8" onValueChange={handleCategoryChange}>
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="w-full justify-start overflow-x-auto gap-4">
             <TabsTrigger value="all">All News</TabsTrigger>
             <TabsTrigger value="market" className="gap-1">
               <TrendingUp className="h-3.5 w-3.5" />
