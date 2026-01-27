@@ -35,6 +35,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   
   const [isDiscoverHovered, setIsDiscoverHovered] = useState(false);
+  const [isNewsHovered, setIsNewsHovered] = useState(false);
 
   const handleDiscoverClick = (type: 'buy' | 'rent', city?: string) => {
     const params = new URLSearchParams();
@@ -185,24 +186,152 @@ const Header: React.FC = () => {
             </AnimatePresence>
           </div>
 
-          {/* Other Nav Links */}
-          {navLinks.slice(1).map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to}>
+          {/* News with Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setIsNewsHovered(true)}
+            onMouseLeave={() => setIsNewsHovered(false)}
+          >
+            <Link to="/news">
               <Button
-                variant={isActive(to) ? 'secondary' : 'ghost'}
+                variant={location.pathname === '/news' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="gap-2"
               >
-                <Icon className="h-4 w-4" />
-                {label}
-                {to === '/favorites' && favorites.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                    {favorites.length}
-                  </Badge>
-                )}
+                <Newspaper className="h-4 w-4" />
+                News
+                <ChevronDown className={cn(
+                  "h-3.5 w-3.5 transition-transform",
+                  isNewsHovered && "rotate-180"
+                )} />
               </Button>
             </Link>
-          ))}
+
+            {/* News Dropdown */}
+            <AnimatePresence>
+              {isNewsHovered && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-full pt-2 z-50"
+                >
+                  <div className="bg-background border border-border rounded-lg shadow-xl p-4 min-w-[280px]">
+                    <div className="space-y-1">
+                      <Link 
+                        to="/news" 
+                        onClick={() => setIsNewsHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Newspaper className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">All News</p>
+                          <p className="text-xs text-muted-foreground">Latest updates</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/news?category=market" 
+                        onClick={() => setIsNewsHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                          <TrendingUp className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Market</p>
+                          <p className="text-xs text-muted-foreground">Price trends & analysis</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/news?category=policy" 
+                        onClick={() => setIsNewsHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                          <Building2 className="h-4 w-4 text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Policy</p>
+                          <p className="text-xs text-muted-foreground">RERA & regulations</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/news?category=investment" 
+                        onClick={() => setIsNewsHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <TrendingUp className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Investment</p>
+                          <p className="text-xs text-muted-foreground">ROI & opportunities</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/news?category=trends" 
+                        onClick={() => setIsNewsHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                          <TrendingUp className="h-4 w-4 text-orange-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Trends</p>
+                          <p className="text-xs text-muted-foreground">Smart homes & tech</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/news?category=city" 
+                        onClick={() => setIsNewsHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                          <MapPin className="h-4 w-4 text-cyan-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">City News</p>
+                          <p className="text-xs text-muted-foreground">Local updates</p>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Favorites */}
+          <Link to="/favorites">
+            <Button
+              variant={isActive('/favorites') ? 'secondary' : 'ghost'}
+              size="sm"
+              className="gap-2"
+            >
+              <Heart className="h-4 w-4" />
+              Favorites
+              {favorites.length > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+                  {favorites.length}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
+          {/* Post Property */}
+          <Link to="/seller">
+            <Button
+              variant={isActive('/seller') ? 'secondary' : 'ghost'}
+              size="sm"
+              className="gap-2"
+            >
+              <Building2 className="h-4 w-4" />
+              Post Property
+            </Button>
+          </Link>
         </nav>
 
         {/* Actions */}

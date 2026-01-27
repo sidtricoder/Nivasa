@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Newspaper, 
@@ -38,8 +39,9 @@ interface NewsArticle {
   city?: string;
 }
 
-// Mock news data - In production, fetch from news API
+// Extended news data with more articles per category
 const mockNews: NewsArticle[] = [
+  // MARKET NEWS
   {
     id: '1',
     title: 'Bangalore Real Estate Market Sees 15% Price Surge in Q4 2025',
@@ -54,6 +56,32 @@ const mockNews: NewsArticle[] = [
     city: 'Bangalore'
   },
   {
+    id: '9',
+    title: 'Delhi NCR Witnesses Record Pre-Launch Sales in January 2026',
+    summary: 'Premium projects in Gurugram and Noida see unprecedented demand with 70% inventory sold before official launch.',
+    category: 'market',
+    source: 'Financial Express',
+    sourceUrl: 'https://financialexpress.com',
+    publishedAt: '2026-01-26T08:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=250&fit=crop',
+    readTime: 4,
+    city: 'Delhi NCR'
+  },
+  {
+    id: '10',
+    title: 'Pune Real Estate Sees 30% Jump in NRI Investments',
+    summary: 'Favorable exchange rates and strong rental yields attract overseas Indians to Pune real estate market.',
+    category: 'market',
+    source: 'India Today',
+    sourceUrl: 'https://indiatoday.in',
+    publishedAt: '2026-01-24T12:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=250&fit=crop',
+    readTime: 6,
+    city: 'Pune'
+  },
+  
+  // POLICY NEWS
+  {
     id: '2',
     title: 'RBI Announces New Home Loan Interest Rate Cuts for First-Time Buyers',
     summary: 'The Reserve Bank has introduced special schemes to make home ownership more accessible for millennials and first-time buyers.',
@@ -64,40 +92,6 @@ const mockNews: NewsArticle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop',
     readTime: 4,
     trending: true
-  },
-  {
-    id: '3',
-    title: 'Top 5 Emerging Localities for Real Estate Investment in 2026',
-    summary: 'Experts reveal the hidden gems across Indian metros that promise high returns for property investors.',
-    category: 'investment',
-    source: 'Housing.com',
-    sourceUrl: 'https://housing.com',
-    publishedAt: '2026-01-25T09:00:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop',
-    readTime: 7
-  },
-  {
-    id: '4',
-    title: 'Smart Home Technology Becoming a Must-Have in Premium Properties',
-    summary: 'AI-powered homes with IoT integration are commanding 20% premium in the luxury segment.',
-    category: 'trends',
-    source: 'PropTiger',
-    sourceUrl: 'https://proptiger.com',
-    publishedAt: '2026-01-24T16:30:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=250&fit=crop',
-    readTime: 6
-  },
-  {
-    id: '5',
-    title: 'Mumbai Metro Line 3 Completion Boosts Property Values by 25%',
-    summary: 'Areas along the new metro corridor see surge in demand as connectivity improves dramatically.',
-    category: 'city',
-    source: 'Times of India',
-    sourceUrl: 'https://timesofindia.com',
-    publishedAt: '2026-01-23T11:00:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=400&h=250&fit=crop',
-    readTime: 4,
-    city: 'Mumbai'
   },
   {
     id: '6',
@@ -111,6 +105,65 @@ const mockNews: NewsArticle[] = [
     readTime: 5
   },
   {
+    id: '11',
+    title: 'Government Extends PMAY Subsidy Scheme Till December 2026',
+    summary: 'First-time homebuyers in affordable segment can continue to avail interest subsidies up to ₹2.67 lakh.',
+    category: 'policy',
+    source: 'NDTV',
+    sourceUrl: 'https://ndtv.com',
+    publishedAt: '2026-01-21T10:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400&h=250&fit=crop',
+    readTime: 3
+  },
+  
+  // INVESTMENT NEWS
+  {
+    id: '3',
+    title: 'Top 5 Emerging Localities for Real Estate Investment in 2026',
+    summary: 'Experts reveal the hidden gems across Indian metros that promise high returns for property investors.',
+    category: 'investment',
+    source: 'Housing.com',
+    sourceUrl: 'https://housing.com',
+    publishedAt: '2026-01-25T09:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop',
+    readTime: 7
+  },
+  {
+    id: '12',
+    title: 'REITs Deliver 18% Returns in 2025, Outperforming Equity Markets',
+    summary: 'Real Estate Investment Trusts continue to attract retail investors with consistent dividend payouts.',
+    category: 'investment',
+    source: 'Moneycontrol',
+    sourceUrl: 'https://moneycontrol.com',
+    publishedAt: '2026-01-23T15:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&h=250&fit=crop',
+    readTime: 5
+  },
+  {
+    id: '13',
+    title: 'Fractional Ownership Platforms See 200% Growth in User Base',
+    summary: 'New-age platforms enable retail investors to own commercial real estate with investments starting ₹25 lakh.',
+    category: 'investment',
+    source: 'Forbes India',
+    sourceUrl: 'https://forbesindia.com',
+    publishedAt: '2026-01-20T11:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=250&fit=crop',
+    readTime: 6
+  },
+  
+  // TRENDS NEWS
+  {
+    id: '4',
+    title: 'Smart Home Technology Becoming a Must-Have in Premium Properties',
+    summary: 'AI-powered homes with IoT integration are commanding 20% premium in the luxury segment.',
+    category: 'trends',
+    source: 'PropTiger',
+    sourceUrl: 'https://proptiger.com',
+    publishedAt: '2026-01-24T16:30:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=250&fit=crop',
+    readTime: 6
+  },
+  {
     id: '7',
     title: 'Co-living Spaces See 40% Growth as Remote Work Continues',
     summary: 'Young professionals prefer flexible living arrangements with community amenities.',
@@ -120,6 +173,42 @@ const mockNews: NewsArticle[] = [
     publishedAt: '2026-01-21T13:00:00Z',
     imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=250&fit=crop',
     readTime: 4
+  },
+  {
+    id: '14',
+    title: 'Green Buildings Command 15% Premium as ESG Focus Grows',
+    summary: 'LEED and IGBC certified projects see higher demand from environmentally conscious buyers.',
+    category: 'trends',
+    source: 'The Hindu',
+    sourceUrl: 'https://thehindu.com',
+    publishedAt: '2026-01-19T09:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=400&h=250&fit=crop',
+    readTime: 5
+  },
+  {
+    id: '15',
+    title: 'Virtual Reality Home Tours Now Standard in Luxury Segment',
+    summary: 'Developers invest in VR technology as 60% of luxury buyers prefer virtual walkthroughs before site visits.',
+    category: 'trends',
+    source: 'TechCrunch India',
+    sourceUrl: 'https://techcrunch.com',
+    publishedAt: '2026-01-18T14:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1617802690992-15d93263d3a9?w=400&h=250&fit=crop',
+    readTime: 4
+  },
+  
+  // CITY NEWS
+  {
+    id: '5',
+    title: 'Mumbai Metro Line 3 Completion Boosts Property Values by 25%',
+    summary: 'Areas along the new metro corridor see surge in demand as connectivity improves dramatically.',
+    category: 'city',
+    source: 'Times of India',
+    sourceUrl: 'https://timesofindia.com',
+    publishedAt: '2026-01-23T11:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=400&h=250&fit=crop',
+    readTime: 4,
+    city: 'Mumbai'
   },
   {
     id: '8',
@@ -132,6 +221,18 @@ const mockNews: NewsArticle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=400&h=250&fit=crop',
     readTime: 5,
     city: 'Hyderabad'
+  },
+  {
+    id: '16',
+    title: 'Chennai Peripheral Ring Road Project to Transform Real Estate Landscape',
+    summary: 'The 130 km ring road connecting suburbs expected to boost property values by 40% in outer areas.',
+    category: 'city',
+    source: 'The New Indian Express',
+    sourceUrl: 'https://newindianexpress.com',
+    publishedAt: '2026-01-17T08:00:00Z',
+    imageUrl: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=400&h=250&fit=crop',
+    readTime: 5,
+    city: 'Chennai'
   }
 ];
 
@@ -267,9 +368,28 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
 };
 
 const NewsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [news, setNews] = useState<NewsArticle[]>(mockNews);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  
+  // Read category from URL, default to 'all'
+  const categoryFromUrl = searchParams.get('category') || 'all';
+  const [activeCategory, setActiveCategory] = useState<string>(categoryFromUrl);
+
+  // Sync with URL params
+  useEffect(() => {
+    const category = searchParams.get('category') || 'all';
+    setActiveCategory(category);
+  }, [searchParams]);
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    if (category === 'all') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ category });
+    }
+  };
 
   const filteredNews = activeCategory === 'all' 
     ? news 
@@ -314,7 +434,7 @@ const NewsPage: React.FC = () => {
         </div>
 
         {/* Category Tabs */}
-        <Tabs defaultValue="all" className="mb-8" onValueChange={setActiveCategory}>
+        <Tabs value={activeCategory} className="mb-8" onValueChange={handleCategoryChange}>
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="all">All News</TabsTrigger>
             <TabsTrigger value="market" className="gap-1">
