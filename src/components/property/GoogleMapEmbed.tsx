@@ -32,14 +32,14 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
 
   const { lat, lng } = coordinates;
   
-  // Google Maps embed URL for regular map view
-  const mapEmbedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d500!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zM${lat}!5e0!3m2!1sen!2sin!4v1`;
+  // Google Maps embed URL for regular map view (place mode)
+  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${lat},${lng}&zoom=17`;
   
-  // Google Maps Street View embed URL
-  const streetViewUrl = `https://www.google.com/maps/embed?pb=!4v1!6m8!1m7!1s!2m2!1d${lat}!2d${lng}!3f0!4f0!5f0.7820865974627469`;
+  // Google Maps Street View embed URL (streetview mode)
+  const streetViewUrl = `https://www.google.com/maps/embed/v1/streetview?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&location=${lat},${lng}&heading=0&pitch=0&fov=90`;
   
   // Direct Google Maps link for opening in new tab
-  const googleMapsLink = `https://www.google.com/maps/@${lat},${lng},18z`;
+  const googleMapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
   const streetViewLink = `https://www.google.com/maps/@${lat},${lng},3a,75y,0h,90t/data=!3m6!1e1!3m4!1s!2e0!7i16384!8i8192`;
 
   const handleLoad = () => {
