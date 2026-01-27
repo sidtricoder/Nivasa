@@ -267,59 +267,63 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
         animate={{ opacity: 1, y: 0 }}
         className="relative group"
       >
-        <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-          <div className="grid md:grid-cols-2 gap-0">
-            <div className="relative aspect-video md:aspect-auto">
-              <img
-                src={article.imageUrl}
-                alt={article.title}
-                className="w-full h-full object-cover"
-              />
-              {article.trending && (
-                <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  Trending
-                </Badge>
-              )}
-            </div>
-            <CardContent className="p-6 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="secondary" className={cn('gap-1', categoryConfig[article.category].color, 'text-white')}>
-                  <CategoryIcon className="h-3 w-3" />
-                  {categoryConfig[article.category].label}
-                </Badge>
-                {article.city && (
-                  <Badge variant="outline" className="gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {article.city}
+        <a 
+          href={article.sourceUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+            <div className="grid md:grid-cols-2 gap-0">
+              <div className="relative aspect-video md:aspect-auto">
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-full object-cover"
+                />
+                {article.trending && (
+                  <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    Trending
                   </Badge>
                 )}
               </div>
-              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
-                {article.title}
-              </h2>
-              <p className="text-muted-foreground mb-4">{article.summary}</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{article.source}</span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {article.readTime} min read
-                  </span>
-                  <span>{formatDate(article.publishedAt)}</span>
+              <CardContent className="p-6 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="secondary" className={cn('gap-1', categoryConfig[article.category].color, 'text-white')}>
+                    <CategoryIcon className="h-3 w-3" />
+                    {categoryConfig[article.category].label}
+                  </Badge>
+                  {article.city && (
+                    <Badge variant="outline" className="gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {article.city}
+                    </Badge>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Bookmark className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                  {article.title}
+                </h2>
+                <p className="text-muted-foreground mb-4">{article.summary}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{article.source}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {article.readTime} min read
+                    </span>
+                    <span>{formatDate(article.publishedAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-primary flex items-center gap-1">
+                      Read article <ExternalLink className="h-3 w-3" />
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </div>
-        </Card>
+              </CardContent>
+            </div>
+          </Card>
+        </a>
       </motion.div>
     );
   }
@@ -330,39 +334,52 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
       animate={{ opacity: 1, y: 0 }}
       className="group"
     >
-      <Card className="overflow-hidden hover:shadow-md transition-shadow h-full">
-        <div className="relative aspect-video">
-          <img
-            src={article.imageUrl}
-            alt={article.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <Badge 
-            variant="secondary" 
-            className={cn('absolute top-3 left-3 gap-1', categoryConfig[article.category].color, 'text-white')}
-          >
-            <CategoryIcon className="h-3 w-3" />
-            {categoryConfig[article.category].label}
-          </Badge>
-        </div>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-            {article.title}
-          </h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{article.summary}</p>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{article.source}</span>
-              <span>•</span>
-              <span>{formatDate(article.publishedAt)}</span>
+      <a 
+        href={article.sourceUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="block h-full"
+      >
+        <Card className="overflow-hidden hover:shadow-md transition-shadow h-full cursor-pointer">
+          <div className="relative aspect-video">
+            <img
+              src={article.imageUrl}
+              alt={article.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <Badge 
+              variant="secondary" 
+              className={cn('absolute top-3 left-3 gap-1', categoryConfig[article.category].color, 'text-white')}
+            >
+              <CategoryIcon className="h-3 w-3" />
+              {categoryConfig[article.category].label}
+            </Badge>
+            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge variant="secondary" className="bg-background/90 text-foreground gap-1">
+                <ExternalLink className="h-3 w-3" />
+                Read
+              </Badge>
             </div>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {article.readTime}m
-            </span>
           </div>
-        </CardContent>
-      </Card>
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+              {article.title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{article.summary}</p>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{article.source}</span>
+                <span>•</span>
+                <span>{formatDate(article.publishedAt)}</span>
+              </div>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {article.readTime}m
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </a>
     </motion.div>
   );
 };
