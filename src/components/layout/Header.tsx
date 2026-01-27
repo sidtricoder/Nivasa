@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { InboxButton } from '@/components/communication';
 
 const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -70,6 +71,9 @@ const Header: React.FC = () => {
               Compare ({compareList.length}/3)
             </Button>
           )}
+
+          {/* Inbox / Messages */}
+          <InboxButton />
 
           {/* Theme Toggle */}
           <Button

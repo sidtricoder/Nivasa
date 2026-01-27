@@ -47,6 +47,12 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CompareModal from '@/components/property/CompareModal';
 import EMICalculator from '@/components/property/EMICalculator';
+import { WhatsAppButton } from '@/components/communication';
+import { useMessageStore } from '@/stores/messageStore';
+import { PropertyViewsTracker, PriceTrendsChart, LocalityInsights, InvestmentCalculator, HomeLoanCalculator } from '@/components/analytics';
+import { PropertyBrochure } from '@/components/pdf';
+import AmenitiesDisplay from '@/components/property/AmenitiesDisplay';
+import VastuComplianceBadge from '@/components/property/VastuComplianceBadge';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
@@ -65,6 +71,7 @@ const PropertyDetailPage: React.FC = () => {
   const { id } = useParams();
   const property = mockListings.find(p => p.id === id);
   const { toggleFavorite, isFavorite, toggleCompare, isInCompare, compareList } = useFavorites();
+  const { startConversation } = useMessageStore();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -112,6 +119,16 @@ const PropertyDetailPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <CompareModal />
+      
+      {/* Floating WhatsApp Button */}
+      <WhatsAppButton
+        phoneNumber={property.seller.phone}
+        propertyTitle={property.title}
+        propertyPrice={formatPrice(property.price)}
+        propertyLocation={`${property.location.locality}, ${property.location.city}`}
+        variant="floating"
+        size="md"
+      />
 
       <main className="container py-6">
         {/* Breadcrumb */}
@@ -240,6 +257,7 @@ const PropertyDetailPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">
                     ₹{property.pricePerSqft.toLocaleString()}/sqft
                   </p>
+                  <PropertyViewsTracker propertyId={property.id} variant="inline" className="justify-end mt-2" />
                 </div>
               </div>
 
@@ -284,6 +302,15 @@ const PropertyDetailPage: React.FC = () => {
                     <p className="text-xs text-muted-foreground">Facing</p>
                   </div>
                 </div>
+              </div>
+              
+              {/* Vastu Compliance Badge */}
+              <div className="mt-4">
+                <VastuComplianceBadge 
+                  status="compliant" 
+                  facing={property.specs.facing} 
+                  variant="badge"
+                />
               </div>
             </div>
 
@@ -395,20 +422,17 @@ const PropertyDetailPage: React.FC = () => {
             {/* Amenities */}
             <Card>
               <CardHeader>
-                <CardTitle>Amenities</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  Amenities
+                  <Badge variant="secondary">{property.amenities.length} amenities</Badge>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {property.amenities.map((amenity) => (
-                    <div
-                      key={amenity}
-                      className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50"
-                    >
-                      <Check className="h-4 w-4 text-success" />
-                      <span className="text-sm">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
+                <AmenitiesDisplay 
+                  amenities={property.amenities} 
+                  variant="grid"
+                  maxVisible={16}
+                />
               </CardContent>
             </Card>
 
@@ -476,7 +500,7 @@ const PropertyDetailPage: React.FC = () => {
           {/* Right Column - Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             {/* Seller Card */}
-            <Card className="sticky top-24">
+            <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12">
@@ -510,10 +534,30 @@ const PropertyDetailPage: React.FC = () => {
                   </div>
                 </div>
 
-                <Button className="w-full gap-2">
+                <Button 
+                  className="w-full gap-2"
+                  onClick={() => {
+                    startConversation(
+                      property.seller.name.toLowerCase().replace(/\s+/g, '-'),
+                      property.seller.name,
+                      property.id,
+                      property.title,
+                      property.images[0]
+                    );
+                  }}
+                >
                   <MessageCircle className="h-4 w-4" />
                   Chat with Seller
                 </Button>
+
+                <WhatsAppButton
+                  phoneNumber={property.seller.phone}
+                  propertyTitle={property.title}
+                  propertyPrice={formatPrice(property.price)}
+                  propertyLocation={`${property.location.locality}, ${property.location.city}`}
+                  variant="inline"
+                  size="md"
+                />
 
                 <div className="relative">
                   <Button
@@ -556,10 +600,40 @@ const PropertyDetailPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* EMI Calculator */}
-            <EMICalculator propertyPrice={property.price} />
+            {/* PDF Brochure Download */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Property Brochure</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Download a detailed PDF brochure of this property to share or review offline.
+                </p>
+                <PropertyBrochure property={property} />
+              </CardContent>
+            </Card>
           </div>
         </div>
+
+        {/* Analytics Section */}
+        <section className="mt-8 space-y-8">
+          <h2 className="text-2xl font-bold text-foreground">Property Analytics</h2>
+          <div className="grid lg:grid-cols-2 gap-8">
+            <PriceTrendsChart 
+              locality={property.location.locality} 
+              currentPrice={property.price} 
+            />
+            <LocalityInsights 
+              locality={property.location.locality}
+              city={property.location.city}
+            />
+          </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            <EMICalculator propertyPrice={property.price} />
+            <InvestmentCalculator propertyPrice={property.price} />
+            <HomeLoanCalculator propertyPrice={property.price} />
+          </div>
+        </section>
       </main>
 
       {/* Lightbox Gallery */}

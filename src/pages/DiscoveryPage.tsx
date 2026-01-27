@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -29,6 +29,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
+import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
+import { useSearchStore } from '@/stores/searchStore';
 import { mockListings, getUniqueLocalities, getPriceRange, Property } from '@/data/listings';
 
 const propertyTypes = [
@@ -73,6 +75,41 @@ const DiscoveryPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Search store for recent/saved searches
+  const { addRecentSearch, setVoiceTranscript, voiceTranscript } = useSearchStore();
+
+  // Handle voice search result
+  useEffect(() => {
+    if (voiceTranscript) {
+      setSearchQuery(voiceTranscript);
+      setVoiceTranscript('');
+    }
+  }, [voiceTranscript, setVoiceTranscript]);
+
+  // Get current filters for saving (full SearchFilters type)
+  const getCurrentFilters = (): import('@/stores/searchStore').SearchFilters => ({
+    query: searchQuery,
+    priceRange: selectedPriceRange,
+    bhk: selectedBHK,
+    localities: selectedLocality !== 'all' ? [selectedLocality] : [],
+    propertyTypes: selectedPropertyTypes,
+    lifestyles: selectedLifestyle,
+    sortBy: sortBy,
+  });
+
+  // Apply saved search filters
+  const handleApplyFilters = (filters: Partial<import('@/stores/searchStore').SearchFilters>) => {
+    if (filters.priceRange) setSelectedPriceRange(filters.priceRange);
+    if (filters.bhk) setSelectedBHK(filters.bhk);
+    if (filters.localities && filters.localities.length > 0) {
+      setSelectedLocality(filters.localities[0]);
+    }
+    if (filters.propertyTypes) setSelectedPropertyTypes(filters.propertyTypes);
+    if (filters.lifestyles) setSelectedLifestyle(filters.lifestyles);
+    if (filters.sortBy) setSortBy(filters.sortBy);
+  };
 
   // Memoized filtered listings
   const filteredListings = useMemo(() => {
@@ -320,12 +357,47 @@ const DiscoveryPage: React.FC = () => {
               placeholder="Search by location, property name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery) {
+                  addRecentSearch(searchQuery, getCurrentFilters());
+                }
+              }}
+              className="pl-10 pr-12"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <VoiceSearchButton 
+                onResult={(text) => {
+                  setSearchQuery(text);
+                  addRecentSearch(text, getCurrentFilters());
+                }}
+                size="sm"
+              />
+            </div>
+            
+            {/* Recent Searches Dropdown */}
+            <RecentSearches 
+              isOpen={isSearchFocused}
+              onClose={() => setIsSearchFocused(false)}
+              onSelect={(search) => {
+                setSearchQuery(search.query);
+                handleApplyFilters(search.filters);
+              }}
             />
           </div>
 
           {/* Controls */}
           <div className="flex items-center gap-2">
+            {/* Saved Searches */}
+            <SavedSearches 
+              currentFilters={getCurrentFilters()}
+              onApply={(filters) => {
+                handleApplyFilters(filters);
+                if (filters.query) setSearchQuery(filters.query);
+              }}
+            />
+
             {/* Mobile Filter Button */}
             <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
               <SheetTrigger asChild>
