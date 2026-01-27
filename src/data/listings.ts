@@ -410,8 +410,9 @@ export const mockListings: Property[] = [
     price: 7200000,
     pricePerSqft: 9000,
     images: [
-      `https://images.unsplash.com/photo-1560185008-5f0d8c7e5f6d?w=800&h=600&fit=crop`,
-      `https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&h=600&fit=crop`,
+      `https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop&auto=format`,
+      `https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=600&fit=crop&auto=format`,
+      `https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&h=600&fit=crop&auto=format`,
     ],
     location: {
       address: "Block D, Sobha Dream Acres",
