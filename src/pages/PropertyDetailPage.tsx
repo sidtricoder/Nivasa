@@ -56,6 +56,7 @@ import VastuComplianceBadge from '@/components/property/VastuComplianceBadge';
 import GaussianSplatViewer from '@/components/property/GaussianSplatViewer';
 import Interactive360Panorama from '@/components/property/Interactive360Panorama';
 import Panoee3DTour from '@/components/property/Panoee3DTour';
+import GoogleMapEmbed from '@/components/property/GoogleMapEmbed';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
@@ -342,13 +343,11 @@ const PropertyDetailPage: React.FC = () => {
                     </div>
                   </TabsContent>
                   <TabsContent value="street-view" className="mt-0">
-                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-muted-foreground">Street View Placeholder</p>
-                        <p className="text-xs text-muted-foreground mt-1">Mapillary integration ready</p>
-                      </div>
-                    </div>
+                    <GoogleMapEmbed 
+                      coordinates={property.location.coordinates}
+                      address={`${property.location.address}, ${property.location.locality}, ${property.location.city}`}
+                      title={property.location.locality}
+                    />
                   </TabsContent>
                   <TabsContent value="3d-tour" className="mt-0">
                     {property.panoee3DTourUrl ? (
