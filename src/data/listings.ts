@@ -42,6 +42,11 @@ export interface Property {
     reraApproved: boolean;
   };
   walkScore: number;
+  safetyScore: number;
+  connectivityScore: number;
+  lifestyleScore: number;
+  highlights: string[];
+  thingsToConsider: string[];
   nearbyPlaces: {
     type: 'school' | 'hospital' | 'metro' | 'park' | 'mall' | 'restaurant';
     name: string;
@@ -162,6 +167,20 @@ export const mockListings: Property[] = [
       reraApproved: true,
     },
     walkScore: 85,
+    safetyScore: 90,
+    connectivityScore: 88,
+    lifestyleScore: 92,
+    highlights: [
+      "Floor-to-ceiling windows with panoramic city views",
+      "Premium Italian marble flooring throughout",
+      "Private balcony perfect for morning coffee",
+      "24/7 concierge service",
+      "Smart home automation system"
+    ],
+    thingsToConsider: [
+      "Construction ongoing in adjacent plot",
+      "Limited visitor parking during peak hours"
+    ],
     nearbyPlaces: [
       { type: "metro", name: "Koramangala Metro", distance: "0.5 km" },
       { type: "school", name: "Delhi Public School", distance: "1.2 km" },
@@ -222,6 +241,17 @@ export const mockListings: Property[] = [
       reraApproved: true,
     },
     walkScore: 72,
+    safetyScore: 85,
+    connectivityScore: 95,
+    lifestyleScore: 70,
+    highlights: [
+      "Walking distance to tech park",
+      "Modern amenities and facilities",
+      "Pet-friendly community"
+    ],
+    thingsToConsider: [
+      "Noise from nearby highway during peak hours"
+    ],
     nearbyPlaces: [
       { type: "restaurant", name: "Cafe Coffee Day", distance: "0.2 km" },
       { type: "park", name: "ITPL Park", distance: "0.6 km" },
@@ -280,6 +310,18 @@ export const mockListings: Property[] = [
       reraApproved: false,
     },
     walkScore: 45,
+    safetyScore: 95,
+    connectivityScore: 60,
+    lifestyleScore: 85,
+    highlights: [
+      "Private swimming pool and garden",
+      "Spacious villa with modern amenities",
+      "Solar panels for eco-friendly living"
+    ],
+    thingsToConsider: [
+      "Far from public transport",
+      "Limited nearby shopping options"
+    ],
     nearbyPlaces: [
       { type: "school", name: "Greenwood High", distance: "1.0 km" },
       { type: "mall", name: "Total Mall", distance: "2.5 km" },
@@ -337,6 +379,18 @@ export const mockListings: Property[] = [
       reraApproved: true,
     },
     walkScore: 90,
+    safetyScore: 88,
+    connectivityScore: 92,
+    lifestyleScore: 95,
+    highlights: [
+      "Premium apartment in prime location",
+      "Walking distance to metro and shopping",
+      "High-end finishes throughout"
+    ],
+    thingsToConsider: [
+      "Higher maintenance costs",
+      "Limited parking for guests"
+    ],
     nearbyPlaces: [
       { type: "metro", name: "HSR Layout Metro", distance: "0.3 km" },
       { type: "restaurant", name: "Truffles", distance: "0.4 km" },
@@ -395,6 +449,18 @@ export const mockListings: Property[] = [
       reraApproved: true,
     },
     walkScore: 65,
+    safetyScore: 78,
+    connectivityScore: 70,
+    lifestyleScore: 68,
+    highlights: [
+      "Affordable housing in developing area",
+      "Good for investment",
+      "Peaceful neighborhood"
+    ],
+    thingsToConsider: [
+      "Limited amenities currently",
+      "Area still developing"
+    ],
     nearbyPlaces: [
       { type: "park", name: "Hebbal Lake", distance: "0.1 km" },
       { type: "mall", name: "Esteem Mall", distance: "1.2 km" },
@@ -454,6 +520,17 @@ export const mockListings: Property[] = [
       reraApproved: true,
     },
     walkScore: 70,
+    safetyScore: 82,
+    connectivityScore: 75,
+    lifestyleScore: 72,
+    highlights: [
+      "Family-friendly community",
+      "Good schools nearby",
+      "Well-maintained society"
+    ],
+    thingsToConsider: [
+      "Older building, may need renovations"
+    ],
     nearbyPlaces: [
       { type: "school", name: "Inventure Academy", distance: "0.8 km" },
       { type: "hospital", name: "Sakra World Hospital", distance: "1.5 km" },
@@ -511,6 +588,18 @@ export const mockListings: Property[] = [
       reraApproved: false,
     },
     walkScore: 88,
+    safetyScore: 92,
+    connectivityScore: 90,
+    lifestyleScore: 94,
+    highlights: [
+      "Luxury penthouse with stunning views",
+      "Premium location and amenities",
+      "Recently renovated"
+    ],
+    thingsToConsider: [
+      "High property tax",
+      "Premium pricing"
+    ],
     nearbyPlaces: [
       { type: "restaurant", name: "Toit", distance: "0.2 km" },
       { type: "metro", name: "Indiranagar Metro", distance: "0.5 km" },
@@ -569,6 +658,18 @@ export const mockListings: Property[] = [
       reraApproved: true,
     },
     walkScore: 95,
+    safetyScore: 96,
+    connectivityScore: 98,
+    lifestyleScore: 97,
+    highlights: [
+      "Ultra-luxury residence in heart of city",
+      "World-class amenities and services",
+      "Iconic building with prestigious address"
+    ],
+    thingsToConsider: [
+      "Very high price point",
+      "High maintenance and association fees"
+    ],
     nearbyPlaces: [
       { type: "mall", name: "UB City Mall", distance: "0.0 km" },
       { type: "restaurant", name: "Karavalli", distance: "0.1 km" },

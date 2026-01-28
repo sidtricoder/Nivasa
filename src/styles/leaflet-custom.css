@@ -1,0 +1,29 @@
+/* Leaflet map fixes */
+.leaflet-container {
+  font-family: inherit;
+  z-index: 0;
+}
+
+.leaflet-control {
+  z-index: 800;
+}
+
+.leaflet-popup {
+  z-index: 900;
+}
+
+/* Fix Leaflet marker icon paths */
+.leaflet-default-icon-path {
+  background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+}
+
+/* Make map responsive */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Fix marker shadows */
+.leaflet-marker-shadow {
+  opacity: 0.4;
+}

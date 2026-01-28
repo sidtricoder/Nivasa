@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
-import { MapPin, Maximize2, ExternalLink, Map, Navigation } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { MapPin, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet default icon issue
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
 
 interface GoogleMapEmbedProps {
   coordinates: { lat: number; lng: number };
@@ -26,51 +31,40 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
   title = "Location",
   className 
 }) => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'map' | 'streetview'>('streetview');
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
 
   const { lat, lng } = coordinates;
   
-  // Google Maps embed URL for regular map view (place mode)
-  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${lat},${lng}&zoom=17`;
-  
-  // Google Maps Street View embed URL (streetview mode)
-  const streetViewUrl = `https://www.google.com/maps/embed/v1/streetview?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&location=${lat},${lng}&heading=0&pitch=0&fov=90`;
-  
-  // Direct Google Maps link for opening in new tab
-  const googleMapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
-  const streetViewLink = `https://www.google.com/maps/@${lat},${lng},3a,75y,0h,90t/data=!3m6!1e1!3m4!1s!2e0!7i16384!8i8192`;
+  // OpenStreetMap link (opens in new tab)
+  const openStreetMapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`;
 
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-  const MapIframe = ({ fullscreen = false, view = 'streetview' }: { fullscreen?: boolean; view?: 'map' | 'streetview' }) => (
-    <div className={cn(
-      "relative bg-muted rounded-lg overflow-hidden",
-      fullscreen ? "w-full h-full min-h-[70vh]" : "aspect-video"
-    )}>
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
-          <div className="flex flex-col items-center gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-sm text-muted-foreground">Loading {view === 'streetview' ? 'Street View' : 'Map'}...</p>
-          </div>
-        </div>
-      )}
-      
-      <iframe
-        src={view === 'streetview' ? streetViewUrl : mapEmbedUrl}
-        title={`${title} - ${view === 'streetview' ? 'Street View' : 'Map'}`}
-        className="w-full h-full border-0"
-        allowFullScreen
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        onLoad={handleLoad}
-      />
-    </div>
-  );
+    // Create map
+    mapInstanceRef.current = L.map(mapRef.current).setView([lat, lng], 17);
+
+    // Add OpenStreetMap tiles (FREE!)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(mapInstanceRef.current);
+
+    // Add marker
+    const marker = L.marker([lat, lng]).addTo(mapInstanceRef.current);
+    
+    if (title || address) {
+      marker.bindPopup(`<strong>${title}</strong>${address ? `<br>${address}` : ''}`).openPopup();
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [lat, lng, title, address]);
 
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -79,76 +73,32 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
           <CardTitle className="flex items-center gap-2 text-lg">
             <MapPin className="h-5 w-5 text-primary" />
             {title}
-            <Badge variant="secondary" className="ml-2">
-              <Navigation className="h-3 w-3 mr-1" />
-              Street View
-            </Badge>
           </CardTitle>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+          >
+            <a 
+              href={openStreetMapLink}
+              target="_blank"
+              rel="noopener noreferrer"
               className="gap-2"
-              onClick={() => window.open(activeView === 'streetview' ? streetViewLink : googleMapsLink, '_blank')}
             >
               <ExternalLink className="h-4 w-4" />
-              Open in Google Maps
-            </Button>
-            
-            <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Maximize2 className="h-4 w-4" />
-                  Fullscreen
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full p-0">
-                <DialogHeader className="absolute top-2 left-2 z-20">
-                  <DialogTitle className="bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    {title} - {activeView === 'streetview' ? 'Street View' : 'Map View'}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="w-full h-full">
-                  <MapIframe fullscreen view={activeView} />
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+              Open in Maps
+            </a>
+          </Button>
         </div>
-      </CardHeader>
-      
-      <CardContent className="p-4">
-        {/* View Toggle */}
-        <Tabs value={activeView} onValueChange={(v) => setActiveView(v as 'map' | 'streetview')} className="mb-3">
-          <TabsList className="grid w-full grid-cols-2 max-w-xs">
-            <TabsTrigger value="streetview" className="gap-2">
-              <Navigation className="h-4 w-4" />
-              Street View
-            </TabsTrigger>
-            <TabsTrigger value="map" className="gap-2">
-              <Map className="h-4 w-4" />
-              Map View
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <MapIframe view={activeView} />
-        
         {address && (
-          <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <p>{address}</p>
-          </div>
+          <p className="text-sm text-muted-foreground">{address}</p>
         )}
-        
-        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-          <p>🖱️ Click and drag to look around • Use controls to navigate</p>
-          <Badge variant="outline" className="text-xs">
-            Powered by Google Maps
-          </Badge>
-        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div
+          ref={mapRef}
+          className="w-full aspect-video bg-muted"
+        />
       </CardContent>
     </Card>
   );

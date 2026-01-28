@@ -13,8 +13,10 @@ import {
   Car,
   Building2,
   Home,
-  Castle
+  Castle,
+  Loader2
 } from 'lucide-react';
+import { getAllProperties } from '@/services/firestoreService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +62,10 @@ const DiscoveryPage: React.FC = () => {
   const priceRange = getPriceRange();
   const localities = getUniqueLocalities();
 
+  // Firebase state
+  const [firebaseProperties, setFirebaseProperties] = useState<Property[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
+
   // Filter State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number]>([
@@ -79,6 +85,23 @@ const DiscoveryPage: React.FC = () => {
 
   // Search store for recent/saved searches
   const { addRecentSearch, setVoiceTranscript, voiceTranscript } = useSearchStore();
+
+  // Fetch properties from Firebase on mount
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoadingProperties(true);
+      try {
+        const { properties } = await getAllProperties(100);
+        setFirebaseProperties(properties);
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+      } finally {
+        setLoadingProperties(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
 
   // Handle voice search result
   useEffect(() => {
@@ -113,7 +136,8 @@ const DiscoveryPage: React.FC = () => {
 
   // Memoized filtered listings
   const filteredListings = useMemo(() => {
-    let results = [...mockListings];
+    // Combine mock listings with Firebase properties
+    let results = [...mockListings, ...firebaseProperties];
 
     // Search query
     if (searchQuery) {
@@ -185,6 +209,7 @@ const DiscoveryPage: React.FC = () => {
     selectedPropertyTypes,
     selectedLifestyle,
     sortBy,
+    firebaseProperties,
   ]);
 
   const formatPrice = (price: number) => {
@@ -516,12 +541,23 @@ const DiscoveryPage: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{filteredListings.length}</span> properties found
+                {loadingProperties && <Loader2 className="inline h-4 w-4 ml-2 animate-spin" />}
               </p>
             </div>
 
             {/* Property Grid/List */}
             <AnimatePresence mode="wait">
-              {filteredListings.length === 0 ? (
+              {loadingProperties ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-16"
+                >
+                  <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                  <p className="text-muted-foreground">Loading properties...</p>
+                </motion.div>
+              ) : filteredListings.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

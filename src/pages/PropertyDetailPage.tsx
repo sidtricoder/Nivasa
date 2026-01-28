@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,7 +30,9 @@ import {
   Utensils,
   X,
   Check,
-  ChevronDown
+  ChevronDown,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +63,7 @@ import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
 import { format } from 'date-fns';
+import { getProperty } from '@/services/firestoreService';
 
 const nearbyTypeIcons: Record<string, React.ComponentType<any>> = {
   school: School,
@@ -73,14 +76,60 @@ const nearbyTypeIcons: Record<string, React.ComponentType<any>> = {
 
 const PropertyDetailPage: React.FC = () => {
   const { id } = useParams();
-  const property = mockListings.find(p => p.id === id);
   const { toggleFavorite, isFavorite, toggleCompare, isInCompare, compareList } = useFavorites();
   const { startConversation } = useMessageStore();
 
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>();
+
+  // Fetch property from mockListings or Firebase
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // First check mockListings
+        const mockProperty = mockListings.find(p => p.id === id);
+        if (mockProperty) {
+          setProperty(mockProperty);
+          setLoading(false);
+          return;
+        }
+
+        // If not in mockListings, fetch from Firebase
+        const firebaseProperty = await getProperty(id);
+        setProperty(firebaseProperty);
+      } catch (error) {
+        console.error('Error fetching property:', error);
+        setProperty(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperty();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+          <p className="text-muted-foreground">Loading property details...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -455,30 +504,54 @@ const PropertyDetailPage: React.FC = () => {
                 <CardTitle>Location & Neighborhood</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Map Placeholder */}
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">Interactive Map Placeholder</p>
-                    <p className="text-xs text-muted-foreground mt-1">Leaflet.js integration ready</p>
-                  </div>
-                </div>
+                {/* Google Map */}
+                <GoogleMapEmbed 
+                  coordinates={property.location.coordinates}
+                  address={`${property.location.address}, ${property.location.locality}, ${property.location.city}`}
+                  title={property.title}
+                />
 
-                {/* Walk Score */}
-                <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Walk Score</p>
-                    <p className="text-sm text-muted-foreground">How walkable is this location</p>
-                  </div>
-                  <div className="flex items-center gap-2">
+                {/* Scores Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
                     <div className={cn(
-                      "text-2xl font-bold",
+                      "text-2xl font-bold mb-1",
                       property.walkScore >= 70 ? "text-success" :
                       property.walkScore >= 50 ? "text-warning" : "text-destructive"
                     )}>
                       {property.walkScore}
                     </div>
-                    <span className="text-sm text-muted-foreground">/100</span>
+                    <p className="text-xs text-muted-foreground text-center">Walk Score</p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
+                    <div className={cn(
+                      "text-2xl font-bold mb-1",
+                      property.safetyScore >= 70 ? "text-success" :
+                      property.safetyScore >= 50 ? "text-warning" : "text-destructive"
+                    )}>
+                      {property.safetyScore}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Safety Score</p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
+                    <div className={cn(
+                      "text-2xl font-bold mb-1",
+                      property.connectivityScore >= 70 ? "text-success" :
+                      property.connectivityScore >= 50 ? "text-warning" : "text-destructive"
+                    )}>
+                      {property.connectivityScore}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Connectivity</p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
+                    <div className={cn(
+                      "text-2xl font-bold mb-1",
+                      property.lifestyleScore >= 70 ? "text-success" :
+                      property.lifestyleScore >= 50 ? "text-warning" : "text-destructive"
+                    )}>
+                      {property.lifestyleScore}
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">Lifestyle</p>
                   </div>
                 </div>
 
@@ -506,6 +579,48 @@ const PropertyDetailPage: React.FC = () => {
                     })}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Highlights */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  Property Highlights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {property.highlights.map((highlight, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{highlight}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Things to Consider */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                  Things to Consider
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {property.thingsToConsider.map((item, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <div className="h-5 w-5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="h-1.5 w-1.5 rounded-full bg-warning" />
+                      </div>
+                      <span className="text-sm text-muted-foreground">{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
