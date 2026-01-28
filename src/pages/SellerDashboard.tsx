@@ -265,9 +265,11 @@ const SellerDashboard: React.FC = () => {
       { field: formData.propertyAge, name: 'Property Age' },
       { field: formData.furnishing, name: 'Furnishing' },
       { field: formData.price, name: 'Price' },
+      { field: formData.blockNumber, name: 'Block/House Number' },
+      { field: formData.road, name: 'Road/Sector' },
+      { field: formData.society, name: 'Society/Area Name' },
       { field: formData.locality, name: 'Locality' },
       { field: formData.city, name: 'City' },
-      { field: formData.address, name: 'Address' },
       { field: formData.pincode, name: 'Pincode' },
       { field: formData.state, name: 'State' },
       { field: formData.walkScore, name: 'Walk Score' },
@@ -365,6 +367,9 @@ const SellerDashboard: React.FC = () => {
       // Combine uploaded images with URL-based images
       const allImageUrls = [...uploadedImageUrls, ...imageUrls];
 
+      // Build complete address from structured fields
+      const completeAddress = `${formData.blockNumber}, ${formData.road}, ${formData.society}`;
+
       const propertyData: Omit<Property, 'id'> = {
         title: formData.title,
         description: formData.description,
@@ -372,7 +377,7 @@ const SellerDashboard: React.FC = () => {
         pricePerSqft: Math.round(parseFloat(formData.price) / parseFloat(formData.sqft || '1')),
         images: allImageUrls.length > 0 ? allImageUrls : (editingPropertyId ? userListings.find(p => p.id === editingPropertyId)?.images || [] : []),
         location: {
-          address: formData.address,
+          address: completeAddress,
           locality: formData.locality,
           city: formData.city,
           state: formData.state,
@@ -472,6 +477,9 @@ const SellerDashboard: React.FC = () => {
       propertyAge: '',
       furnishing: '',
       price: '',
+      blockNumber: '',
+      road: '',
+      society: '',
       locality: '',
       city: '',
       address: '',
@@ -492,11 +500,20 @@ const SellerDashboard: React.FC = () => {
     });
     setSelectedFiles([]);
     setImagePreviews([]);
+    setImageUrls([]);
+    setUrlInput('');
     setCurrentStep(1);
     setEditingPropertyId(null);
   };
 
   const handleEditProperty = (property: Property) => {
+    // Try to split the address into structured fields
+    // Format expected: "blockNumber, road, society"
+    const addressParts = property.location.address.split(',').map(s => s.trim());
+    const blockNumber = addressParts[0] || '';
+    const road = addressParts[1] || '';
+    const society = addressParts[2] || addressParts[0] || ''; // Fallback to first part if only one part exists
+
     setFormData({
       title: property.title,
       description: property.description,
@@ -510,6 +527,9 @@ const SellerDashboard: React.FC = () => {
       propertyAge: property.specs.propertyAge.toString(),
       furnishing: property.specs.furnishing,
       price: property.price.toString(),
+      blockNumber: blockNumber,
+      road: road,
+      society: society,
       locality: property.location.locality,
       city: property.location.city,
       address: property.location.address,

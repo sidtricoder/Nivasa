@@ -1,7 +1,8 @@
 /**
  * Geocoding Service
- * Uses Nominatim (OpenStreetMap) - Completely FREE, no API key needed!
- * Usage Policy: https://operations.osmfoundation.org/policies/nominatim/
+ * Uses Photon API (OpenStreetMap) - Completely FREE, no API key needed!
+ * Photon is CORS-friendly and works from localhost
+ * Docs: https://photon.komoot.io/
  */
 
 export interface GeocodeResult {
@@ -12,9 +13,9 @@ export interface GeocodeResult {
 }
 
 /**
- * Convert address to coordinates using Nominatim (OpenStreetMap Geocoding)
- * FREE - No API key, no credit card, no limits for fair use
- * Rate limit: Max 1 request per second (automatically handled)
+ * Convert address to coordinates using Photon (OpenStreetMap Geocoding)
+ * FREE - No API key, no credit card, CORS-enabled
+ * Better for localhost development than Nominatim
  */
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests
@@ -36,14 +37,11 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult> =>
   await waitForRateLimit();
 
   const encodedAddress = encodeURIComponent(address);
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1&addressdetails=1`;
+  // Using Photon API - CORS-friendly alternative to Nominatim
+  const url = `https://photon.komoot.io/api/?q=${encodedAddress}&limit=1`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Nivasa Real Estate Platform',
-      },
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Geocoding service temporarily unavailable');
@@ -51,40 +49,50 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult> =>
 
     const data = await response.json();
 
-    if (data.length > 0) {
-      const result = data[0];
+    if (data.features && data.features.length > 0) {
+      const result = data.features[0];
+      const coords = result.geometry.coordinates; // [lng, lat] in GeoJSON
+      const props = result.properties;
+      
+      // Build formatted address
+      const addressParts = [
+        props.name,
+        props.street,
+        props.city || props.county,
+        props.state,
+        props.country
+      ].filter(Boolean);
+
       return {
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-        formattedAddress: result.display_name,
-        placeId: result.place_id.toString(),
+        lat: coords[1], // Photon returns [lng, lat]
+        lng: coords[0],
+        formattedAddress: addressParts.join(', '),
+        placeId: props.osm_id?.toString() || 'unknown',
       };
     } else {
-      throw new Error('Address not found. Please check the address and try again.');
+      throw new Error('Address not found. Please try a more general location (e.g., just the area name and city).');
     }
   } catch (error: any) {
     if (error.message.includes('not found')) {
       throw error;
     }
+    console.error('Geocoding error:', error);
     throw new Error('Failed to geocode address. Please check your internet connection and try again.');
   }
 };
 
 /**
  * Reverse geocode - convert coordinates to address
- * FREE - No API key needed
+ * Uses Photon reverse API
  */
 export const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
   await waitForRateLimit();
 
-  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
+  // Photon reverse geocoding
+  const url = `https://photon.komoot.io/reverse?lon=${lng}&lat=${lat}`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Nivasa Real Estate Platform',
-      },
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error('Reverse geocoding failed');
@@ -92,8 +100,17 @@ export const reverseGeocode = async (lat: number, lng: number): Promise<string> 
 
     const data = await response.json();
 
-    if (data.display_name) {
-      return data.display_name;
+    if (data.features && data.features.length > 0) {
+      const props = data.features[0].properties;
+      const addressParts = [
+        props.name,
+        props.street,
+        props.city || props.county,
+        props.state,
+        props.country
+      ].filter(Boolean);
+      
+      return addressParts.join(', ');
     } else {
       throw new Error('Unable to find address for coordinates');
     }

@@ -48,47 +48,84 @@ const MapPicker: React.FC<MapPickerProps> = ({
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Create map centered on coordinates or default location
-    const center: [number, number] = coordinates.lat !== 0 
-      ? [coordinates.lat, coordinates.lng]
-      : [28.6139, 77.2090]; // Default to Delhi
+    // Small delay to ensure container has dimensions
+    setTimeout(() => {
+      if (!mapRef.current) return;
 
-    mapInstanceRef.current = L.map(mapRef.current).setView(center, coordinates.lat !== 0 ? 15 : 12);
+      // Create map centered on coordinates or default location
+      const center: [number, number] = coordinates.lat !== 0 
+        ? [coordinates.lat, coordinates.lng]
+        : [28.6139, 77.2090]; // Default to Delhi
 
-    // Add OpenStreetMap tiles (FREE!)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(mapInstanceRef.current);
+      try {
+        mapInstanceRef.current = L.map(mapRef.current).setView(center, coordinates.lat !== 0 ? 15 : 12);
 
-    // Add draggable marker
-    markerRef.current = L.marker(center, {
-      draggable: true,
-    }).addTo(mapInstanceRef.current);
+        // Add OpenStreetMap tiles (FREE!)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19,
+        }).addTo(mapInstanceRef.current);
 
-    // Handle marker drag
-    markerRef.current.on('dragend', async () => {
-      if (!markerRef.current) return;
-      
-      const position = markerRef.current.getLatLng();
-      const newCoords = {
-        lat: position.lat,
-        lng: position.lng,
-      };
+        // Add draggable marker
+        markerRef.current = L.marker(center, {
+          draggable: true,
+        }).addTo(mapInstanceRef.current);
 
-      setCoordinates(newCoords);
-      onCoordinatesChange(newCoords);
+        // Bind popup to marker
+        markerRef.current.bindPopup('📍 Drag me to adjust location!').openPopup();
 
-      // Optionally reverse geocode
-      if (onAddressUpdate) {
-        try {
-          const updatedAddress = await reverseGeocode(newCoords.lat, newCoords.lng);
-          onAddressUpdate(updatedAddress);
-        } catch (error) {
-          console.error('Reverse geocoding failed:', error);
-        }
+        // Handle marker drag
+        markerRef.current.on('dragend', async () => {
+          if (!markerRef.current) return;
+          
+          const position = markerRef.current.getLatLng();
+          const newCoords = {
+            lat: position.lat,
+            lng: position.lng,
+          };
+
+          setCoordinates(newCoords);
+          onCoordinatesChange(newCoords);
+
+          // Update popup
+          markerRef.current.setPopupContent(`✅ Updated: ${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`).openPopup();
+
+          // Optionally reverse geocode
+          if (onAddressUpdate) {
+            try {
+              const updatedAddress = await reverseGeocode(newCoords.lat, newCoords.lng);
+              onAddressUpdate(updatedAddress);
+            } catch (error) {
+              console.error('Reverse geocoding failed:', error);
+            }
+          }
+        });
+
+        // Allow clicking on map to move marker
+        mapInstanceRef.current.on('click', (e: L.LeafletMouseEvent) => {
+          if (!markerRef.current) return;
+
+          const newCoords = {
+            lat: e.latlng.lat,
+            lng: e.latlng.lng,
+          };
+
+          setCoordinates(newCoords);
+          onCoordinatesChange(newCoords);
+
+          markerRef.current.setLatLng(e.latlng);
+          markerRef.current.setPopupContent(`✅ Updated: ${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`).openPopup();
+        });
+
+        // Force map to resize after initialization
+        setTimeout(() => {
+          mapInstanceRef.current?.invalidateSize();
+        }, 100);
+
+      } catch (error) {
+        console.error('Map initialization error:', error);
       }
-    });
+    }, 100);
 
     return () => {
       if (mapInstanceRef.current) {
@@ -127,8 +164,14 @@ const MapPicker: React.FC<MapPickerProps> = ({
       // Update map and marker
       if (mapInstanceRef.current && markerRef.current) {
         const newPos: [number, number] = [newCoords.lat, newCoords.lng];
-        mapInstanceRef.current.setView(newPos, 15);
+        mapInstanceRef.current.setView(newPos, 15, { animate: true });
         markerRef.current.setLatLng(newPos);
+        markerRef.current.setPopupContent(`📍 ${result.formattedAddress}`).openPopup();
+        
+        // Force map to recalculate size
+        setTimeout(() => {
+          mapInstanceRef.current?.invalidateSize();
+        }, 100);
       }
 
       if (onAddressUpdate) {
@@ -187,13 +230,14 @@ const MapPicker: React.FC<MapPickerProps> = ({
         <div
           ref={mapRef}
           className="w-full h-[400px] bg-muted"
+          style={{ minHeight: '400px' }}
         />
       </Card>
 
       <Alert>
         <MapPin className="h-4 w-4" />
         <AlertDescription>
-          Using OpenStreetMap (100% FREE, no API key needed). Drag the pin to adjust the exact location.
+          <strong>How to set location:</strong> Click "Find Address" to locate the area, then <strong>click anywhere on the map</strong> or <strong>drag the marker</strong> to pinpoint exact location.
         </AlertDescription>
       </Alert>
     </div>
