@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { InboxButton } from '@/components/communication';
+import { UserProfile } from '@/components/auth';
 import { cn } from '@/lib/utils';
 
 // Popular cities data
@@ -359,6 +360,9 @@ const Header: React.FC = () => {
 
           {/* Inbox / Messages */}
           <InboxButton className={`${textColor} ${hoverBg}`} />
+
+          {/* User Profile / Auth */}
+          <UserProfile />
 
           {/* Theme Toggle */}
           <Button
