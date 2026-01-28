@@ -50,6 +50,8 @@ import Footer from '@/components/layout/Footer';
 import CompareModal from '@/components/property/CompareModal';
 import EMICalculator from '@/components/property/EMICalculator';
 import { WhatsAppButton } from '@/components/communication';
+import FirebaseChatDrawer from '@/components/communication/FirebaseChatDrawer';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMessageStore } from '@/stores/messageStore';
 import { PropertyViewsTracker, PriceTrendsChart, LocalityInsights, InvestmentCalculator, HomeLoanCalculator } from '@/components/analytics';
 import { PropertyBrochure } from '@/components/pdf';
@@ -78,6 +80,7 @@ const PropertyDetailPage: React.FC = () => {
   const { id } = useParams();
   const { toggleFavorite, isFavorite, toggleCompare, isInCompare, compareList } = useFavorites();
   const { startConversation } = useMessageStore();
+  const { currentUser } = useAuth();
 
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +88,7 @@ const PropertyDetailPage: React.FC = () => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>();
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Fetch property from mockListings or Firebase
   useEffect(() => {
@@ -173,14 +177,25 @@ const PropertyDetailPage: React.FC = () => {
       <Header />
       <CompareModal />
       
-      {/* Floating WhatsApp Button */}
-      <WhatsAppButton
-        phoneNumber={property.seller.phone}
+      {/* Floating Action Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          size="lg"
+          className="rounded-full h-14 w-14 shadow-lg"
+          onClick={() => setIsChatOpen(true)}
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Firebase Chat Drawer */}
+      <FirebaseChatDrawer
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        propertyId={property.id}
+        sellerId={property.seller.id}
+        sellerName={property.seller.name}
         propertyTitle={property.title}
-        propertyPrice={formatPrice(property.price)}
-        propertyLocation={`${property.location.locality}, ${property.location.city}`}
-        variant="floating"
-        size="md"
       />
 
       <main className="container py-6">
@@ -662,30 +677,24 @@ const PropertyDetailPage: React.FC = () => {
                   </div>
                 </div>
 
-                <Button 
-                  className="w-full gap-2"
-                  onClick={() => {
-                    startConversation(
-                      property.seller.name.toLowerCase().replace(/\s+/g, '-'),
-                      property.seller.name,
-                      property.id,
-                      property.title,
-                      property.images[0]
-                    );
-                  }}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Chat with Seller
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    className="gap-2"
+                    onClick={() => setIsChatOpen(true)}
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Chat with Seller
+                  </Button>
 
-                <WhatsAppButton
-                  phoneNumber={property.seller.phone}
-                  propertyTitle={property.title}
-                  propertyPrice={formatPrice(property.price)}
-                  propertyLocation={`${property.location.locality}, ${property.location.city}`}
-                  variant="inline"
-                  size="md"
-                />
+                  <WhatsAppButton
+                    phoneNumber={property.seller.phone}
+                    propertyTitle={property.title}
+                    propertyPrice={formatPrice(property.price)}
+                    propertyLocation={`${property.location.locality}, ${property.location.city}`}
+                    variant="inline"
+                    size="md"
+                  />
+                </div>
 
                 <div className="relative">
                   <Button

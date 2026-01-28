@@ -40,5 +40,42 @@ service cloud.firestore {
       allow delete: if isAuthenticated() 
                     && resource.data.seller.id == request.auth.uid;
     }
+    
+    // Chat messages collection
+    match /chats/{messageId} {
+      // Users can read messages where they are sender or receiver
+      allow read: if isAuthenticated() 
+                  && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      
+      // Users can create messages where they are the sender
+      allow create: if isAuthenticated() 
+                    && request.resource.data.from == request.auth.uid;
+      
+      // Users can update their own messages (e.g., mark as read)
+      allow update: if isAuthenticated() 
+                    && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      
+      // Users can delete their own sent messages
+      allow delete: if isAuthenticated() 
+                    && resource.data.from == request.auth.uid;
+    }
+    
+    // Conversations collection
+    match /conversations/{conversationId} {
+      // Users can read conversations they are part of
+      allow read: if isAuthenticated() 
+                  && request.auth.uid in resource.data.participants;
+      
+      // Users can create conversations they are part of
+      allow create: if isAuthenticated() 
+                    && request.auth.uid in request.resource.data.participants;
+      
+      // Participants can update conversation metadata
+      allow update: if isAuthenticated() 
+                    && request.auth.uid in resource.data.participants;
+      
+      // No one can delete conversations (keep message history)
+      allow delete: if false;
+    }
   }
 }
