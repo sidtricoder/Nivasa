@@ -14,6 +14,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import NewsPage from "./pages/NewsPage";
 import ServicesPage from "./pages/ServicesPage";
+import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/news" element={<NewsPage />} />
                 <Route path="/services" element={<ServicesPage />} />
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

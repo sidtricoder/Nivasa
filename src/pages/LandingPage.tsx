@@ -24,6 +24,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MinimalPropertyCard from '@/components/property/MinimalPropertyCard';
 import CompareModal from '@/components/property/CompareModal';
+import WhyNivasa from '@/components/landing/WhyNivasa';
+import FAQSection from '@/components/landing/FAQSection';
 import { mockListings } from '@/data/listings';
 
 const lifestyleFilters = [
@@ -301,8 +303,8 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* White Spacer */}
-      <div className="py-12 lg:py-16 bg-background" />
+      {/* Why Choose Nivasa Section */}
+      <WhyNivasa />
 
       {/* How It Works - Premium 2026 Design */}
       <section className="py-28 lg:py-36 bg-gradient-to-b from-slate-50 via-white to-slate-50/50 overflow-visible">
@@ -635,9 +637,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* White Spacer before CTA */}
-      <div className="py-12 lg:py-16 bg-background" />
-
       {/* CTA Section with Video Background */}
       <section className="relative py-32 lg:py-44 overflow-hidden">
         {/* Video Background */}
@@ -697,8 +696,8 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* White Spacer before Footer */}
-      <div className="py-12 lg:py-16 bg-background" />
+      {/* FAQ Section */}
+      <FAQSection />
 
       <Footer />
     </div>

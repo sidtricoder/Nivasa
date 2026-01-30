@@ -64,6 +64,7 @@ import Panoee3DTour from '@/components/property/Panoee3DTour';
 import GoogleMapEmbed from '@/components/property/GoogleMapEmbed';
 import PropertyChatbot from '@/components/property/PropertyChatbot';
 import VirtualStagingModal from '@/components/property/VirtualStagingModal';
+import NeighborhoodDashboard from '@/components/property/NeighborhoodDashboard';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
@@ -584,74 +585,11 @@ const PropertyDetailPage: React.FC = () => {
                   title={property.title}
                 />
 
-                {/* Scores Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
-                    <div className={cn(
-                      "text-2xl font-bold mb-1",
-                      property.walkScore >= 70 ? "text-success" :
-                      property.walkScore >= 50 ? "text-warning" : "text-destructive"
-                    )}>
-                      {property.walkScore}
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">Walk Score</p>
-                  </div>
-                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
-                    <div className={cn(
-                      "text-2xl font-bold mb-1",
-                      property.safetyScore >= 70 ? "text-success" :
-                      property.safetyScore >= 50 ? "text-warning" : "text-destructive"
-                    )}>
-                      {property.safetyScore}
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">Safety Score</p>
-                  </div>
-                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
-                    <div className={cn(
-                      "text-2xl font-bold mb-1",
-                      property.connectivityScore >= 70 ? "text-success" :
-                      property.connectivityScore >= 50 ? "text-warning" : "text-destructive"
-                    )}>
-                      {property.connectivityScore}
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">Connectivity</p>
-                  </div>
-                  <div className="flex flex-col items-center justify-center p-4 bg-secondary/50 rounded-lg">
-                    <div className={cn(
-                      "text-2xl font-bold mb-1",
-                      property.lifestyleScore >= 70 ? "text-success" :
-                      property.lifestyleScore >= 50 ? "text-warning" : "text-destructive"
-                    )}>
-                      {property.lifestyleScore}
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">Lifestyle</p>
-                  </div>
-                </div>
-
-                {/* Nearby Places */}
-                <div>
-                  <h4 className="font-medium mb-4">Nearby Places</h4>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {property.nearbyPlaces.map((place, index) => {
-                      const Icon = nearbyTypeIcons[place.type] || MapPin;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 p-3 rounded-lg border"
-                        >
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                            <Icon className="h-5 w-5 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{place.name}</p>
-                            <p className="text-sm text-muted-foreground capitalize">{place.type}</p>
-                          </div>
-                          <Badge variant="secondary">{place.distance}</Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* Neighborhood Intelligence Dashboard - Real-time scores from Overpass API */}
+                <NeighborhoodDashboard 
+                  coordinates={property.location.coordinates}
+                  fallbackData={property.nearbyPlaces}
+                />
               </CardContent>
             </Card>
 
@@ -821,6 +759,7 @@ const PropertyDetailPage: React.FC = () => {
             <LocalityInsights 
               locality={property.location.locality}
               city={property.location.city}
+              coordinates={property.location.coordinates}
             />
           </div>
         </section>
