@@ -9,8 +9,21 @@ import {
   AlertCircle,
   ArrowRight,
   Clock,
-  Shield
+  Shield,
+  Building2,
+  RefreshCw
 } from 'lucide-react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  ResponsiveContainer,
+  Cell,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Slider } from '@/components/ui/slider';
@@ -20,6 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { getBankRates, getPolicyRates, BankRate, PolicyRates } from '@/services/bankRatesService';
 
 // ============================================
 // QUIET LUXURY DESIGN SYSTEM
@@ -172,6 +186,38 @@ const ServicesPage: React.FC = () => {
   // Home Loan Eligibility State
   const [monthlyIncome, setMonthlyIncome] = useState(150000);
   const [existingEMI, setExistingEMI] = useState(0);
+
+  // Bank Rates State
+  const [bankRates, setBankRates] = useState<BankRate[]>([]);
+  const [policyRates, setPolicyRates] = useState<PolicyRates | null>(null);
+  const [isLoadingRates, setIsLoadingRates] = useState(true);
+  const [selectedBankType, setSelectedBankType] = useState<'all' | 'public' | 'private'>('all');
+
+  // Fetch bank rates on mount
+  useEffect(() => {
+    const fetchRates = async () => {
+      setIsLoadingRates(true);
+      try {
+        const [rates, policy] = await Promise.all([
+          getBankRates(),
+          getPolicyRates()
+        ]);
+        setBankRates(rates);
+        setPolicyRates(policy);
+      } catch (error) {
+        console.error('Failed to fetch bank rates:', error);
+      } finally {
+        setIsLoadingRates(false);
+      }
+    };
+    fetchRates();
+  }, []);
+
+  // Filtered bank rates based on selected type
+  const filteredBankRates = useMemo(() => {
+    if (selectedBankType === 'all') return bankRates;
+    return bankRates.filter(bank => bank.type === selectedBankType);
+  }, [bankRates, selectedBankType]);
 
   // EMI Calculations
   const emiCalculations = useMemo(() => {
@@ -326,44 +372,44 @@ const ServicesPage: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Bento Grid - Asymmetric with Row Span */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-2 gap-6 lg:gap-6 mt-12">
+        {/* Bento Grid - Balanced Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-12">
           
-          {/* HERO: EMI Calculator (8 columns, 2 rows) */}
-          <div className="lg:col-span-8 lg:row-span-2">
-            <LuxuryCard hasGlow className="p-8 md:p-10 h-full">
+          {/* EMI Calculator (7 columns) */}
+          <div className="lg:col-span-7">
+            <LuxuryCard hasGlow className="p-6 md:p-8">
               {/* Icon + Header Row */}
-              <div className="flex items-start gap-4 mb-8">
+              <div className="flex items-start gap-4 mb-6">
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, ...SPRING_CONFIG }}
-                  className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+                  className="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
                   style={{ 
                     background: '#3B7BFF',
                     boxShadow: '0 8px 24px -4px rgba(59, 123, 255, 0.4)'
                   }}
                 >
-                  <Calculator className="h-7 w-7 text-white" />
+                  <Calculator className="h-6 w-6 text-white" />
                 </motion.div>
                 <div>
                   <h2 
-                    className="text-2xl md:text-3xl font-bold"
+                    className="text-xl md:text-2xl font-bold"
                     style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                   >
                     EMI Calculator
                   </h2>
-                  <p style={{ color: '#6B7280' }} className="text-sm mt-1">
+                  <p style={{ color: '#6B7280' }} className="text-sm mt-0.5">
                     Calculate your monthly payments
                   </p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-5 gap-10">
+              <div className="grid md:grid-cols-2 gap-8">
                 {/* Sliders */}
-                <div className="md:col-span-3 space-y-8">
+                <div className="space-y-6">
                   {/* Loan Amount */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label 
                         className="text-sm font-semibold"
@@ -423,13 +469,13 @@ const ServicesPage: React.FC = () => {
                   </div>
 
                   {/* Tenure */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-semibold" style={{ color: '#2B2F36' }}>
                         Loan Tenure
                       </Label>
                       <span 
-                        className="text-xl font-bold"
+                        className="text-lg font-bold"
                         style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                       >
                         {tenure} years
@@ -441,17 +487,159 @@ const ServicesPage: React.FC = () => {
                       min={1}
                       max={30}
                       step={1}
-                      className="py-3"
+                      className="py-2"
                     />
                     <div className="flex justify-between text-xs" style={{ color: '#9CA3AF' }}>
                       <span>1 yr</span>
                       <span>30 yrs</span>
                     </div>
                   </div>
+
+                  {/* Quick EMI Comparison */}
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                      EMI at Different Rates
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[7.5, 8.5, 9.5].map((rate) => {
+                        const monthlyRate = rate / 12 / 100;
+                        const months = tenure * 12;
+                        const emi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+                          (Math.pow(1 + monthlyRate, months) - 1);
+                        const isCurrentRate = Math.abs(rate - interestRate) < 0.5;
+                        return (
+                          <motion.div
+                            key={rate}
+                            whileHover={{ scale: 1.02 }}
+                            className={`p-3 rounded-lg text-center cursor-pointer transition-all ${
+                              isCurrentRate ? 'ring-2 ring-blue-500' : ''
+                            }`}
+                            style={{ 
+                              background: isCurrentRate ? 'rgba(59, 123, 255, 0.1)' : 'rgba(0,0,0,0.02)',
+                              border: '1px solid rgba(0,0,0,0.04)'
+                            }}
+                            onClick={() => setInterestRate(rate)}
+                          >
+                            <p className="text-xs font-medium" style={{ color: '#6B7280' }}>{rate}%</p>
+                            <p className="text-sm font-bold" style={{ color: isCurrentRate ? '#3B7BFF' : '#2B2F36' }}>
+                              ₹{Math.round(emi).toLocaleString()}
+                            </p>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Home Buying Tips */}
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                      💡 Expert Tips
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#10B981' }} />
+                        <p className="text-xs" style={{ color: '#6B7280' }}>
+                          Keep EMI under 30% of income for financial stability
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#10B981' }} />
+                        <p className="text-xs" style={{ color: '#6B7280' }}>
+                          Higher down payment = Lower interest over time
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#10B981' }} />
+                        <p className="text-xs" style={{ color: '#6B7280' }}>
+                          Compare rates from 3+ banks before deciding
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Popular Loan Amounts - Quick Select */}
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                      Popular Loan Amounts
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[2500000, 5000000, 7500000, 10000000].map((amount) => (
+                        <motion.button
+                          key={amount}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setLoanAmount(amount)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                            loanAmount === amount 
+                              ? 'bg-[#3B7BFF] text-white' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          ₹{(amount / 100000).toFixed(0)}L
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tenure Guide */}
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                      Tenure Guide
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="p-2 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                        <p className="text-xs font-bold" style={{ color: '#10B981' }}>10 yrs</p>
+                        <p className="text-[10px]" style={{ color: '#6B7280' }}>Low interest</p>
+                      </div>
+                      <div className="p-2 rounded-lg" style={{ background: 'rgba(59, 123, 255, 0.1)' }}>
+                        <p className="text-xs font-bold" style={{ color: '#3B7BFF' }}>20 yrs</p>
+                        <p className="text-[10px]" style={{ color: '#6B7280' }}>Balanced</p>
+                      </div>
+                      <div className="p-2 rounded-lg" style={{ background: 'rgba(245, 158, 11, 0.1)' }}>
+                        <p className="text-xs font-bold" style={{ color: '#F59E0B' }}>30 yrs</p>
+                        <p className="text-[10px]" style={{ color: '#6B7280' }}>Low EMI</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Banks Preview */}
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold" style={{ color: '#2B2F36' }}>
+                        Top Banks
+                      </p>
+                      {policyRates && (
+                        <Badge variant="outline" className="text-[10px]">
+                          Repo: {policyRates.repoRate}%
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {bankRates.slice(0, 4).map((bank, idx) => (
+                        <div 
+                          key={bank.shortName}
+                          className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-full"
+                              style={{ background: bank.color }}
+                            />
+                            <span className="text-xs font-medium" style={{ color: '#2B2F36' }}>
+                              {bank.shortName}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold" style={{ color: bank.color }}>
+                            {bank.minRate}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Results */}
-                <div className="md:col-span-2 space-y-5">
+                <div className="space-y-4">
                   {/* Giant EMI Display */}
                   <motion.div 
                     layout
@@ -560,9 +748,9 @@ const ServicesPage: React.FC = () => {
             </LuxuryCard>
           </div>
 
-          {/* SIDEBAR: Investment Calculator (4 columns, row 1) */}
-          <div className="lg:col-span-4">
-            <LuxuryCard className="p-6 h-full">
+          {/* SIDEBAR: Investment Calculator + Loan Eligibility (5 columns) */}
+          <div className="lg:col-span-5 space-y-6">
+            <LuxuryCard className="p-5">
               {/* Icon + Header Row */}
               <div className="flex items-start gap-3 mb-5">
                 <motion.div 
@@ -652,13 +840,37 @@ const ServicesPage: React.FC = () => {
                       />
                     ))}
                   </div>
+                  {/* Investment Insights */}
+                  <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                      Investment Scenarios
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        <span style={{ color: '#6B7280' }}>Conservative (6%)</span>
+                        <span className="font-bold" style={{ color: '#2B2F36' }}>
+                          {formatCurrency(propertyPrice * Math.pow(1.06, investmentYears))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span style={{ color: '#6B7280' }}>Balanced (10%)</span>
+                        <span className="font-bold" style={{ color: '#3B7BFF' }}>
+                          {formatCurrency(propertyPrice * Math.pow(1.10, investmentYears))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span style={{ color: '#6B7280' }}>Aggressive (15%)</span>
+                        <span className="font-bold" style={{ color: '#10B981' }}>
+                          {formatCurrency(propertyPrice * Math.pow(1.15, investmentYears))}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </LuxuryCard>
-          </div>
 
-          {/* SIDEBAR: Loan Eligibility (4 columns, row 2) */}
-          <div className="lg:col-span-4">
-            <LuxuryCard className="p-6 h-full">
+            {/* Loan Eligibility */}
+            <LuxuryCard className="p-5">
               {/* Icon + Header Row */}
               <div className="flex items-start gap-3 mb-5">
                 <motion.div 
@@ -774,10 +986,273 @@ const ServicesPage: React.FC = () => {
                       {formatCurrency(eligibilityCalc.maxLoan)}
                     </p>
                   </motion.div>
+
+                  {/* Documents Required */}
+                  <div className="mt-2 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                     <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                      Required Documents
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: '#6B7280' }}>
+                       <div className="flex items-center gap-1.5">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                         ID Proof (Aadhar)
+                       </div>
+                       <div className="flex items-center gap-1.5">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                         Salary Slips
+                       </div>
+                        <div className="flex items-center gap-1.5">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                         Bank Statements
+                       </div>
+                       <div className="flex items-center gap-1.5">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                         Form 16 / ITR
+                       </div>
+                    </div>
+                  </div>
                 </div>
               </LuxuryCard>
           </div>
         </div>
+
+        {/* Bank Interest Rates Comparison Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, ...SPRING_CONFIG }}
+          className="mt-12"
+        >
+          <LuxuryCard className="p-8">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="flex items-start gap-4">
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.5, ...SPRING_CONFIG }}
+                  className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #3B7BFF 0%, #8B5CF6 100%)',
+                    boxShadow: '0 8px 24px -4px rgba(59, 123, 255, 0.4)'
+                  }}
+                >
+                  <Building2 className="h-7 w-7 text-white" />
+                </motion.div>
+                <div>
+                  <h3 
+                    className="text-2xl font-bold"
+                    style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
+                  >
+                    Bank Interest Rates
+                  </h3>
+                  <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
+                    Compare home loan rates across major banks • Updated Jan 2026
+                  </p>
+                </div>
+              </div>
+
+              {/* Policy Rate Badge */}
+              {policyRates && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex items-center gap-3 px-5 py-3 rounded-xl"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(59, 123, 255, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
+                    border: '1px solid rgba(59, 123, 255, 0.15)'
+                  }}
+                >
+                  <div>
+                    <p className="text-xs font-medium" style={{ color: '#6B7280' }}>RBI Repo Rate</p>
+                    <p className="text-xl font-bold" style={{ color: '#3B7BFF' }}>
+                      {policyRates.repoRate}%
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Bank Type Filter */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                { key: 'all', label: 'All Banks' },
+                { key: 'public', label: 'Public Sector' },
+                { key: 'private', label: 'Private Banks' }
+              ].map((filter) => (
+                <Button
+                  key={filter.key}
+                  variant={selectedBankType === filter.key ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedBankType(filter.key as 'all' | 'public' | 'private')}
+                  className={cn(
+                    "rounded-lg font-medium transition-all",
+                    selectedBankType === filter.key 
+                      ? "bg-[#3B7BFF] text-white shadow-lg shadow-blue-500/25" 
+                      : "hover:bg-gray-100"
+                  )}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Chart */}
+            {isLoadingRates ? (
+              <div className="h-[400px] flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <RefreshCw className="h-8 w-8" style={{ color: '#3B7BFF' }} />
+                </motion.div>
+              </div>
+            ) : (
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={filteredBankRates.map(bank => ({
+                      name: bank.shortName,
+                      minRate: bank.minRate,
+                      maxRate: bank.maxRate,
+                      spread: bank.maxRate - bank.minRate,
+                      color: bank.color,
+                      fullName: bank.bankName,
+                      type: bank.type
+                    }))}
+                    layout="vertical"
+                    margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+                    barCategoryGap="20%"
+                  >
+                    <CartesianGrid 
+                      strokeDasharray="3 3" 
+                      horizontal={true}
+                      vertical={false}
+                      stroke="rgba(0,0,0,0.06)"
+                    />
+                    <XAxis 
+                      type="number" 
+                      domain={[7, 14]}
+                      tickFormatter={(value) => `${value}%`}
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                      axisLine={{ stroke: 'rgba(0,0,0,0.1)' }}
+                    />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name"
+                      tick={{ fill: '#2B2F36', fontSize: 13, fontWeight: 600 }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={70}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(59, 123, 255, 0.05)' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="bg-white rounded-xl shadow-xl border border-gray-100 p-4"
+                              style={{ minWidth: '200px' }}
+                            >
+                              <p className="font-bold text-[#2B2F36] mb-2">{data.fullName}</p>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-[#6B7280]">Min Rate:</span>
+                                  <span className="font-semibold text-green-600">{data.minRate}%</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm text-[#6B7280]">Max Rate:</span>
+                                  <span className="font-semibold text-orange-500">{data.maxRate}%</span>
+                                </div>
+                                <div className="pt-2 border-t border-gray-100">
+                                  <Badge variant="outline" className="text-xs capitalize">
+                                    {data.type === 'public' ? '🏛️ Public' : data.type === 'private' ? '🏦 Private' : data.type}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar 
+                      dataKey="minRate" 
+                      name="Min Rate"
+                      radius={[0, 6, 6, 0]}
+                    >
+                      {filteredBankRates.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color}
+                          style={{ filter: 'brightness(1.1)' }}
+                        />
+                      ))}
+                    </Bar>
+                    <Bar 
+                      dataKey="spread" 
+                      name="Rate Range"
+                      stackId="a"
+                      radius={[0, 6, 6, 0]}
+                      fill="rgba(0,0,0,0.1)"
+                    />
+                    <Legend 
+                      verticalAlign="top"
+                      align="right"
+                      wrapperStyle={{ paddingBottom: '10px' }}
+                      formatter={(value) => (
+                        <span style={{ color: '#6B7280', fontSize: '12px' }}>{value}</span>
+                      )}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Bottom Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+              <motion.div 
+                whileHover={{ y: -2 }}
+                className="p-4 rounded-xl text-center"
+                style={{ background: 'rgba(16, 185, 129, 0.08)' }}
+              >
+                <p className="text-xs font-medium mb-1" style={{ color: '#6B7280' }}>Lowest Rate</p>
+                <p className="text-2xl font-bold" style={{ color: '#10B981' }}>
+                  {bankRates.length > 0 ? `${Math.min(...bankRates.map(b => b.minRate))}%` : '-'}
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
+                  {bankRates.length > 0 ? bankRates.find(b => b.minRate === Math.min(...bankRates.map(x => x.minRate)))?.shortName : ''}
+                </p>
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -2 }}
+                className="p-4 rounded-xl text-center"
+                style={{ background: 'rgba(59, 123, 255, 0.08)' }}
+              >
+                <p className="text-xs font-medium mb-1" style={{ color: '#6B7280' }}>Average Rate</p>
+                <p className="text-2xl font-bold" style={{ color: '#3B7BFF' }}>
+                  {bankRates.length > 0 ? `${(bankRates.reduce((acc, b) => acc + b.minRate, 0) / bankRates.length).toFixed(2)}%` : '-'}
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Across all banks</p>
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -2 }}
+                className="p-4 rounded-xl text-center"
+                style={{ background: 'rgba(245, 158, 11, 0.08)' }}
+              >
+                <p className="text-xs font-medium mb-1" style={{ color: '#6B7280' }}>Banks Compared</p>
+                <p className="text-2xl font-bold" style={{ color: '#F59E0B' }}>
+                  {bankRates.length}
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Major lenders</p>
+              </motion.div>
+            </div>
+          </LuxuryCard>
+        </motion.div>
 
         {/* Bottom CTA */}
         <motion.div

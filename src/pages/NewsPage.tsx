@@ -447,7 +447,58 @@ const NewsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Soft flowing gradient background - flowing bottom to top */}
+      <div 
+        className="fixed inset-0 -z-10"
+        style={{
+          background: `
+            linear-gradient(0deg, 
+              rgba(210, 200, 220, 0.5) 0%,
+              rgba(220, 225, 240, 0.7) 25%,
+              rgba(245, 243, 240, 1) 50%,
+              rgba(240, 238, 233, 0.9) 75%,
+              rgba(230, 210, 220, 0.6) 100%
+            )
+          `
+        }}
+      />
+      
+      {/* Animated gradient blobs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Lavender blob - bottom center */}
+        <div 
+          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[700px] h-[600px] rounded-full opacity-40 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
+          }}
+        />
+        
+        {/* Warm peach blob - top right */}
+        <div 
+          className="absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full opacity-35 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
+          }}
+        />
+        
+        {/* Soft blue blob - top left */}
+        <div 
+          className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
+          }}
+        />
+        
+        {/* Pink accent blob - right side */}
+        <div 
+          className="absolute top-1/2 -right-20 w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(230, 200, 220, 0.5) 0%, transparent 60%)'
+          }}
+        />
+      </div>
+
       <Header />
       
       <main className="container py-8">

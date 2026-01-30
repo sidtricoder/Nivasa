@@ -15,6 +15,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import NewsPage from "./pages/NewsPage";
 import ServicesPage from "./pages/ServicesPage";
 import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,7 +29,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <ChatDrawer />
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/discover" element={<DiscoveryPage />} />
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/news" element={<NewsPage />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/about" element={<AboutPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

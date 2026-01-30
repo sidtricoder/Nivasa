@@ -1397,7 +1397,7 @@ const SellerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <Header />
       <CompareModal />
 

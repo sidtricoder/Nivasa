@@ -100,6 +100,71 @@ const mapOsmType = (tags: Record<string, string>): NearbyAmenity['type'] | null 
   return null;
 };
 
+// Multiple Overpass API mirrors for fallback
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+/**
+ * Fetch with retry logic and multiple endpoints
+ */
+const fetchWithRetry = async (
+  query: string,
+  maxRetries: number = 3
+): Promise<any> => {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Cycle through endpoints on each retry
+    const endpoint = OVERPASS_ENDPOINTS[attempt % OVERPASS_ENDPOINTS.length];
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `data=${encodeURIComponent(query)}`,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // If rate limited or server error, try next endpoint
+      if (response.status === 429 || response.status >= 500) {
+        console.warn(`Overpass endpoint ${endpoint} returned ${response.status}, trying next...`);
+        lastError = new Error(`Overpass API error: ${response.status}`);
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        continue;
+      }
+      
+      throw new Error(`Overpass API error: ${response.status}`);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.warn(`Overpass endpoint ${endpoint} timed out, trying next...`);
+        lastError = new Error('Request timed out');
+      } else {
+        console.warn(`Overpass endpoint ${endpoint} failed:`, error.message);
+        lastError = error;
+      }
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
+    }
+  }
+  
+  throw lastError || new Error('All Overpass API endpoints failed');
+};
+
 /**
  * Fetch nearby amenities from Overpass API
  */
@@ -148,19 +213,7 @@ export const fetchNearbyAmenities = async (
   `;
 
   try {
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `data=${encodeURIComponent(query)}`,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Overpass API error: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchWithRetry(query);
     const amenities: NearbyAmenity[] = [];
     const seenNames = new Set<string>();
 
@@ -433,10 +486,24 @@ export const getNeighborhoodData = async (
     
     // Return cached data if available (even if stale)
     if (cached) {
+      console.log('Using stale cache for neighborhood data');
       return { ...cached.data, isFromCache: true };
     }
     
-    throw error;
+    // Return default fallback data when API fails and no cache
+    console.log('Using fallback neighborhood data');
+    const fallbackData: NeighborhoodData = {
+      amenities: [],
+      safeHavenScore: 70,
+      walkScore: 65,
+      safetyScore: 70,
+      connectivityScore: 60,
+      lifestyleScore: 65,
+      lastUpdated: new Date().toISOString(),
+      isFromCache: true, // Mark as cached to indicate it's not live data
+    };
+    
+    return fallbackData;
   }
 };
 

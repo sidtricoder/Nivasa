@@ -16,7 +16,58 @@ const FavoritesPage: React.FC = () => {
   const favoriteProperties = mockListings.filter(p => favorites.includes(p.id));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Soft flowing gradient background - flowing top-right to bottom-left */}
+      <div 
+        className="fixed inset-0 -z-10"
+        style={{
+          background: `
+            linear-gradient(315deg, 
+              rgba(230, 210, 220, 0.6) 0%,
+              rgba(240, 238, 233, 0.9) 25%,
+              rgba(245, 243, 240, 1) 50%,
+              rgba(220, 225, 240, 0.7) 75%,
+              rgba(255, 210, 200, 0.5) 100%
+            )
+          `
+        }}
+      />
+      
+      {/* Animated gradient blobs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Warm coral blob - top right */}
+        <div 
+          className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 190, 170, 0.6) 0%, rgba(255, 170, 150, 0.3) 50%, transparent 70%)'
+          }}
+        />
+        
+        {/* Soft lavender blob - bottom left */}
+        <div 
+          className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
+          }}
+        />
+        
+        {/* Pink blob - center */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(230, 200, 220, 0.5) 0%, transparent 60%)'
+          }}
+        />
+        
+        {/* Cool blue blob - bottom right */}
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
+          }}
+        />
+      </div>
+
       <Header />
       <CompareModal />
 

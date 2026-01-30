@@ -542,13 +542,10 @@ const LandingPage: React.FC = () => {
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.8, type: "spring", stiffness: 400 }}
-                        className="inline-flex items-center gap-2 floating-accent floating-accent-success bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-semibold px-4 py-2 rounded-full mb-6"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-semibold px-4 py-2 rounded-full mb-6"
                       >
                         <Shield className="h-3.5 w-3.5" />
-                        <span className="relative">
-                          Verified Owner
-                          <span className="absolute inset-0 animate-shimmer rounded-full" />
-                        </span>
+                        Verified Owner
                       </motion.div>
                       
                       {/* Image */}

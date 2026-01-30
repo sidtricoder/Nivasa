@@ -15,7 +15,10 @@ import {
   ChevronDown,
   TrendingUp,
   Users,
-  Calculator
+  Calculator,
+  Info,
+  Mail,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +41,7 @@ const Header: React.FC = () => {
   
   const [isDiscoverHovered, setIsDiscoverHovered] = useState(false);
   const [isNewsHovered, setIsNewsHovered] = useState(false);
+  const [isCompanyHovered, setIsCompanyHovered] = useState(false);
 
   const handleDiscoverClick = (type: 'buy' | 'rent', city?: string) => {
     const params = new URLSearchParams();
@@ -342,6 +346,70 @@ const Header: React.FC = () => {
               Services
             </Button>
           </Link>
+
+          {/* Company with Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setIsCompanyHovered(true)}
+            onMouseLeave={() => setIsCompanyHovered(false)}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`gap-2 ${textColor} ${hoverBg}`}
+            >
+              <Info className="h-4 w-4" />
+              Company
+              <ChevronDown className={cn(
+                "h-3.5 w-3.5 transition-transform",
+                isCompanyHovered && "rotate-180"
+              )} />
+            </Button>
+
+            {/* Company Dropdown */}
+            <AnimatePresence>
+              {isCompanyHovered && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full pt-2 z-50"
+                >
+                  <div className="bg-background border border-border rounded-lg shadow-xl p-4 min-w-[280px]">
+                    <div className="space-y-1">
+                      <Link 
+                        to="/about" 
+                        onClick={() => setIsCompanyHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
+                          <Sparkles className="h-4 w-4 text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">About Us</p>
+                          <p className="text-xs text-muted-foreground">Our story & mission</p>
+                        </div>
+                      </Link>
+                      <Link 
+                        to="/contact" 
+                        onClick={() => setIsCompanyHovered(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center">
+                          <Mail className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Contact Us</p>
+                          <p className="text-xs text-muted-foreground">Get in touch</p>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Post Property */}
           <Link to="/seller">

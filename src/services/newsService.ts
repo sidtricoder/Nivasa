@@ -198,7 +198,7 @@ async function fetchFromRSS(feedUrl: string, sourceName: string): Promise<NewsAr
       }
       
       return {
-        id: `${sourceName.toLowerCase().replace(/\s+/g, '-')}-${index}-${Date.now()}`,
+        id: `${sourceName.toLowerCase().replace(/\s+/g, '-')}-${index}-${simpleHash(cleanTitle)}`,
         title: cleanHtml(item.title),
         summary: cleanDescription.length > 200 ? cleanDescription.substring(0, 200) + '...' : cleanDescription,
         category,
