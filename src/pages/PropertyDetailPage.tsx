@@ -32,7 +32,9 @@ import {
   Check,
   ChevronDown,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Wand2,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,12 +50,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CompareModal from '@/components/property/CompareModal';
-import EMICalculator from '@/components/property/EMICalculator';
 import { WhatsAppButton } from '@/components/communication';
 import FirebaseChatDrawer from '@/components/communication/FirebaseChatDrawer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMessageStore } from '@/stores/messageStore';
-import { PropertyViewsTracker, PriceTrendsChart, LocalityInsights, InvestmentCalculator, HomeLoanCalculator } from '@/components/analytics';
+import { PropertyViewsTracker, PriceTrendsChart, LocalityInsights } from '@/components/analytics';
 import { PropertyBrochure } from '@/components/pdf';
 import AmenitiesDisplay from '@/components/property/AmenitiesDisplay';
 import VastuComplianceBadge from '@/components/property/VastuComplianceBadge';
@@ -61,6 +62,8 @@ import GaussianSplatViewer from '@/components/property/GaussianSplatViewer';
 import Interactive360Panorama from '@/components/property/Interactive360Panorama';
 import Panoee3DTour from '@/components/property/Panoee3DTour';
 import GoogleMapEmbed from '@/components/property/GoogleMapEmbed';
+import PropertyChatbot from '@/components/property/PropertyChatbot';
+import VirtualStagingModal from '@/components/property/VirtualStagingModal';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
@@ -89,6 +92,8 @@ const PropertyDetailPage: React.FC = () => {
   const [showPhone, setShowPhone] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState<Date | undefined>();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isStagingOpen, setIsStagingOpen] = useState(false);
+  const [stagingImage, setStagingImage] = useState<string>('');
 
   // Fetch property from mockListings or Firebase
   useEffect(() => {
@@ -177,16 +182,8 @@ const PropertyDetailPage: React.FC = () => {
       <Header />
       <CompareModal />
       
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          size="lg"
-          className="rounded-full h-14 w-14 shadow-lg"
-          onClick={() => setIsChatOpen(true)}
-        >
-          <MessageCircle className="h-6 w-6" />
-        </Button>
-      </div>
+      {/* AI Property Chatbot */}
+      <PropertyChatbot property={property} />
 
       {/* Firebase Chat Drawer */}
       <FirebaseChatDrawer
@@ -388,6 +385,10 @@ const PropertyDetailPage: React.FC = () => {
                 <CardHeader>
                   <TabsList className="w-full justify-start">
                     <TabsTrigger value="photos">Photos</TabsTrigger>
+                    <TabsTrigger value="virtual-staging" className="gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Virtual Staging
+                    </TabsTrigger>
                     <TabsTrigger value="street-view">Street View</TabsTrigger>
                     <TabsTrigger value="3d-tour">3D Tour</TabsTrigger>
                   </TabsList>
@@ -396,14 +397,62 @@ const PropertyDetailPage: React.FC = () => {
                   <TabsContent value="photos" className="mt-0">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {property.images.map((img, index) => (
-                        <img
-                          key={index}
-                          src={img}
-                          alt=""
-                          className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => { setCurrentImageIndex(index); setIsGalleryOpen(true); }}
-                        />
+                        <div key={index} className="relative group">
+                          <img
+                            src={img}
+                            alt=""
+                            className="w-full aspect-[4/3] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => { setCurrentImageIndex(index); setIsGalleryOpen(true); }}
+                          />
+                          {/* Stage Room Button - Appears on Hover */}
+                          <motion.button
+                            initial={{ opacity: 0, y: 10 }}
+                            whileHover={{ scale: 1.05 }}
+                            className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 px-3 py-1.5 bg-[#3B7BFF] text-white text-xs font-medium rounded-lg shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStagingImage(img);
+                              setIsStagingOpen(true);
+                            }}
+                          >
+                            <Wand2 className="h-3 w-3" />
+                            Stage Room
+                          </motion.button>
+                        </div>
                       ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="virtual-staging" className="mt-0">
+                    <div className="aspect-video bg-gradient-to-br from-[#F0EEE9] to-white dark:from-slate-900 dark:to-slate-800 rounded-xl flex items-center justify-center border border-[#E5E7EB] dark:border-slate-700">
+                      <div className="text-center p-8 max-w-md">
+                        <motion.div 
+                          className="w-20 h-20 rounded-full bg-[#3B7BFF]/10 flex items-center justify-center mx-auto mb-6"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Wand2 className="h-10 w-10 text-[#3B7BFF]" />
+                        </motion.div>
+                        <h3 className="font-semibold text-xl mb-3 text-[#2B2F36] dark:text-slate-50">
+                          Virtual Staging
+                        </h3>
+                        <p className="text-[#6B7280] dark:text-slate-400 text-sm mb-6">
+                          Transform empty rooms into beautifully furnished spaces with AI. 
+                          Choose from Modern, Traditional, Minimal, Scandinavian, or Bohemian styles.
+                        </p>
+                        <Button 
+                          className="gap-2 bg-[#3B7BFF] hover:bg-[#3B7BFF]/90 text-white shadow-[0_4px_14px_rgba(59,123,255,0.3)]"
+                          onClick={() => {
+                            setStagingImage(property.images[0]);
+                            setIsStagingOpen(true);
+                          }}
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Start Staging
+                        </Button>
+                        <p className="text-xs text-[#6B7280] mt-4">
+                          Or hover over any photo and click "Stage Room"
+                        </p>
+                      </div>
                     </div>
                   </TabsContent>
                   <TabsContent value="street-view" className="mt-0">
@@ -436,6 +485,15 @@ const PropertyDetailPage: React.FC = () => {
                 </CardContent>
               </Tabs>
             </Card>
+
+            {/* Virtual Staging Modal */}
+            <VirtualStagingModal
+              isOpen={isStagingOpen}
+              onClose={() => setIsStagingOpen(false)}
+              image={stagingImage || property.images[0]}
+              allImages={property.images}
+              propertyTitle={property.title}
+            />
 
             {/* Description */}
             <Card>
@@ -764,11 +822,6 @@ const PropertyDetailPage: React.FC = () => {
               locality={property.location.locality}
               city={property.location.city}
             />
-          </div>
-          <div className="grid lg:grid-cols-3 gap-8">
-            <EMICalculator propertyPrice={property.price} />
-            <InvestmentCalculator propertyPrice={property.price} />
-            <HomeLoanCalculator propertyPrice={property.price} />
           </div>
         </section>
       </main>

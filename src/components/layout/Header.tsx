@@ -14,7 +14,8 @@ import {
   MapPin,
   ChevronDown,
   TrendingUp,
-  Users
+  Users,
+  Calculator
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -327,6 +328,18 @@ const Header: React.FC = () => {
                   {favorites.length}
                 </Badge>
               )}
+            </Button>
+          </Link>
+
+          {/* Services */}
+          <Link to="/services">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`gap-2 ${textColor} ${hoverBg}`}
+            >
+              <Calculator className="h-4 w-4" />
+              Services
             </Button>
           </Link>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,10 +25,15 @@ const VoiceSearchButton: React.FC<VoiceSearchButtonProps> = ({
   const { isListening, setIsListening, voiceTranscript, setVoiceTranscript } = useSearchStore();
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isSupported, setIsSupported] = useState(true);
+  
+  // Use ref to store onResult callback to avoid recreation
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
 
   useEffect(() => {
     if (!isSpeechRecognitionSupported()) {
       setIsSupported(false);
+      console.warn('Speech recognition not supported in this browser');
       return;
     }
 
@@ -48,7 +53,8 @@ const VoiceSearchButton: React.FC<VoiceSearchButtonProps> = ({
       
       // If this is a final result, trigger the search
       if (event.results[event.results.length - 1].isFinal) {
-        onResult(transcript);
+        console.log('Voice search result:', transcript);
+        onResultRef.current(transcript);
         setIsListening(false);
       }
     };
@@ -61,8 +67,10 @@ const VoiceSearchButton: React.FC<VoiceSearchButtonProps> = ({
         toast.error('Microphone access denied. Please allow microphone access to use voice search.');
       } else if (event.error === 'no-speech') {
         toast.info("Didn't catch that. Please try again.");
+      } else if (event.error === 'network') {
+        toast.error('Network error. Please check your internet connection.');
       } else {
-        toast.error('Voice search error. Please try again.');
+        toast.error(`Voice search error: ${event.error}`);
       }
     };
 
@@ -75,7 +83,7 @@ const VoiceSearchButton: React.FC<VoiceSearchButtonProps> = ({
     return () => {
       recognitionInstance.abort();
     };
-  }, [onResult, setIsListening, setVoiceTranscript]);
+  }, [setIsListening, setVoiceTranscript]);
 
   const toggleListening = useCallback(() => {
     if (!recognition) return;

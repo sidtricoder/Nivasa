@@ -364,7 +364,7 @@ const LandingPage: React.FC = () => {
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-6 group-hover:animate-glow-pulse"
+                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-6"
                       >
                         <Sparkles className="h-7 w-7 text-primary" />
                       </motion.div>
@@ -469,7 +469,7 @@ const LandingPage: React.FC = () => {
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                        className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/15 to-rose-500/5 flex items-center justify-center mb-5 group-hover:animate-glow-pulse"
+                        className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/15 to-rose-500/5 flex items-center justify-center mb-5"
                       >
                         <Home className="h-6 w-6 text-rose-500" />
                       </motion.div>
@@ -523,7 +523,7 @@ const LandingPage: React.FC = () => {
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                        className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 flex items-center justify-center mb-5 group-hover:animate-glow-pulse"
+                        className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 flex items-center justify-center mb-5"
                       >
                         <Users className="h-6 w-6 text-emerald-600" />
                       </motion.div>
@@ -589,7 +589,7 @@ const LandingPage: React.FC = () => {
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-                        className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/15 to-violet-500/5 flex items-center justify-center mb-5 group-hover:animate-glow-pulse"
+                        className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/15 to-violet-500/5 flex items-center justify-center mb-5"
                       >
                         <FileCheck className="h-6 w-6 text-violet-500" />
                       </motion.div>

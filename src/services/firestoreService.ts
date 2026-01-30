@@ -22,6 +22,8 @@ import { Property } from '../data/listings';
 export const COLLECTIONS = {
   PROPERTIES: 'properties',
   USERS: 'users',
+  AI_QUERIES: 'ai_queries',
+  AI_CHATS: 'ai_property_chats',
 };
 
 /**
@@ -256,3 +258,168 @@ export const incrementPropertyViews = async (propertyId: string): Promise<void> 
  * // Search by city
  * const results = await searchPropertiesByCity("Bangalore");
  */
+
+// AI Search Query Interface
+export interface AISearchQuery {
+  id?: string;
+  rawQuery: string;
+  extractedFilters: Record<string, any>;
+  resultsCount: number;
+  timestamp: any;
+  userAgent?: string;
+  landmarkSearched?: string;
+}
+
+/**
+ * Save an AI search query to Firebase for analytics
+ */
+export const saveAISearchQuery = async (queryData: Omit<AISearchQuery, 'id' | 'timestamp'>): Promise<string> => {
+  try {
+    const queriesRef = collection(db, COLLECTIONS.AI_QUERIES);
+    const newQueryRef = doc(queriesRef);
+    
+    const searchData = {
+      ...queryData,
+      id: newQueryRef.id,
+      timestamp: serverTimestamp(),
+    };
+    
+    await setDoc(newQueryRef, searchData);
+    return newQueryRef.id;
+  } catch (error: any) {
+    console.error('Failed to save AI query:', error);
+    // Don't throw - we don't want to break the search if analytics fails
+    return '';
+  }
+};
+
+/**
+ * Get all AI search queries (for analytics dashboard)
+ */
+export const getAISearchQueries = async (limitCount: number = 100): Promise<AISearchQuery[]> => {
+  try {
+    const queriesRef = collection(db, COLLECTIONS.AI_QUERIES);
+    const q = query(
+      queriesRef,
+      orderBy('timestamp', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const queries: AISearchQuery[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      queries.push(doc.data() as AISearchQuery);
+    });
+    
+    return queries;
+  } catch (error: any) {
+    console.error('Failed to get AI queries:', error);
+    return [];
+  }
+};
+
+// AI Property Chat Interfaces
+export interface AIChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface AIPropertyChat {
+  id?: string;
+  propertyId: string;
+  propertyTitle: string;
+  userId?: string;
+  sessionId: string;
+  messages: AIChatMessage[];
+  createdAt: any;
+  updatedAt: any;
+}
+
+/**
+ * Save or update an AI property chat session
+ */
+export const saveAIPropertyChat = async (
+  chatData: Omit<AIPropertyChat, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> => {
+  try {
+    // Use propertyId + sessionId as document ID for upsert behavior
+    const docId = `${chatData.propertyId}_${chatData.sessionId}`;
+    const chatRef = doc(db, COLLECTIONS.AI_CHATS, docId);
+    const existingDoc = await getDoc(chatRef);
+
+    if (existingDoc.exists()) {
+      // Update existing chat
+      await updateDoc(chatRef, {
+        messages: chatData.messages,
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      // Create new chat
+      await setDoc(chatRef, {
+        ...chatData,
+        id: docId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+    
+    return docId;
+  } catch (error: any) {
+    console.error('Failed to save AI chat:', error);
+    return '';
+  }
+};
+
+/**
+ * Get an AI property chat by session
+ */
+export const getAIPropertyChat = async (
+  propertyId: string,
+  sessionId: string
+): Promise<AIPropertyChat | null> => {
+  try {
+    const docId = `${propertyId}_${sessionId}`;
+    const chatRef = doc(db, COLLECTIONS.AI_CHATS, docId);
+    const chatSnap = await getDoc(chatRef);
+    
+    if (chatSnap.exists()) {
+      return chatSnap.data() as AIPropertyChat;
+    }
+    return null;
+  } catch (error: any) {
+    console.error('Failed to get AI chat:', error);
+    return null;
+  }
+};
+
+/**
+ * Get all AI chats for a property (for analytics)
+ */
+export const getAIChatsForProperty = async (
+  propertyId: string,
+  limitCount: number = 50
+): Promise<AIPropertyChat[]> => {
+  try {
+    const chatsRef = collection(db, COLLECTIONS.AI_CHATS);
+    const q = query(
+      chatsRef,
+      where('propertyId', '==', propertyId),
+      orderBy('updatedAt', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const chats: AIPropertyChat[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      chats.push(doc.data() as AIPropertyChat);
+    });
+    
+    return chats;
+  } catch (error: any) {
+    console.error('Failed to get AI chats for property:', error);
+    return [];
+  }
+};

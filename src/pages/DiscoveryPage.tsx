@@ -14,9 +14,12 @@ import {
   Building2,
   Home,
   Castle,
-  Loader2
+  Loader2,
+  Sparkles,
+  MapPin
 } from 'lucide-react';
-import { getAllProperties } from '@/services/firestoreService';
+import { getAllProperties, saveAISearchQuery } from '@/services/firestoreService';
+import { extractFiltersFromQuery, formatExtractedFilters, AIExtractedFilters, geocodeLandmark, calculateDistance } from '@/services/aiSearchService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +37,8 @@ import CompareModal from '@/components/property/CompareModal';
 import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
 import { useSearchStore } from '@/stores/searchStore';
 import { mockListings, getUniqueLocalities, getPriceRange, Property } from '@/data/listings';
+import { toast } from 'sonner';
+
 
 const propertyTypes = [
   { value: 'apartment', label: 'Apartment', icon: Building2 },
@@ -66,6 +71,18 @@ const DiscoveryPage: React.FC = () => {
   const [firebaseProperties, setFirebaseProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
 
+  // Calculate dynamic price range including Firebase properties
+  const allProperties = useMemo(() => [...mockListings, ...firebaseProperties], [firebaseProperties]);
+  
+  const dynamicPriceRange = useMemo(() => {
+    if (allProperties.length === 0) return priceRange;
+    const prices = allProperties.map(p => p.price);
+    return {
+      min: Math.min(...prices),
+      max: Math.max(...prices),
+    };
+  }, [allProperties]);
+
   // Filter State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number]>([
@@ -82,9 +99,123 @@ const DiscoveryPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
+  // AI Search state
+  const [isAISearching, setIsAISearching] = useState(false);
+  const [aiFilters, setAIFilters] = useState<AIExtractedFilters | null>(null);
+  const [showAIBadge, setShowAIBadge] = useState(false);
+  
+  // Landmark-based search state
+  const [landmarkCoords, setLandmarkCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [landmarkName, setLandmarkName] = useState<string>('');
+  const NEARBY_RADIUS_KM = 5; // Properties within 5km of landmark (tighter radius for accuracy)
+  
+  // AI Location filters (flexible matching, independent of dropdown)
+  const [aiLocality, setAiLocality] = useState<string>('');
+  const [aiCity, setAiCity] = useState<string>('');
 
   // Search store for recent/saved searches
   const { addRecentSearch, setVoiceTranscript, voiceTranscript } = useSearchStore();
+  
+  // AI Search handler
+  const handleAISearch = async (query: string) => {
+    if (!query.trim()) return;
+    
+    setIsAISearching(true);
+    setShowAIBadge(false);
+    setLandmarkCoords(null);
+    setLandmarkName('');
+    setAiLocality('');
+    setAiCity('');
+    
+    try {
+      const result = await extractFiltersFromQuery(query);
+      
+      if (result.success && Object.keys(result.filters).length > 1) {
+        // Apply extracted filters
+        const filters = result.filters;
+        
+        // Reset filter states
+        setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
+        setSelectedBHK([]);
+        setSelectedLocality('all');
+        setSelectedPropertyTypes([]);
+        setSelectedLifestyle([]);
+        
+        if (filters.bhk) setSelectedBHK([filters.bhk]);
+        if (filters.priceMax || filters.priceMin) {
+          setSelectedPriceRange([
+            filters.priceMin || dynamicPriceRange.min,
+            filters.priceMax || dynamicPriceRange.max
+          ]);
+        }
+        
+        // For locality, try to find exact match in available localities for dropdown
+        if (filters.locality) {
+          const matchedLocality = localities.find(
+            loc => loc.toLowerCase() === filters.locality?.toLowerCase()
+          );
+          if (matchedLocality) {
+            setSelectedLocality(matchedLocality);
+          }
+          // Also store for flexible AI filtering (partial match)
+          setAiLocality(filters.locality.toLowerCase());
+        }
+        
+        // Store city for filtering (AI extracted)
+        if (filters.city) {
+          setAiCity(filters.city.toLowerCase());
+        }
+        
+        if (filters.propertyType) setSelectedPropertyTypes([filters.propertyType]);
+        if (filters.isPetFriendly) setSelectedLifestyle(['pet-friendly']);
+        if (filters.hasParking) setSelectedLifestyle(prev => [...prev, 'parking']);
+        
+        // Handle landmark-based search
+        if (filters.nearLandmark) {
+          toast.loading('Finding location...', { id: 'geocoding' });
+          const coords = await geocodeLandmark(filters.nearLandmark);
+          if (coords) {
+            setLandmarkCoords({ lat: coords.lat, lng: coords.lng });
+            setLandmarkName(filters.nearLandmark.replace(' Bangalore', ''));
+            toast.success(`Showing properties within ${NEARBY_RADIUS_KM}km of ${filters.nearLandmark.replace(' Bangalore', '')}`, { id: 'geocoding' });
+          } else {
+            toast.error('Could not find that location', { id: 'geocoding' });
+          }
+        }
+        
+        // Clear search query so text search doesn't conflict with AI filters
+        setSearchQuery('');
+        
+        setAIFilters(filters);
+        setShowAIBadge(true);
+        
+        // Save query to Firebase for analytics (async, don't await)
+        saveAISearchQuery({
+          rawQuery: query,
+          extractedFilters: filters,
+          resultsCount: 0, // Will be updated later or can be approximate
+          landmarkSearched: filters.nearLandmark,
+          userAgent: navigator.userAgent
+        });
+        
+        if (!filters.nearLandmark) {
+          toast.success('AI found matching filters', {
+            description: formatExtractedFilters(filters).join(' • ')
+          });
+        }
+      } else {
+        // Fall back to regular text search - keep the query as is
+        setAIFilters(null);
+        setShowAIBadge(false);
+      }
+    } catch (error) {
+      console.error('AI search error:', error);
+      toast.error('AI search failed, using text search');
+    } finally {
+      setIsAISearching(false);
+    }
+  };
 
   // Fetch properties from Firebase on mount
   useEffect(() => {
@@ -139,16 +270,20 @@ const DiscoveryPage: React.FC = () => {
     // Combine mock listings with Firebase properties
     let results = [...mockListings, ...firebaseProperties];
 
-    // Search query
+    // Search query - match if any significant word from query matches property fields
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      results = results.filter(
-        p =>
-          p.title.toLowerCase().includes(query) ||
-          p.location.locality.toLowerCase().includes(query) ||
-          p.location.city.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query)
-      );
+      // Split into words and filter out common stop words
+      const stopWords = ['in', 'the', 'a', 'an', 'for', 'with', 'and', 'or', 'to', 'of', 'i', 'want', 'need', 'looking', 'property', 'house', 'home'];
+      const searchWords = query.split(/\s+/).filter(word => word.length > 1 && !stopWords.includes(word));
+      
+      if (searchWords.length > 0) {
+        results = results.filter(p => {
+          const searchableText = `${p.title} ${p.location.locality} ${p.location.city} ${p.location.address} ${p.description} ${p.amenities.join(' ')}`.toLowerCase();
+          // Match if ANY search word is found in the property
+          return searchWords.some(word => searchableText.includes(word));
+        });
+      }
     }
 
     // Price range
@@ -161,9 +296,25 @@ const DiscoveryPage: React.FC = () => {
       results = results.filter(p => selectedBHK.includes(p.specs.bhk));
     }
 
-    // Locality
+    // Locality (dropdown exact match)
     if (selectedLocality && selectedLocality !== 'all') {
       results = results.filter(p => p.location.locality === selectedLocality);
+    }
+    
+    // AI Locality filter (flexible partial matching when dropdown not set)
+    if (aiLocality && selectedLocality === 'all') {
+      results = results.filter(p => 
+        p.location.locality.toLowerCase().includes(aiLocality) ||
+        aiLocality.includes(p.location.locality.toLowerCase()) ||
+        p.location.address.toLowerCase().includes(aiLocality)
+      );
+    }
+    
+    // AI City filter
+    if (aiCity) {
+      results = results.filter(p => 
+        p.location.city.toLowerCase() === aiCity
+      );
     }
 
     // Property Type
@@ -184,20 +335,60 @@ const DiscoveryPage: React.FC = () => {
       );
     }
 
-    // Sort
-    switch (sortBy) {
-      case 'price-low':
-        results.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        results.sort((a, b) => b.price - a.price);
-        break;
-      case 'walk-score':
-        results.sort((a, b) => b.walkScore - a.walkScore);
-        break;
-      case 'newest':
-      default:
-        results.sort((a, b) => new Date(b.listedAt).getTime() - new Date(a.listedAt).getTime());
+    // Landmark-based distance filtering
+    if (landmarkCoords || landmarkName) {
+      // First, find properties that explicitly list the landmark in nearbyPlaces
+      const propertiesWithExplicitLandmark = results.filter(p => 
+        landmarkName && p.nearbyPlaces.some(place => 
+          place.name.toLowerCase().includes(landmarkName.toLowerCase()) ||
+          landmarkName.toLowerCase().includes(place.name.toLowerCase())
+        )
+      );
+      
+      // If we have properties that explicitly mention the landmark, ONLY show those
+      if (propertiesWithExplicitLandmark.length > 0) {
+        results = propertiesWithExplicitLandmark;
+      } else if (landmarkCoords) {
+        // Fallback: No explicit matches, use distance-based filtering
+        results = results.filter(p => {
+          if (p.location.coordinates) {
+            const distance = calculateDistance(
+              landmarkCoords.lat,
+              landmarkCoords.lng,
+              p.location.coordinates.lat,
+              p.location.coordinates.lng
+            );
+            return distance <= NEARBY_RADIUS_KM;
+          }
+          return false;
+        });
+      }
+      
+      // Sort by distance when searching by landmark
+      if (landmarkCoords) {
+        results.sort((a, b) => {
+          if (!a.location.coordinates || !b.location.coordinates) return 0;
+          const distA = calculateDistance(landmarkCoords.lat, landmarkCoords.lng, a.location.coordinates.lat, a.location.coordinates.lng);
+          const distB = calculateDistance(landmarkCoords.lat, landmarkCoords.lng, b.location.coordinates.lat, b.location.coordinates.lng);
+          return distA - distB;
+        });
+      }
+    } else {
+      // Normal sort when not searching by landmark
+      switch (sortBy) {
+        case 'price-low':
+          results.sort((a, b) => a.price - b.price);
+          break;
+        case 'price-high':
+          results.sort((a, b) => b.price - a.price);
+          break;
+        case 'walk-score':
+          results.sort((a, b) => b.walkScore - a.walkScore);
+          break;
+        case 'newest':
+        default:
+          results.sort((a, b) => new Date(b.listedAt).getTime() - new Date(a.listedAt).getTime());
+      }
     }
 
     return results;
@@ -210,6 +401,9 @@ const DiscoveryPage: React.FC = () => {
     selectedLifestyle,
     sortBy,
     firebaseProperties,
+    landmarkCoords,
+    aiLocality,
+    aiCity,
   ]);
 
   const formatPrice = (price: number) => {
@@ -221,11 +415,13 @@ const DiscoveryPage: React.FC = () => {
 
   const clearFilters = () => {
     setSearchQuery('');
-    setSelectedPriceRange([priceRange.min, priceRange.max]);
+    setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
     setSelectedBHK([]);
     setSelectedLocality('all');
     setSelectedPropertyTypes([]);
     setSelectedLifestyle([]);
+    setAiLocality('');
+    setAiCity('');
   };
 
   const activeFiltersCount = [
@@ -244,9 +440,9 @@ const DiscoveryPage: React.FC = () => {
         <Slider
           value={selectedPriceRange}
           onValueChange={(value) => setSelectedPriceRange(value as [number, number])}
-          min={priceRange.min}
-          max={priceRange.max}
-          step={100000}
+          min={dynamicPriceRange.min}
+          max={dynamicPriceRange.max}
+          step={10000}
         />
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>{formatPrice(selectedPriceRange[0])}</span>
@@ -377,24 +573,68 @@ const DiscoveryPage: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {/* AI/Search Icon with loading state */}
+            <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              {isAISearching ? (
+                <Loader2 className="h-4 w-4 text-primary animate-spin" />
+              ) : (
+                <div className="relative">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Sparkles className="h-2.5 w-2.5 text-primary absolute -top-1 -right-1" />
+                </div>
+              )}
+            </div>
             <Input
-              placeholder="Search by location, property name..."
+              placeholder="Try: '3BHK under 1 crore in Koramangala with parking'"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (!e.target.value) {
+                  setShowAIBadge(false);
+                  setAIFilters(null);
+                }
+              }}
               onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 300)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && searchQuery) {
+                  setIsSearchFocused(false); // Close recent searches
+                  handleAISearch(searchQuery);
                   addRecentSearch(searchQuery, getCurrentFilters());
                 }
               }}
-              className="pl-10 pr-12"
+              className="pl-10 pr-24"
+              disabled={isAISearching}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setShowAIBadge(false);
+                    setAIFilters(null);
+                    setIsSearchFocused(false);
+                    // Reset filters including AI location filters
+                    setSelectedPriceRange([priceRange.min, priceRange.max]);
+                    setSelectedBHK([]);
+                    setSelectedLocality('all');
+                    setSelectedPropertyTypes([]);
+                    setSelectedLifestyle([]);
+                    setAiLocality('');
+                    setAiCity('');
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
               <VoiceSearchButton 
                 onResult={(text) => {
                   setSearchQuery(text);
+                  setIsSearchFocused(false); // Close recent searches
+                  handleAISearch(text);
                   addRecentSearch(text, getCurrentFilters());
                 }}
                 size="sm"
@@ -403,7 +643,7 @@ const DiscoveryPage: React.FC = () => {
             
             {/* Recent Searches Dropdown */}
             <RecentSearches 
-              isOpen={isSearchFocused}
+              isOpen={isSearchFocused && !isAISearching}
               onClose={() => setIsSearchFocused(false)}
               onSelect={(search) => {
                 setSearchQuery(search.query);
@@ -479,6 +719,54 @@ const DiscoveryPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Search Badge */}
+        <AnimatePresence>
+          {showAIBadge && aiFilters && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-4"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
+                {landmarkCoords ? (
+                  <MapPin className="h-4 w-4 text-primary" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-primary" />
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {landmarkCoords ? `Near ${landmarkName}:` : 'AI found:'}
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {landmarkCoords && (
+                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
+                      Within {NEARBY_RADIUS_KM}km
+                    </Badge>
+                  )}
+                  {formatExtractedFilters(aiFilters).map((filter, i) => (
+                    <Badge key={i} variant="secondary" className="bg-white/80 text-xs">
+                      {filter}
+                    </Badge>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 ml-1"
+                  onClick={() => {
+                    setShowAIBadge(false);
+                    setAIFilters(null);
+                    setLandmarkCoords(null);
+                    setLandmarkName('');
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Active Filters */}
         {activeFiltersCount > 0 && (

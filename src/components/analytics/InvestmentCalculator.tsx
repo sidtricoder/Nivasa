@@ -11,12 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface InvestmentCalculatorProps {
-  propertyPrice: number;
+  propertyPrice?: number;
   className?: string;
 }
 
 const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
-  propertyPrice,
+  propertyPrice = 5000000,
   className,
 }) => {
   const [investmentYears, setInvestmentYears] = useState(5);

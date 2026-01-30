@@ -9,10 +9,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 
 interface EMICalculatorProps {
-  propertyPrice: number;
+  propertyPrice?: number;
 }
 
-const EMICalculator: React.FC<EMICalculatorProps> = ({ propertyPrice }) => {
+const EMICalculator: React.FC<EMICalculatorProps> = ({ propertyPrice = 5000000 }) => {
   const [loanAmount, setLoanAmount] = useState(Math.round(propertyPrice * 0.8));
   const [interestRate, setInterestRate] = useState(8.5);
   const [tenure, setTenure] = useState(20);

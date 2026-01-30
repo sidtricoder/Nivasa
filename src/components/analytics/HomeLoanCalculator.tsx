@@ -11,12 +11,12 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 interface HomeLoanCalculatorProps {
-  propertyPrice: number;
+  propertyPrice?: number;
   className?: string;
 }
 
 const HomeLoanCalculator: React.FC<HomeLoanCalculatorProps> = ({
-  propertyPrice,
+  propertyPrice = 5000000,
   className,
 }) => {
   const [monthlyIncome, setMonthlyIncome] = useState(150000);

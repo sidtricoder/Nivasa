@@ -55,9 +55,15 @@ const RecentSearches: React.FC<RecentSearchesProps> = ({
             Recent Searches
           </div>
           <Button
+            type="button"
             variant="ghost"
             size="sm"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               clearRecentSearches();
               onClose();
@@ -74,10 +80,17 @@ const RecentSearches: React.FC<RecentSearchesProps> = ({
             {recentSearches.map((search, index) => (
               <motion.button
                 key={search.id}
+                type="button"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.03 }}
-                onClick={() => {
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   onSelect(search);
                   onClose();
                 }}
