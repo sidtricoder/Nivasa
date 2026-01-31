@@ -1,7 +1,7 @@
 /* Glowing Card Effect - From Uiverse.io by Pravins01 */
 .glow-card {
   position: relative;
-  background-color: #000;
+  background-color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: end;
@@ -42,16 +42,16 @@
   font-size: 20px;
   text-transform: capitalize;
   font-weight: 700;
-  color: white;
+  color: #2B2F36;
 }
 
 .glow-card p:not(.card-heading) {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(43, 47, 54, 0.8);
 }
 
 .glow-card .card-highlight {
-  color: #e81cff;
+  color: #3B7BFF;
   font-weight: 600;
 }
 
