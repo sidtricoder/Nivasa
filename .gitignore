@@ -28,3 +28,9 @@ change.sh
 
 
 .env
+
+# Google Cloud Service Account Keys (NEVER COMMIT THESE!)
+nivasa-real-estate-486006-04f307c4a1d5.json
+*-credentials.json
+*-service-account.json
+*.pem

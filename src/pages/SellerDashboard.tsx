@@ -60,6 +60,8 @@ import Footer from '@/components/layout/Footer';
 import CompareModal from '@/components/property/CompareModal';
 import MapPicker from '@/components/property/MapPicker';
 import FirebaseChatDrawer from '@/components/communication/FirebaseChatDrawer';
+import FloorPlanUpload from '@/components/seller/FloorPlanUpload';
+import { FloorPlanData } from '@/types/floorPlan';
 
 const steps = [
   { id: 1, title: 'Basics', icon: Home, description: 'Property details' },
@@ -118,6 +120,10 @@ const SellerDashboard: React.FC = () => {
   // 360° Panorama images state
   const [panoramaUrls, setPanoramaUrls] = useState<string[]>([]);
   const [panoramaUrlInput, setPanoramaUrlInput] = useState('');
+  
+  // Floor plan state
+  const [floorPlanImage, setFloorPlanImage] = useState<string | null>(null);
+  const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -479,6 +485,7 @@ const SellerDashboard: React.FC = () => {
         listedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         panoramaImages: panoramaUrls.length > 0 ? panoramaUrls : undefined,
+        floorPlan: floorPlanData || undefined,
       };
 
       if (editingPropertyId) {
@@ -558,6 +565,8 @@ const SellerDashboard: React.FC = () => {
     setUrlInput('');
     setPanoramaUrls([]);
     setPanoramaUrlInput('');
+    setFloorPlanImage(null);
+    setFloorPlanData(null);
     setCurrentStep(1);
     setEditingPropertyId(null);
   };
@@ -1018,6 +1027,20 @@ const SellerDashboard: React.FC = () => {
                 </div>
               )}
             </div>
+
+            <Separator />
+
+            {/* Floor Plan Upload */}
+            <FloorPlanUpload
+              bhk={parseInt(formData.bhk) || 2}
+              sqft={parseFloat(formData.sqft) || 1000}
+              onFloorPlanChange={({ image, floorPlanData: data }) => {
+                setFloorPlanImage(image);
+                setFloorPlanData(data);
+              }}
+              initialImage={floorPlanImage || undefined}
+              initialFloorPlan={floorPlanData || undefined}
+            />
 
             {/* Upload Progress */}
             {uploading && uploadProgress > 0 && (

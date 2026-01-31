@@ -333,21 +333,21 @@ const LandingPage: React.FC = () => {
           >
             <BounceCards
               images={[
-                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&h=700&fit=crop",
-                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&h=700&fit=crop",
-                "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=500&h=700&fit=crop",
-                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=500&h=700&fit=crop",
-                "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=500&h=700&fit=crop"
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=600&fit=crop",
+                "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400&h=600&fit=crop"
               ]}
-              containerWidth={900}
-              containerHeight={550}
+              containerWidth={1100}
+              containerHeight={450}
               enableHover={true}
               transformStyles={[
-                'rotate(14deg) translate(-320px)',
-                'rotate(7deg) translate(-160px)',
+                'rotate(14deg) translate(-420px)',
+                'rotate(7deg) translate(-210px)',
                 'rotate(-2deg)',
-                'rotate(-9deg) translate(160px)',
-                'rotate(5deg) translate(320px)'
+                'rotate(-9deg) translate(210px)',
+                'rotate(5deg) translate(420px)'
               ]}
             />
           </motion.div>

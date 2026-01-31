@@ -129,70 +129,36 @@ const Header: React.FC = () => {
                   transition={{ duration: 0.15 }}
                   className="absolute left-0 top-full pt-2 z-50"
                 >
-                  <div className="bg-background border border-border rounded-lg shadow-xl p-6 min-w-[500px]">
-                    <div className="grid grid-cols-2 gap-8">
-                      {/* For Buyers */}
-                      <div>
-                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Building2 className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-foreground">For Buyers</h3>
-                            <p className="text-xs text-muted-foreground">Properties for sale</p>
-                          </div>
+                  <div className="bg-background border border-border rounded-lg shadow-xl p-6 min-w-[280px]">
+                    {/* For Buyers */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Building2 className="h-4 w-4 text-primary" />
                         </div>
-                        <div className="space-y-1">
-                          {popularCities.slice(0, 6).map((city) => (
-                            <button
-                              key={city}
-                              onClick={() => handleDiscoverClick('buy', city)}
-                              className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-md transition-colors flex items-center gap-2"
-                            >
-                              <MapPin className="h-3.5 w-3.5" />
-                              Properties in {city}
-                            </button>
-                          ))}
-                          <button
-                            onClick={() => handleDiscoverClick('buy')}
-                            className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:bg-primary/10 rounded-md transition-colors flex items-center gap-2"
-                          >
-                            <TrendingUp className="h-3.5 w-3.5" />
-                            View All Properties
-                          </button>
+                        <div>
+                          <h3 className="font-semibold text-foreground">For Buyers</h3>
+                          <p className="text-xs text-muted-foreground">Properties for sale</p>
                         </div>
                       </div>
-
-                      {/* For Tenants */}
-                      <div>
-                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
-                          <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
-                            <Key className="h-4 w-4 text-orange-500" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-foreground">For Tenants</h3>
-                            <p className="text-xs text-muted-foreground">Properties for rent</p>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          {popularCities.slice(0, 6).map((city) => (
-                            <button
-                              key={city}
-                              onClick={() => handleDiscoverClick('rent', city)}
-                              className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-md transition-colors flex items-center gap-2"
-                            >
-                              <MapPin className="h-3.5 w-3.5" />
-                              Rentals in {city}
-                            </button>
-                          ))}
+                      <div className="space-y-1">
+                        {popularCities.slice(0, 6).map((city) => (
                           <button
-                            onClick={() => handleDiscoverClick('rent')}
-                            className="w-full text-left px-3 py-2 text-sm text-orange-500 font-medium hover:bg-orange-500/10 rounded-md transition-colors flex items-center gap-2"
+                            key={city}
+                            onClick={() => handleDiscoverClick('buy', city)}
+                            className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-md transition-colors flex items-center gap-2"
                           >
-                            <Users className="h-3.5 w-3.5" />
-                            View All Rentals
+                            <MapPin className="h-3.5 w-3.5" />
+                            Properties in {city}
                           </button>
-                        </div>
+                        ))}
+                        <button
+                          onClick={() => handleDiscoverClick('buy')}
+                          className="w-full text-left px-3 py-2 text-sm text-primary font-medium hover:bg-primary/10 rounded-md transition-colors flex items-center gap-2"
+                        >
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          View All Properties
+                        </button>
                       </div>
                     </div>
                   </div>
