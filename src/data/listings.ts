@@ -1,3 +1,5 @@
+import { FloorPlanData } from '@/types/floorPlan';
+
 // Supabase-ready schema for property listings
 export interface Property {
   id: string;
@@ -61,6 +63,7 @@ export interface Property {
   panoee3DTourUrl?: string;
   videoUrl?: string;
   panoramaImages?: string[]; // 360° panorama images
+  floorPlan?: FloorPlanData; // 3D floor plan data
 }
 
 export interface Seller {
@@ -194,6 +197,21 @@ export const mockListings: Property[] = [
     listedAt: "2024-01-15T10:30:00Z",
     updatedAt: "2024-01-20T15:45:00Z",
     panoee3DTourUrl: "https://tour.panoee.net/6978ea2270f11a38ef1098be",
+    floorPlan: {
+      rooms: [
+        { id: 'room-1', name: 'Living Room', type: 'living', width: 15, length: 12, position: { x: 0, y: 0 } },
+        { id: 'room-2', name: 'Kitchen', type: 'kitchen', width: 10, length: 8, position: { x: 15, y: 0 } },
+        { id: 'room-3', name: 'Master Bedroom', type: 'bedroom', width: 14, length: 12, position: { x: 0, y: 12 } },
+        { id: 'room-4', name: 'Bedroom 2', type: 'bedroom', width: 12, length: 10, position: { x: 14, y: 12 } },
+        { id: 'room-5', name: 'Bedroom 3', type: 'bedroom', width: 11, length: 10, position: { x: 14, y: 22 } },
+        { id: 'room-6', name: 'Master Bath', type: 'bathroom', width: 8, length: 6, position: { x: 0, y: 24 } },
+        { id: 'room-7', name: 'Bathroom 2', type: 'bathroom', width: 6, length: 6, position: { x: 8, y: 24 } },
+        { id: 'room-8', name: 'Dining', type: 'dining', width: 10, length: 8, position: { x: 25, y: 0 } },
+        { id: 'room-9', name: 'Balcony', type: 'balcony', width: 15, length: 5, position: { x: 0, y: -5 } },
+        { id: 'room-10', name: 'Lobby', type: 'lobby', width: 8, length: 6, position: { x: 25, y: 8 } },
+      ],
+      totalSqft: 1250,
+    },
   },
   {
     id: "prop-002",
