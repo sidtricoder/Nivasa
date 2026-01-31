@@ -185,7 +185,7 @@ const LandingPage: React.FC = () => {
       {/* Selling Fast Section */}
       <section className="py-24 lg:py-32 bg-background">
         <div className="container">
-          {/* Section Header - Minimal like HavenHub */}
+          {/* Section Header - Minimal like Nivasa */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -327,7 +327,7 @@ const LandingPage: React.FC = () => {
               YOUR JOURNEY TO HOME OWNERSHIP
             </motion.p>
             <h2 className="font-premium text-fluid-3xl font-semibold text-foreground mb-6">
-              How HavenHub Works
+              How Nivasa Works
             </h2>
             <p className="text-fluid-body text-muted-foreground max-w-2xl mx-auto">
               From discovery to closing, we make finding your dream home simple, transparent, and stress-free.

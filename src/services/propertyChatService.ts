@@ -24,7 +24,7 @@ function generatePropertyContext(property: Property): string {
   const highlightsText = property.highlights.join('\n- ');
   const considerationsText = property.thingsToConsider.join('\n- ');
 
-  return `You are a helpful property assistant for Nivasa/HavenHub, an Indian real estate platform. 
+  return `You are a helpful property assistant for Nivasa, an Indian real estate platform. 
 Answer questions about this specific property based on the data provided below. Be friendly, concise, and accurate.
 
 ## PROPERTY INFORMATION

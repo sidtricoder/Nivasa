@@ -5,7 +5,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* HavenHub Design System - Trust Blue Palette */
+/* Nivasa Design System - Trust Blue Palette */
 
 @layer base {
   :root {
@@ -303,5 +303,18 @@
 
   .animate-glow-pulse {
     animation: glow-pulse 2s ease-in-out infinite;
+  }
+}
+
+/* Dark mode overrides for inline styled text colors */
+@layer utilities {
+  .dark [style*="color: #2B2F36"],
+  .dark [style*="color:#2B2F36"] {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark [style*="color: #6B7280"],
+  .dark [style*="color:#6B7280"] {
+    color: hsl(var(--muted-foreground)) !important;
   }
 }

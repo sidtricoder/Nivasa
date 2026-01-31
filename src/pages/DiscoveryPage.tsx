@@ -242,6 +242,18 @@ const DiscoveryPage: React.FC = () => {
     }
   }, [voiceTranscript, setVoiceTranscript]);
 
+  // Handle city URL parameter from navigation
+  useEffect(() => {
+    const cityParam = searchParams.get('city');
+    if (cityParam) {
+      // Set the city filter when coming from navigation
+      setAiCity(cityParam.toLowerCase());
+    } else {
+      // Clear city filter when navigating to "all properties"
+      setAiCity('');
+    }
+  }, [searchParams]);
+
   // Get current filters for saving (full SearchFilters type)
   const getCurrentFilters = (): import('@/stores/searchStore').SearchFilters => ({
     query: searchQuery,
@@ -402,6 +414,7 @@ const DiscoveryPage: React.FC = () => {
     sortBy,
     firebaseProperties,
     landmarkCoords,
+    landmarkName,
     aiLocality,
     aiCity,
   ]);
