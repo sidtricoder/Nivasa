@@ -66,6 +66,9 @@ export const getProperty = async (propertyId: string): Promise<Property | null> 
   }
 };
 
+// Alias for consistency
+export const getPropertyById = getProperty;
+
 /**
  * Update a property
  */

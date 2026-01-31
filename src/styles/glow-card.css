@@ -1,0 +1,97 @@
+/* Glowing Card Effect - From Uiverse.io by Pravins01 */
+.glow-card {
+  position: relative;
+  background-color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  padding: 12px;
+  gap: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  overflow: visible;
+}
+
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  left: -5px;
+  margin: auto;
+  width: calc(100% + 10px);
+  height: calc(100% + 10px);
+  border-radius: 10px;
+  background: linear-gradient(-45deg, #e81cff 0%, #40c9ff 100%);
+  z-index: -10;
+  pointer-events: none;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.glow-card::after {
+  content: "";
+  z-index: -1;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(-45deg, #fc00ff 0%, #00dbde 100%);
+  transform: translate3d(0, 0, 0) scale(0.95);
+  filter: blur(20px);
+}
+
+.glow-card .card-heading {
+  font-size: 20px;
+  text-transform: capitalize;
+  font-weight: 700;
+  color: white;
+}
+
+.glow-card p:not(.card-heading) {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.glow-card .card-highlight {
+  color: #e81cff;
+  font-weight: 600;
+}
+
+.glow-card:hover::after {
+  filter: blur(30px);
+}
+
+.glow-card:hover::before {
+  transform: rotate(-90deg) scaleX(1.34) scaleY(0.77);
+}
+
+/* Variants for different gradient colors */
+.glow-card.variant-blue::before {
+  background: linear-gradient(-45deg, #3B7BFF 0%, #40c9ff 100%);
+}
+
+.glow-card.variant-blue::after {
+  background: linear-gradient(-45deg, #2563EB 0%, #00dbde 100%);
+}
+
+.glow-card.variant-purple::before {
+  background: linear-gradient(-45deg, #8B5CF6 0%, #EC4899 100%);
+}
+
+.glow-card.variant-purple::after {
+  background: linear-gradient(-45deg, #7C3AED 0%, #DB2777 100%);
+}
+
+.glow-card.variant-green::before {
+  background: linear-gradient(-45deg, #10B981 0%, #34D399 100%);
+}
+
+.glow-card.variant-green::after {
+  background: linear-gradient(-45deg, #059669 0%, #10B981 100%);
+}
+
+.glow-card.variant-orange::before {
+  background: linear-gradient(-45deg, #F59E0B 0%, #FBBF24 100%);
+}
+
+.glow-card.variant-orange::after {
+  background: linear-gradient(-45deg, #D97706 0%, #F59E0B 100%);
+}

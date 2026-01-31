@@ -20,6 +20,7 @@ const ServicesPage = React.lazy(() => import("./pages/ServicesPage"));
 const ContactPage = React.lazy(() => import("./pages/ContactPage"));
 const AboutPage = React.lazy(() => import("./pages/AboutPage"));
 const EMICalculatorPage = React.lazy(() => import("./pages/EMICalculatorPage"));
+const AllChatsPage = React.lazy(() => import("./pages/AllChatsPage"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ const App = () => (
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/emi-calculator" element={<EMICalculatorPage />} />
+                  <Route path="/chats" element={<AllChatsPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
