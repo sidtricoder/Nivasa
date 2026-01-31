@@ -85,7 +85,13 @@ Rules:
 3. Keep responses concise (2-3 sentences max unless more detail is asked)
 4. If asked about something not in the data, politely say you don't have that information
 5. Use Indian Rupees (₹) and Indian measurement units (sqft)
-6. For location questions, reference the nearby places data`;
+6. For location questions, reference the nearby places data
+7. IMPORTANT: At the end of EVERY response, add a section called "FOLLOW_UP_SUGGESTIONS:" with 2-3 relevant follow-up questions the user might want to ask next, based on the conversation context. Each suggestion should be on a new line starting with "- ". Example:
+
+FOLLOW_UP_SUGGESTIONS:
+- What are the nearby schools?
+- Is parking included?
+- What is the maintenance cost?`;
 }
 
 /**
@@ -93,7 +99,7 @@ Rules:
  */
 function convertToGeminiFormat(history: ChatMessage[], systemPrompt: string, userMessage: string) {
   const contents: any[] = [];
-  
+
   // Add system context as first user message
   contents.push({
     role: 'user',
@@ -122,15 +128,57 @@ function convertToGeminiFormat(history: ChatMessage[], systemPrompt: string, use
 }
 
 /**
+ * Response from the AI chatbot including follow-up suggestions
+ */
+export interface ChatResponse {
+  message: string;
+  followUpSuggestions: string[];
+}
+
+/**
+ * Parse follow-up suggestions from AI response
+ */
+function parseFollowUpSuggestions(content: string): ChatResponse {
+  const followUpMarker = 'FOLLOW_UP_SUGGESTIONS:';
+  const markerIndex = content.indexOf(followUpMarker);
+
+  if (markerIndex === -1) {
+    return {
+      message: content.trim(),
+      followUpSuggestions: []
+    };
+  }
+
+  const message = content.substring(0, markerIndex).trim();
+  const suggestionsText = content.substring(markerIndex + followUpMarker.length);
+
+  const suggestions = suggestionsText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('-'))
+    .map(line => line.substring(1).trim())
+    .filter(s => s.length > 0)
+    .slice(0, 3); // Max 3 suggestions
+
+  return {
+    message,
+    followUpSuggestions: suggestions
+  };
+}
+
+/**
  * Send a message to the property chatbot and get a response
  */
 export async function sendPropertyChatMessage(
   property: Property,
   userMessage: string,
   conversationHistory: ChatMessage[] = []
-): Promise<string> {
+): Promise<ChatResponse> {
   if (!GEMINI_API_KEY) {
-    return "I'm sorry, the AI assistant is not configured. Please contact the seller directly for questions about this property.";
+    return {
+      message: "I'm sorry, the AI assistant is not configured. Please contact the seller directly for questions about this property.",
+      followUpSuggestions: []
+    };
   }
 
   const systemPrompt = generatePropertyContext(property);
@@ -145,7 +193,7 @@ export async function sendPropertyChatMessage(
         contents: convertToGeminiFormat(conversationHistory, systemPrompt, userMessage),
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 300,
+          maxOutputTokens: 400, // Increased to accommodate suggestions
           topP: 0.95,
           topK: 40
         }
@@ -160,11 +208,21 @@ export async function sendPropertyChatMessage(
 
     const data = await response.json();
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    return content.trim() || "I couldn't understand that. Could you please rephrase your question?";
+
+    if (!content.trim()) {
+      return {
+        message: "I couldn't understand that. Could you please rephrase your question?",
+        followUpSuggestions: []
+      };
+    }
+
+    return parseFollowUpSuggestions(content);
   } catch (error) {
     console.error('Property chat error:', error);
-    return "I'm having trouble connecting right now. Please try again in a moment, or contact the seller directly.";
+    return {
+      message: "I'm having trouble connecting right now. Please try again in a moment, or contact the seller directly.",
+      followUpSuggestions: []
+    };
   }
 }
 
