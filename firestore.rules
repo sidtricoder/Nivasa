@@ -134,5 +134,17 @@ service cloud.firestore {
       // No deletion of chat history
       allow delete: if false;
     }
+    
+    // User Favorites collection
+    match /userFavorites/{userId} {
+      // Only the owner can read their favorites
+      allow read: if isOwner(userId);
+      
+      // Only the owner can create/update their favorites
+      allow create, update: if isOwner(userId);
+      
+      // Only the owner can delete their favorites
+      allow delete: if isOwner(userId);
+    }
   }
 }
