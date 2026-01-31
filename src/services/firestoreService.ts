@@ -24,6 +24,7 @@ export const COLLECTIONS = {
   USERS: 'users',
   AI_QUERIES: 'ai_queries',
   AI_CHATS: 'ai_property_chats',
+  LEADS: 'property_leads',
 };
 
 /**
@@ -421,5 +422,150 @@ export const getAIChatsForProperty = async (
   } catch (error: any) {
     console.error('Failed to get AI chats for property:', error);
     return [];
+  }
+};
+
+/**
+ * Lead/Interest types and interfaces
+ */
+export interface PropertyLead {
+  id: string;
+  propertyId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userPhone?: string;
+  sellerId: string;
+  createdAt: any;
+  status: 'new' | 'contacted' | 'visited' | 'closed';
+}
+
+/**
+ * Express interest in a property
+ */
+export const expressInterest = async (
+  propertyId: string,
+  userId: string,
+  userName: string,
+  userEmail: string,
+  sellerId: string,
+  userPhone?: string
+): Promise<string> => {
+  try {
+    const leadsRef = collection(db, COLLECTIONS.LEADS);
+    const leadId = `${propertyId}_${userId}`;
+    const leadRef = doc(leadsRef, leadId);
+    
+    // Check if lead already exists
+    const existingLead = await getDoc(leadRef);
+    if (existingLead.exists()) {
+      throw new Error('You have already expressed interest in this property');
+    }
+    
+    const leadData: PropertyLead = {
+      id: leadId,
+      propertyId,
+      userId,
+      userName,
+      userEmail,
+      sellerId,
+      createdAt: serverTimestamp(),
+      status: 'new',
+    };
+    
+    // Only add userPhone if it's provided (not undefined)
+    if (userPhone) {
+      leadData.userPhone = userPhone;
+    }
+    
+    await setDoc(leadRef, leadData);
+    return leadId;
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to express interest');
+  }
+};
+
+/**
+ * Check if user has already expressed interest
+ */
+export const checkUserInterest = async (
+  propertyId: string,
+  userId: string
+): Promise<boolean> => {
+  try {
+    const leadId = `${propertyId}_${userId}`;
+    const leadRef = doc(db, COLLECTIONS.LEADS, leadId);
+    const leadSnap = await getDoc(leadRef);
+    return leadSnap.exists();
+  } catch (error: any) {
+    console.error('Failed to check user interest:', error);
+    return false;
+  }
+};
+
+/**
+ * Get all leads for a seller
+ */
+export const getLeadsBySeller = async (sellerId: string): Promise<PropertyLead[]> => {
+  try {
+    const leadsRef = collection(db, COLLECTIONS.LEADS);
+    const q = query(
+      leadsRef,
+      where('sellerId', '==', sellerId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const leads: PropertyLead[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      leads.push(doc.data() as PropertyLead);
+    });
+    
+    return leads;
+  } catch (error: any) {
+    console.error('Failed to get leads:', error);
+    return [];
+  }
+};
+
+/**
+ * Get leads for a specific property
+ */
+export const getLeadsByProperty = async (propertyId: string): Promise<PropertyLead[]> => {
+  try {
+    const leadsRef = collection(db, COLLECTIONS.LEADS);
+    const q = query(
+      leadsRef,
+      where('propertyId', '==', propertyId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const leads: PropertyLead[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      leads.push(doc.data() as PropertyLead);
+    });
+    
+    return leads;
+  } catch (error: any) {
+    console.error('Failed to get property leads:', error);
+    return [];
+  }
+};
+
+/**
+ * Update lead status
+ */
+export const updateLeadStatus = async (
+  leadId: string,
+  status: PropertyLead['status']
+): Promise<void> => {
+  try {
+    const leadRef = doc(db, COLLECTIONS.LEADS, leadId);
+    await updateDoc(leadRef, { status });
+  } catch (error: any) {
+    throw new Error('Failed to update lead status');
   }
 };
