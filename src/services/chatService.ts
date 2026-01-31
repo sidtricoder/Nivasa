@@ -110,18 +110,25 @@ const updateConversation = async (
 
     if (snapshot.empty) {
       // Create new conversation
+      console.log('Creating new conversation:', conversationId);
       await addDoc(conversationsRef, conversationData);
     } else {
-      // Update existing conversation
+      // Update existing conversation - include participants to ensure permissions check passes
       const docRef = snapshot.docs[0].ref;
+      console.log('Updating existing conversation:', conversationId);
       await updateDoc(docRef, {
+        participants, // Include participants in update to satisfy Firestore rules
         lastMessage,
         lastMessageTime: Timestamp.fromDate(new Date()),
         unreadCount: (snapshot.docs[0].data().unreadCount || 0) + 1,
       });
     }
-  } catch (error) {
+    console.log('Conversation updated successfully');
+  } catch (error: any) {
     console.error('Error updating conversation:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    // Don't throw - allow message to be sent even if conversation metadata fails
   }
 };
 
@@ -250,8 +257,10 @@ export const subscribeToConversations = (
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('Conversations snapshot received:', snapshot.docs.length, 'documents');
         const conversations: ChatConversation[] = snapshot.docs.map((doc) => {
           const data = doc.data();
+          console.log('Conversation data:', data);
           return {
             id: data.id,
             participants: data.participants,
@@ -263,10 +272,13 @@ export const subscribeToConversations = (
             propertyImage: data.propertyImage,
           };
         });
+        console.log('Parsed conversations:', conversations);
         callback(conversations);
       },
       (error) => {
         console.error('Error subscribing to conversations:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
       }
     );
 

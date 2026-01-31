@@ -49,7 +49,16 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
   sellerName,
   propertyTitle,
 }) => {
+  console.log('FirebaseChatDrawer rendered with props:', { 
+    isOpen, 
+    propertyId, 
+    sellerId, 
+    sellerName, 
+    propertyTitle 
+  });
+  
   const { currentUser } = useAuth();
+  console.log('Current user in FirebaseChatDrawer:', currentUser?.uid);
   const { toast } = useToast();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -68,7 +77,9 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
   useEffect(() => {
     if (!currentUser || !isOpen) return;
 
+    console.log('Setting up conversation subscription for user:', currentUser.uid);
     const unsubscribe = subscribeToConversations(currentUser.uid, (convs) => {
+      console.log('Received conversations in component:', convs.length);
       setConversations(convs);
     });
 
@@ -79,11 +90,13 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
   useEffect(() => {
     if (!currentUser || !activeConv) return;
 
+    console.log('Setting up message subscription:', activeConv);
     const unsubscribe = subscribeToMessages(
       currentUser.uid,
       activeConv.userId,
       activeConv.propertyId,
       (msgs) => {
+        console.log('Received messages in component:', msgs.length);
         setMessages(msgs);
         // Mark as read
         if (msgs.length > 0) {
@@ -113,15 +126,25 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
 
   // Initialize conversation from props
   useEffect(() => {
-    if (propertyId && sellerId && sellerName && propertyTitle) {
-      setActiveConv({
-        userId: sellerId,
-        propertyId,
-        userName: sellerName,
-        propertyTitle,
-      });
+    console.log('Props check:', { propertyId, sellerId, sellerName, propertyTitle, currentUser: currentUser?.uid });
+    if (propertyId && sellerId && sellerName && propertyTitle && currentUser) {
+      console.log('Initializing chat with:', { propertyId, sellerId, sellerName, propertyTitle, currentUserId: currentUser.uid });
+      // Only set if user is not the seller (can't chat with themselves)
+      if (currentUser.uid !== sellerId) {
+        console.log('Setting activeConv (user is not seller)');
+        setActiveConv({
+          userId: sellerId,
+          propertyId,
+          userName: sellerName,
+          propertyTitle,
+        });
+      } else {
+        console.log('NOT setting activeConv - user is the seller (cannot chat with self)');
+      }
+    } else {
+      console.log('Missing required props for chat initialization');
     }
-  }, [propertyId, sellerId, sellerName, propertyTitle]);
+  }, [propertyId, sellerId, sellerName, propertyTitle, currentUser]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !activeConv || !currentUser) return;
@@ -378,6 +401,9 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
       </div>
     </div>
   );
+
+  console.log('Render - activeConv state:', activeConv);
+  console.log('Render - showing:', activeConv ? 'ChatView' : 'ConversationListView');
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
