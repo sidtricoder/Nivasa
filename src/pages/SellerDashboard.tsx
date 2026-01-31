@@ -495,6 +495,13 @@ const SellerDashboard: React.FC = () => {
           floorPlanImage: floorPlanImage || undefined,
         } : undefined,
       };
+      
+      // Debug: Log what floor plan data is being saved
+      console.log('=== SAVING PROPERTY ===');
+      console.log('Floor Plan Data:', propertyData.floorPlan);
+      console.log('Floor Plan Image present:', !!propertyData.floorPlan?.floorPlanImage);
+      console.log('Floor Plan Image type:', typeof propertyData.floorPlan?.floorPlanImage);
+      console.log('Floor Plan Image length:', propertyData.floorPlan?.floorPlanImage?.length || 0);
 
       if (editingPropertyId) {
         // Update existing property
