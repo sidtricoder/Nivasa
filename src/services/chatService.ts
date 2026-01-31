@@ -14,14 +14,12 @@ import {
   doc,
   updateDoc,
   getDocs,
-  limit,
-  or,
-  and,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 export interface ChatMessage {
   id?: string;
+  conversationId: string; // Unique ID for the conversation
   to: string; // Receiver user ID
   from: string; // Sender user ID
   relatedProperty: string; // Property ID
@@ -54,7 +52,12 @@ export const sendChatMessage = async (
   text: string
 ): Promise<string> => {
   try {
+    // Generate consistent conversation ID
+    const participants = [from, to].sort();
+    const conversationId = `${participants[0]}_${participants[1]}_${relatedProperty}`;
+
     const messageData: Omit<ChatMessage, 'id'> = {
+      conversationId,
       from,
       to,
       relatedProperty,
@@ -134,21 +137,14 @@ export const subscribeToMessages = (
   try {
     const messagesRef = collection(db, CHATS_COLLECTION);
     
-    // Query for messages between these two users about this property
+    // Generate conversation ID (same logic as when sending)
+    const participants = [userId, otherUserId].sort();
+    const conversationId = `${participants[0]}_${participants[1]}_${propertyId}`;
+    
+    // Simple query using conversationId - no complex indexes needed
     const q = query(
       messagesRef,
-      or(
-        and(
-          where('from', '==', userId),
-          where('to', '==', otherUserId),
-          where('relatedProperty', '==', propertyId)
-        ),
-        and(
-          where('from', '==', otherUserId),
-          where('to', '==', userId),
-          where('relatedProperty', '==', propertyId)
-        )
-      ),
+      where('conversationId', '==', conversationId),
       orderBy('timestamp', 'asc')
     );
 
@@ -159,6 +155,7 @@ export const subscribeToMessages = (
           const data = doc.data();
           return {
             id: doc.id,
+            conversationId: data.conversationId || conversationId,
             from: data.from,
             to: data.to,
             relatedProperty: data.relatedProperty,
@@ -171,6 +168,8 @@ export const subscribeToMessages = (
       },
       (error) => {
         console.error('Error subscribing to messages:', error);
+        // Return empty array on error instead of breaking
+        callback([]);
       }
     );
 

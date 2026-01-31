@@ -299,10 +299,6 @@ const SellerDashboard: React.FC = () => {
       { field: formData.city, name: 'City' },
       { field: formData.pincode, name: 'Pincode' },
       { field: formData.state, name: 'State' },
-      { field: formData.walkScore, name: 'Walk Score' },
-      { field: formData.safetyScore, name: 'Safety Score' },
-      { field: formData.connectivityScore, name: 'Connectivity Score' },
-      { field: formData.lifestyleScore, name: 'Lifestyle Score' },
     ];
 
     const missingFields = requiredFields.filter(f => !f.field).map(f => f.name);
@@ -438,10 +434,11 @@ const SellerDashboard: React.FC = () => {
           documentsReady: true,
           reraApproved: false,
         },
-        walkScore: parseInt(formData.walkScore),
-        safetyScore: parseInt(formData.safetyScore),
-        connectivityScore: parseInt(formData.connectivityScore),
-        lifestyleScore: parseInt(formData.lifestyleScore),
+        // Scores are computed by AI based on location - default to 0
+        walkScore: 0,
+        safetyScore: 0,
+        connectivityScore: 0,
+        lifestyleScore: 0,
         highlights: formData.highlights,
         thingsToConsider: formData.thingsToConsider,
         nearbyPlaces: formData.nearbyPlaces.map(place => ({
@@ -564,10 +561,10 @@ const SellerDashboard: React.FC = () => {
       state: property.location.state,
       amenities: property.amenities,
       features: property.features,
-      walkScore: property.walkScore.toString(),
-      safetyScore: property.safetyScore.toString(),
-      connectivityScore: property.connectivityScore.toString(),
-      lifestyleScore: property.lifestyleScore.toString(),
+      walkScore: '0', // Scores are AI-computed
+      safetyScore: '0',
+      connectivityScore: '0',
+      lifestyleScore: '0',
       highlights: property.highlights,
       thingsToConsider: property.thingsToConsider,
       nearbyPlaces: property.nearbyPlaces.map(p => ({ type: p.type, name: p.name, distance: p.distance })),
@@ -1079,78 +1076,14 @@ const SellerDashboard: React.FC = () => {
             className="space-y-6"
           >
             <div className="space-y-3">
-              <Label className="text-base font-medium">Property Scores *</Label>
+              <Label className="text-base font-medium">Property Features *</Label>
               <p className="text-sm text-muted-foreground">
-                Rate these aspects of your property on a scale of 1-100
+                Select features that apply to your property
               </p>
             </div>
 
-            {/* Walk Score */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="walkScore">Walk Score *</Label>
-                <Badge variant="secondary">{formData.walkScore || 0}/100</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">How walkable is the location?</p>
-              <Slider
-                value={[parseInt(formData.walkScore) || 0]}
-                onValueChange={(value) => handleInputChange('walkScore', value[0].toString())}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </div>
-
-            {/* Safety Score */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="safetyScore">Safety Score *</Label>
-                <Badge variant="secondary">{formData.safetyScore || 0}/100</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">How safe is the neighborhood?</p>
-              <Slider
-                value={[parseInt(formData.safetyScore) || 0]}
-                onValueChange={(value) => handleInputChange('safetyScore', value[0].toString())}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </div>
-
-            {/* Connectivity Score */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="connectivityScore">Connectivity Score *</Label>
-                <Badge variant="secondary">{formData.connectivityScore || 0}/100</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">Access to public transport, highways, etc.</p>
-              <Slider
-                value={[parseInt(formData.connectivityScore) || 0]}
-                onValueChange={(value) => handleInputChange('connectivityScore', value[0].toString())}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </div>
-
-            {/* Lifestyle Score */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="lifestyleScore">Lifestyle Score *</Label>
-                <Badge variant="secondary">{formData.lifestyleScore || 0}/100</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">Proximity to shopping, dining, entertainment</p>
-              <Slider
-                value={[parseInt(formData.lifestyleScore) || 0]}
-                onValueChange={(value) => handleInputChange('lifestyleScore', value[0].toString())}
-                min={0}
-                max={100}
-                step={1}
-              />
-            </div>
-
             {/* Pet Friendly & Parking */}
-            <div className="space-y-4 pt-4 border-t">
+            <div className="space-y-4 p-4 border rounded-lg bg-secondary/10">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="isPetFriendly"
@@ -1175,6 +1108,13 @@ const SellerDashboard: React.FC = () => {
                   Has Parking Space
                 </Label>
               </div>
+            </div>
+
+            {/* Note about scores */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>Note:</strong> Walk Score, Safety Score, and other neighborhood scores are automatically calculated based on your property's location. No manual input needed!
+              </p>
             </div>
           </motion.div>
         );
