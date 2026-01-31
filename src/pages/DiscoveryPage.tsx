@@ -1513,7 +1513,7 @@ const DiscoveryPage: React.FC = () => {
         </div>
 
         {/* Content on top of wave */}
-        <div className="relative z-10 px-4 pt-6 pb-3">
+        <div className="relative z-10 px-8 lg:px-16 pt-6 pb-3">
           <div className="max-w-7xl mx-auto">
             {/* Search & Controls - Single Line */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6 min-w-0">
@@ -1700,7 +1700,7 @@ const DiscoveryPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="container pt-4 pb-6 max-w-full overflow-x-hidden"></div>
+        <div className="px-8 lg:px-16 pt-4 pb-6 max-w-7xl mx-auto"></div>
         {/* AI Search Badge */}
         <AnimatePresence>
           {showAIBadge && aiFilters && (
@@ -1790,213 +1790,217 @@ const DiscoveryPage: React.FC = () => {
           </motion.div>
         )}
 
-        <div className="flex gap-6">
-          {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-[320px] flex-shrink-0">
-            <AmazonStyleFilters FilterContent={FilterContent} />
-          </aside>
+        <div className="px-8 lg:px-16">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex gap-6">
+              {/* Desktop Sidebar */}
+              <aside className="hidden lg:block w-[320px] flex-shrink-0">
+                <AmazonStyleFilters FilterContent={FilterContent} />
+              </aside>
 
-          {/* Results */}
-          <main className="flex-1">
-            {/* Premium Results Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between mb-6 pb-4 border-b border-border/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <motion.span
-                    key={filteredListings.length}
-                    initial={{ scale: 1.2 }}
-                    animate={{ scale: 1 }}
-                    className="text-2xl font-bold text-primary"
-                  >
-                    {filteredListings.length}
-                  </motion.span>
-                  <span className="text-muted-foreground">properties found</span>
-                </div>
-                {loadingProperties && (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10">
-                    <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                    <span className="text-xs text-primary font-medium">Loading...</span>
-                  </div>
-                )}
-              </div>
-              {displayedProperties < filteredListings.length && (
-                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-primary rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(displayedProperties / filteredListings.length) * 100}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  </div>
-                  <span>{Math.round((displayedProperties / filteredListings.length) * 100)}% viewed</span>
-                </div>
-              )}
-            </motion.div>
-
-            {/* Property Grid/List */}
-            <AnimatePresence mode="wait">
-              {loadingProperties ? (
+              {/* Results */}
+              <main className="flex-1">
+                {/* Premium Results Header */}
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-between mb-6 pb-4 border-b border-border/50"
                 >
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <PropertyCardSkeleton key={i} />
-                  ))}
-                </motion.div>
-              ) : filteredListings.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-20 text-center"
-                >
-                  {/* Animated Icon Container */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                    className="relative mb-6"
-                  >
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center">
-                      <Search className="h-10 w-10 text-primary/60" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <motion.span
+                        key={filteredListings.length}
+                        initial={{ scale: 1.2 }}
+                        animate={{ scale: 1 }}
+                        className="text-2xl font-bold text-primary"
+                      >
+                        {filteredListings.length}
+                      </motion.span>
+                      <span className="text-muted-foreground">properties found</span>
                     </div>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 rounded-full border-2 border-dashed border-primary/20"
-                    />
-                  </motion.div>
-
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">No properties found</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md">
-                    We couldn't find properties matching your criteria. Try adjusting your filters or search for something different.
-                  </p>
-
-                  {/* Suggestion Chips */}
-                  <div className="flex flex-wrap justify-center gap-2 mb-6">
-                    <span className="text-sm text-muted-foreground">Try:</span>
-                    {['All Properties', 'Under ₹1 Cr', 'Apartments'].map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => {
-                          clearFilters();
-                          if (suggestion === 'Under ₹1 Cr') {
-                            setSelectedPriceRange([dynamicPriceRange.min, 10000000]);
-                          } else if (suggestion === 'Apartments') {
-                            setSelectedPropertyTypes(['apartment']);
-                          }
-                        }}
-                        className="px-3 py-1 text-sm rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                    {loadingProperties && (
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10">
+                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        <span className="text-xs text-primary font-medium">Loading...</span>
+                      </div>
+                    )}
                   </div>
-
-                  <Button variant="outline" onClick={clearFilters} className="gap-2">
-                    <X className="h-4 w-4" />
-                    Clear All Filters
-                  </Button>
-                </motion.div>
-              ) : (
-                <>
-                  <motion.div
-                    key={viewMode}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className={
-                      viewMode === 'grid'
-                        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                        : 'space-y-4'
-                    }
-                  >
-                    {filteredListings.slice(0, displayedProperties).map((property, index) => (
-                      <motion.div
-                        key={property.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: Math.min(index * 0.05, 0.3), // Cap delay at 0.3s
-                          duration: 0.4,
-                          ease: [0.22, 1, 0.36, 1]
-                        }}
-                      >
-                        <PropertyCard property={property} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-
-                  {/* Load More Section */}
                   {displayedProperties < filteredListings.length && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-12 mb-8 text-center"
-                    >
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-center gap-4">
-                          <div className="h-px bg-border flex-1" />
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <span className="text-sm">
-                              Showing {displayedProperties} of {filteredListings.length} properties
-                            </span>
-                          </div>
-                          <div className="h-px bg-border flex-1" />
-                        </div>
+                    <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-primary rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(displayedProperties / filteredListings.length) * 100}%` }}
+                          transition={{ duration: 0.5 }}
+                        />
+                      </div>
+                      <span>{Math.round((displayedProperties / filteredListings.length) * 100)}% viewed</span>
+                    </div>
+                  )}
+                </motion.div>
 
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => {
-                            const remaining = filteredListings.length - displayedProperties;
-                            const toLoad = Math.min(LOAD_MORE_COUNT, remaining);
-                            setDisplayedProperties(prev => prev + toLoad);
-                          }}
-                          className="min-w-[200px]"
+                {/* Property Grid/List */}
+                <AnimatePresence mode="wait">
+                  {loadingProperties ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <PropertyCardSkeleton key={i} />
+                      ))}
+                    </motion.div>
+                  ) : filteredListings.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col items-center justify-center py-20 text-center"
+                    >
+                      {/* Animated Icon Container */}
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                        className="relative mb-6"
+                      >
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center">
+                          <Search className="h-10 w-10 text-primary/60" />
+                        </div>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-0 rounded-full border-2 border-dashed border-primary/20"
+                        />
+                      </motion.div>
+
+                      <h3 className="text-xl font-semibold mb-2 text-foreground">No properties found</h3>
+                      <p className="text-muted-foreground mb-6 max-w-md">
+                        We couldn't find properties matching your criteria. Try adjusting your filters or search for something different.
+                      </p>
+
+                      {/* Suggestion Chips */}
+                      <div className="flex flex-wrap justify-center gap-2 mb-6">
+                        <span className="text-sm text-muted-foreground">Try:</span>
+                        {['All Properties', 'Under ₹1 Cr', 'Apartments'].map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => {
+                              clearFilters();
+                              if (suggestion === 'Under ₹1 Cr') {
+                                setSelectedPriceRange([dynamicPriceRange.min, 10000000]);
+                              } else if (suggestion === 'Apartments') {
+                                setSelectedPropertyTypes(['apartment']);
+                              }
+                            }}
+                            className="px-3 py-1 text-sm rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+
+                      <Button variant="outline" onClick={clearFilters} className="gap-2">
+                        <X className="h-4 w-4" />
+                        Clear All Filters
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <motion.div
+                        key={viewMode}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className={
+                          viewMode === 'grid'
+                            ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+                            : 'space-y-4'
+                        }
+                      >
+                        {filteredListings.slice(0, displayedProperties).map((property, index) => (
+                          <motion.div
+                            key={property.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay: Math.min(index * 0.05, 0.3), // Cap delay at 0.3s
+                              duration: 0.4,
+                              ease: [0.22, 1, 0.36, 1]
+                            }}
+                          >
+                            <PropertyCard property={property} />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+
+                      {/* Load More Section */}
+                      {displayedProperties < filteredListings.length && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-12 mb-8 text-center"
                         >
-                          Load {Math.min(LOAD_MORE_COUNT, filteredListings.length - displayedProperties)} More Properties
-                        </Button>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-center gap-4">
+                              <div className="h-px bg-border flex-1" />
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <span className="text-sm">
+                                  Showing {displayedProperties} of {filteredListings.length} properties
+                                </span>
+                              </div>
+                              <div className="h-px bg-border flex-1" />
+                            </div>
 
-                        <p className="text-xs text-muted-foreground">
-                          Or keep scrolling to load automatically
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
+                            <Button
+                              variant="outline"
+                              size="lg"
+                              onClick={() => {
+                                const remaining = filteredListings.length - displayedProperties;
+                                const toLoad = Math.min(LOAD_MORE_COUNT, remaining);
+                                setDisplayedProperties(prev => prev + toLoad);
+                              }}
+                              className="min-w-[200px]"
+                            >
+                              Load {Math.min(LOAD_MORE_COUNT, filteredListings.length - displayedProperties)} More Properties
+                            </Button>
 
-                  {/* All Properties Loaded Message */}
-                  {displayedProperties >= filteredListings.length && filteredListings.length > LOAD_MORE_COUNT && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-12 mb-8 text-center"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-center gap-2 text-green-600">
-                          <div className="w-2 h-2 bg-green-500 rounded-full" />
-                          <span className="text-sm font-medium">
-                            You've seen all {filteredListings.length} properties
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Try adjusting your filters to see more results
-                        </p>
-                      </div>
-                    </motion.div>
+                            <p className="text-xs text-muted-foreground">
+                              Or keep scrolling to load automatically
+                            </p>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* All Properties Loaded Message */}
+                      {displayedProperties >= filteredListings.length && filteredListings.length > LOAD_MORE_COUNT && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-12 mb-8 text-center"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-center gap-2 text-green-600">
+                              <div className="w-2 h-2 bg-green-500 rounded-full" />
+                              <span className="text-sm font-medium">
+                                You've seen all {filteredListings.length} properties
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Try adjusting your filters to see more results
+                            </p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </AnimatePresence>
-          </main>
+                </AnimatePresence>
+              </main>
+            </div>
+          </div>
         </div>
       </div>
 
