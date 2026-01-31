@@ -172,7 +172,7 @@ If you cannot detect rooms clearly, return an empty array: []`
           ],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096,
           },
         }),
       }
@@ -189,14 +189,56 @@ If you cannot detect rooms clearly, return an empty array: []`
     
     console.log('Gemini response:', textContent);
     
-    // Extract JSON from response
+    // Extract JSON from response - try to find complete or partial array
+    let jsonString = '';
     const jsonMatch = textContent.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    } else {
+      // Try to extract partial JSON and repair it
+      const partialMatch = textContent.match(/\[[\s\S]*/);
+      if (partialMatch) {
+        jsonString = partialMatch[0];
+        // Try to repair truncated JSON by closing brackets
+        const openBrackets = (jsonString.match(/\[/g) || []).length;
+        const closeBrackets = (jsonString.match(/\]/g) || []).length;
+        const openBraces = (jsonString.match(/\{/g) || []).length;
+        const closeBraces = (jsonString.match(/\}/g) || []).length;
+        
+        // Close any unclosed braces/brackets
+        for (let i = 0; i < openBraces - closeBraces; i++) jsonString += '}';
+        for (let i = 0; i < openBrackets - closeBrackets; i++) jsonString += ']';
+        
+        // Remove trailing comma before ]
+        jsonString = jsonString.replace(/,\s*\]$/, ']');
+        console.log('Repaired JSON:', jsonString);
+      }
+    }
+    
+    if (!jsonString) {
       console.warn('No JSON found in Gemini response');
       return { rooms: [], success: false };
     }
 
-    const geminiRooms: GeminiRoom[] = JSON.parse(jsonMatch[0]);
+    let geminiRooms: GeminiRoom[];
+    try {
+      geminiRooms = JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      // Try one more time with aggressive repair
+      try {
+        // Remove the last incomplete object if any
+        const lastCompleteObj = jsonString.lastIndexOf('},');
+        if (lastCompleteObj > 0) {
+          jsonString = jsonString.substring(0, lastCompleteObj + 1) + ']';
+          geminiRooms = JSON.parse(jsonString);
+        } else {
+          return { rooms: [], success: false };
+        }
+      } catch {
+        return { rooms: [], success: false };
+      }
+    }
     
     if (!Array.isArray(geminiRooms) || geminiRooms.length === 0) {
       return { rooms: [], success: false };
