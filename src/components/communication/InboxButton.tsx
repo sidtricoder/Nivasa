@@ -66,33 +66,6 @@ const InboxButton: React.FC<InboxButtonProps> = ({ className }) => {
           </motion.span>
         )}
       </AnimatePresence>
-
-      {/* Notification dot pulse */}
-      <AnimatePresence>
-        {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            className="absolute -top-1 -right-1"
-          >
-            <span className="flex h-3 w-3">
-              <motion.span
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.75, 0, 0.75],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                className="absolute inline-flex h-full w-full rounded-full bg-destructive"
-              />
-            </span>
-          </motion.span>
-        )}
-      </AnimatePresence>
     </Button>
   );
 };

@@ -229,9 +229,15 @@ const DiscoveryPage: React.FC = () => {
   const [firebaseProperties, setFirebaseProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
 
-  // Use only Firebase properties (no mock data to avoid duplicates)
-  const allProperties = useMemo(() => firebaseProperties, [firebaseProperties]);
-
+  // Calculate dynamic price range including Firebase properties
+  // Deduplicate by ID, prioritizing Firebase data over mock data
+  const allProperties = useMemo(() => {
+    const firebaseIds = new Set(firebaseProperties.map(p => p.id));
+    // Filter out mock listings that exist in Firebase (by ID)
+    const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
+    return [...firebaseProperties, ...uniqueMockListings];
+  }, [firebaseProperties]);
+  
   const dynamicPriceRange = useMemo(() => {
     if (allProperties.length === 0) return priceRange;
     const prices = allProperties.map(p => p.price);
@@ -558,10 +564,10 @@ const DiscoveryPage: React.FC = () => {
             filters.priceMax || dynamicPriceRange.max
           ]);
         }
-
-        // For locality, try to find exact match in available localities for dropdown
+        
+        // For locality, try to find exact match in available cities for dropdown
         if (filters.locality) {
-          const matchedLocality = localities.find(
+          const matchedLocality = availableCities.find(
             loc => loc.toLowerCase() === filters.locality?.toLowerCase()
           );
           if (matchedLocality) {
@@ -694,8 +700,11 @@ const DiscoveryPage: React.FC = () => {
 
   // Memoized filtered listings
   const filteredListings = useMemo(() => {
-    // Use Firebase properties only
-    let results = [...firebaseProperties];
+    // Combine mock listings with Firebase properties, deduplicating by ID
+    // Firebase properties take priority (they may have been edited)
+    const firebaseIds = new Set(firebaseProperties.map(p => p.id));
+    const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
+    let results = [...firebaseProperties, ...uniqueMockListings];
 
     // Search query - match if any significant word from query matches property fields
     if (searchQuery) {
@@ -1117,53 +1126,19 @@ const DiscoveryPage: React.FC = () => {
       {/* Area Range - Custom Slider */}
       <div className="space-y-4 overflow-hidden">
         <Label className="text-sm font-medium">Area (sqft)</Label>
-        <div className="flex justify-between text-xs text-muted-foreground mb-2">
-          <span>{selectedAreaRange[0]} sqft</span>
-          <span>{selectedAreaRange[1]} sqft</span>
-        </div>
-        <div className="pt-2 pb-1 px-2">
-          <div
-            className="relative area-slider-track cursor-pointer select-none"
-            onMouseMove={handleAreaSliderMouseMove}
-            onMouseUp={handleAreaSliderMouseUp}
-            onMouseLeave={handleAreaSliderMouseUp}
-          >
-            {/* Track background */}
-            <div className="w-full h-2 bg-secondary rounded-full relative">
-              {/* Active range */}
-              <div
-                className="absolute h-2 bg-primary rounded-full"
-                style={{
-                  left: `${((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                  right: `${100 - ((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                }}
-              />
-
-              {/* Min thumb */}
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
-                style={{
-                  left: `${((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
-                }}
-                onMouseDown={(e) => handleAreaSliderMouseDown(e, 'min')}
-              />
-
-              {/* Max thumb */}
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
-                style={{
-                  left: `${((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
-                }}
-                onMouseDown={(e) => handleAreaSliderMouseDown(e, 'max')}
-              />
-            </div>
+        <div className="px-2">
+          <Slider
+            value={selectedAreaRange}
+            onValueChange={(value) => setSelectedAreaRange(value as [number, number])}
+            min={dynamicAreaRange.min}
+            max={dynamicAreaRange.max}
+            step={50}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+            <span>{selectedAreaRange[0]} sqft</span>
+            <span>{selectedAreaRange[1]} sqft</span>
           </div>
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{dynamicAreaRange.min} sqft</span>
-          <span>{dynamicAreaRange.max} sqft</span>
         </div>
       </div>
 
@@ -1172,53 +1147,19 @@ const DiscoveryPage: React.FC = () => {
       {/* Walk Score - Custom Slider */}
       <div className="space-y-4 overflow-hidden">
         <Label className="text-sm font-medium">Walk Score</Label>
-        <div className="flex justify-between text-xs text-muted-foreground mb-2">
-          <span>{selectedWalkScoreRange[0]}</span>
-          <span>{selectedWalkScoreRange[1]}</span>
-        </div>
-        <div className="pt-2 pb-1 px-2">
-          <div
-            className="relative walkscore-slider-track cursor-pointer select-none"
-            onMouseMove={handleWalkScoreSliderMouseMove}
-            onMouseUp={handleWalkScoreSliderMouseUp}
-            onMouseLeave={handleWalkScoreSliderMouseUp}
-          >
-            {/* Track background */}
-            <div className="w-full h-2 bg-secondary rounded-full relative">
-              {/* Active range */}
-              <div
-                className="absolute h-2 bg-primary rounded-full"
-                style={{
-                  left: `${(selectedWalkScoreRange[0] / 100) * 100}%`,
-                  right: `${100 - (selectedWalkScoreRange[1] / 100) * 100}%`,
-                }}
-              />
-
-              {/* Min thumb */}
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
-                style={{
-                  left: `${(selectedWalkScoreRange[0] / 100) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
-                }}
-                onMouseDown={(e) => handleWalkScoreSliderMouseDown(e, 'min')}
-              />
-
-              {/* Max thumb */}
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
-                style={{
-                  left: `${(selectedWalkScoreRange[1] / 100) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
-                }}
-                onMouseDown={(e) => handleWalkScoreSliderMouseDown(e, 'max')}
-              />
-            </div>
+        <div className="px-2">
+          <Slider
+            value={selectedWalkScoreRange}
+            onValueChange={(value) => setSelectedWalkScoreRange(value as [number, number])}
+            min={0}
+            max={100}
+            step={5}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+            <span>{selectedWalkScoreRange[0]}</span>
+            <span>{selectedWalkScoreRange[1]}</span>
           </div>
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0</span>
-          <span>100</span>
         </div>
         <div className="text-xs text-muted-foreground">
           {walkScoreRanges.find(range =>
@@ -1235,7 +1176,7 @@ const DiscoveryPage: React.FC = () => {
           <Checkbox
             id="verified-only"
             checked={verifiedOnly}
-            onCheckedChange={setVerifiedOnly}
+            onCheckedChange={(checked) => setVerifiedOnly(checked === true)}
           />
           <Label htmlFor="verified-only" className="cursor-pointer text-sm">
             Verified Properties Only

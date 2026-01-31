@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Room, roomColors } from '@/types/floorPlan';
 
@@ -22,14 +21,6 @@ const Room3D: React.FC<Room3DProps> = ({ room, isHovered, onHover }) => {
   const length = room.length * SCALE;
   const posX = room.position.x * SCALE;
   const posZ = room.position.y * SCALE;
-
-  // Gentle hover animation
-  useFrame(() => {
-    if (groupRef.current) {
-      const targetY = isHovered ? 0.05 : 0;
-      groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.1;
-    }
-  });
 
   return (
     <group

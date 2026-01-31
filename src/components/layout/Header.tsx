@@ -283,28 +283,8 @@ const Header: React.FC = () => {
                     </div>
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
+              )}n            </AnimatePresence>
           </div>
-
-          {/* Favorites - Only show when logged in */}
-          {currentUser && (
-            <Link to="/favorites">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`gap-2 ${textColor} ${hoverBg}`}
-              >
-                <Heart className="h-4 w-4" />
-                Favorites
-                {favorites.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
-                    {favorites.length}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
-          )}
 
           {/* Services */}
           <Link to="/services">
@@ -417,21 +397,6 @@ const Header: React.FC = () => {
 
           {/* User Profile / Auth */}
           <UserProfile />
-
-          {/* Mobile Favorites */}
-          <Link to="/favorites" className="md:hidden relative">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Heart className="h-4 w-4" />
-              {favorites.length > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-                >
-                  {favorites.length}
-                </Badge>
-              )}
-            </Button>
-          </Link>
         </div>
       </div>
 

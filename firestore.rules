@@ -43,17 +43,15 @@ service cloud.firestore {
     
     // Chat messages collection
     match /chats/{messageId} {
-      // Users can read messages where they are sender or receiver
-      allow read: if isAuthenticated() 
-                  && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      // Allow authenticated users to read all messages (no sender/receiver filtering)
+      allow read: if isAuthenticated();
       
       // Users can create messages where they are the sender
       allow create: if isAuthenticated() 
                     && request.resource.data.from == request.auth.uid;
       
-      // Users can update their own messages (e.g., mark as read)
-      allow update: if isAuthenticated() 
-                    && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+      // Users can update messages (e.g., mark as read)
+      allow update: if isAuthenticated();
       
       // Users can delete their own sent messages
       allow delete: if isAuthenticated() 

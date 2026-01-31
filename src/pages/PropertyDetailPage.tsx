@@ -104,7 +104,7 @@ const PropertyDetailPage: React.FC = () => {
   const [expressingInterest, setExpressingInterest] = useState(false);
   const { toast } = useToast();
 
-  // Fetch property from mockListings or Firebase
+  // Fetch property from Firebase first, fallback to mockListings
   useEffect(() => {
     const fetchProperty = async () => {
       if (!id) {
@@ -114,7 +114,17 @@ const PropertyDetailPage: React.FC = () => {
 
       setLoading(true);
       try {
-        // First check mockListings
+        // First try to fetch from Firebase (Firestore data is the source of truth)
+        const firebaseProperty = await getProperty(id);
+        if (firebaseProperty) {
+          console.log('Fetched property from Firebase:', firebaseProperty);
+          console.log('FloorPlan data:', firebaseProperty?.floorPlan);
+          setProperty(firebaseProperty);
+          setLoading(false);
+          return;
+        }
+
+        // If not in Firebase, fallback to mockListings
         const mockProperty = mockListings.find(p => p.id === id);
         if (mockProperty) {
           setProperty(mockProperty);
@@ -122,14 +132,12 @@ const PropertyDetailPage: React.FC = () => {
           return;
         }
 
-        // If not in mockListings, fetch from Firebase
-        const firebaseProperty = await getProperty(id);
-        console.log('Fetched property from Firebase:', firebaseProperty);
-        console.log('FloorPlan data:', firebaseProperty?.floorPlan);
-        setProperty(firebaseProperty);
+        setProperty(null);
       } catch (error) {
         console.error('Error fetching property:', error);
-        setProperty(null);
+        // On error, try mockListings as fallback
+        const mockProperty = mockListings.find(p => p.id === id);
+        setProperty(mockProperty || null);
       } finally {
         setLoading(false);
       }
