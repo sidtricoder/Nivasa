@@ -136,6 +136,7 @@ const SellerDashboard: React.FC = () => {
     isPetFriendly: false,
     hasParking: false,
     coordinates: { lat: 0, lng: 0 },
+    sellerPhone: '',
   });
 
   const progress = (currentStep / steps.length) * 100;
@@ -432,7 +433,7 @@ const SellerDashboard: React.FC = () => {
         seller: {
           id: currentUser.uid,
           name: userData?.displayName || currentUser.email || 'User',
-          phone: userData?.phoneNumber || '',
+          phone: formData.sellerPhone || userData?.phoneNumber || '',
           email: currentUser.email || '',
           isVerified: currentUser.emailVerified,
           memberSince: new Date().toISOString(),
@@ -530,6 +531,7 @@ const SellerDashboard: React.FC = () => {
       isPetFriendly: false,
       hasParking: false,
       coordinates: { lat: 0, lng: 0 },
+      sellerPhone: '',
     });
     setSelectedFiles([]);
     setImagePreviews([]);
@@ -580,6 +582,7 @@ const SellerDashboard: React.FC = () => {
       isPetFriendly: property.isPetFriendly,
       hasParking: property.hasParking,
       coordinates: property.location.coordinates,
+      sellerPhone: property.seller?.phone || '',
     });
     setImagePreviews(property.images);
     setEditingPropertyId(property.id);
@@ -848,6 +851,21 @@ const SellerDashboard: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
+            </div>
+
+            {/* Seller Phone Number */}
+            <div className="space-y-2">
+              <Label htmlFor="sellerPhone">Your Phone Number</Label>
+              <Input
+                id="sellerPhone"
+                type="tel"
+                placeholder="e.g., 9876543210"
+                value={formData.sellerPhone}
+                onChange={(e) => handleInputChange('sellerPhone', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                This will be shown to buyers for "Show Number" and WhatsApp contact
+              </p>
             </div>
           </motion.div>
         );

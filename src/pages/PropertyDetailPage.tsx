@@ -71,6 +71,7 @@ import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getProperty, expressInterest, checkUserInterest } from '@/services/firestoreService';
+import { sendChatMessage } from '@/services/chatService';
 import { useToast } from '@/hooks/use-toast';
 
 const nearbyTypeIcons: Record<string, React.ComponentType<any>> = {
@@ -721,7 +722,7 @@ const PropertyDetailPage: React.FC = () => {
                   </div>
                   <div className="p-3 rounded-lg bg-secondary/50">
                     <p className="text-lg font-semibold text-primary">
-                      {new Date(property.seller.memberSince).getFullYear()}
+                      {format(new Date(property.seller.memberSince), 'MMM yyyy')}
                     </p>
                     <p className="text-xs text-muted-foreground">Member Since</p>
                   </div>
@@ -729,7 +730,7 @@ const PropertyDetailPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <Button 
-                    className="gap-2"
+                    className="gap-2 h-full min-h-[48px]"
                     onClick={() => {
                       if (!currentUser) {
                         toast({
@@ -814,7 +815,42 @@ const PropertyDetailPage: React.FC = () => {
                     </PopoverContent>
                   </Popover>
                   {appointmentDate && (
-                    <Button className="w-full mt-2">
+                    <Button 
+                      className="w-full mt-2"
+                      onClick={async () => {
+                        if (!currentUser || !property) {
+                          toast({
+                            title: 'Login Required',
+                            description: 'Please login to schedule an appointment',
+                            variant: 'destructive',
+                          });
+                          return;
+                        }
+                        try {
+                          // Send appointment message to seller
+                          const appointmentMessage = `📅 Appointment Request\n\nHi, I would like to schedule a visit on ${format(appointmentDate, 'PPP')}.\n\nProperty: ${property.title}\nLocation: ${property.location.address}\n\nPlease confirm the time slot.`;
+                          
+                          await sendChatMessage(
+                            currentUser.uid,
+                            property.seller.id,
+                            property.id,
+                            appointmentMessage
+                          );
+                          
+                          toast({
+                            title: 'Appointment Requested!',
+                            description: `Your visit request for ${format(appointmentDate, 'PPP')} has been sent to the seller.`,
+                          });
+                          setAppointmentDate(undefined);
+                        } catch (error) {
+                          toast({
+                            title: 'Error',
+                            description: 'Failed to send appointment request',
+                            variant: 'destructive',
+                          });
+                        }
+                      }}
+                    >
                       Confirm Appointment
                     </Button>
                   )}
