@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { processFloorPlan } from '@/services/floorPlanAnalysisService';
+import { uploadToCloudinary } from '@/services/cloudinaryService';
 import { FloorPlanData, Room, roomColors } from '@/types/floorPlan';
 import { cn } from '@/lib/utils';
 
@@ -51,18 +52,24 @@ const FloorPlanUpload: React.FC<FloorPlanUploadProps> = ({
     setErrorMessage('');
 
     try {
-      // Convert to base64
+      // Step 1: Upload to Cloudinary to get a URL
+      console.log('=== UPLOADING FLOOR PLAN TO CLOUDINARY ===');
+      const cloudinaryResult = await uploadToCloudinary(file, {
+        folder: 'nivasa/floor-plans',
+      });
+      console.log('Cloudinary upload success:', cloudinaryResult.secureUrl);
+      const imageUrl = cloudinaryResult.secureUrl;
+      setImage(imageUrl);
+      
+      // Step 2: Analyze with Gemini (need base64 for API)
+      setStatus('analyzing');
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64Image = event.target?.result as string;
-        setImage(base64Image);
-        setStatus('analyzing');
 
         try {
-          // Process floor plan with AI analysis
           console.log('=== STARTING FLOOR PLAN ANALYSIS ===');
           console.log('BHK:', bhk, 'SQFT:', sqft);
-          console.log('Image length:', base64Image?.length || 0);
           
           const result = await processFloorPlan(base64Image, bhk, sqft);
           
@@ -74,20 +81,19 @@ const FloorPlanUpload: React.FC<FloorPlanUploadProps> = ({
           setFloorPlanData(result.floorPlanData);
           setStatus(result.usedTemplate ? 'fallback' : 'success');
           
-          // Notify parent
-          console.log('FloorPlanUpload calling onFloorPlanChange with:', result.floorPlanData);
+          // Pass Cloudinary URL (not base64) to parent
+          console.log('FloorPlanUpload calling onFloorPlanChange with URL:', imageUrl);
           onFloorPlanChange({
-            image: base64Image,
+            image: imageUrl, // Use Cloudinary URL instead of base64!
             floorPlanData: result.floorPlanData,
           });
         } catch (error) {
           console.error('Analysis error:', error);
-          // Still use template on error
           const result = await processFloorPlan(null, bhk, sqft);
           setFloorPlanData(result.floorPlanData);
           setStatus('fallback');
           onFloorPlanChange({
-            image: base64Image,
+            image: imageUrl, // Use Cloudinary URL
             floorPlanData: result.floorPlanData,
           });
         }
