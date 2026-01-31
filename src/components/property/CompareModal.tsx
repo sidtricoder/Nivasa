@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bed, Bath, Square, MapPin, Shield, Check, Minus } from 'lucide-react';
+import { X, Bed, Bath, Square, MapPin, Shield, Check, Minus, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +8,41 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { mockListings, Property } from '@/data/listings';
+import { getAllProperties } from '@/services/firestoreService';
 import { Link } from 'react-router-dom';
 
 const CompareModal: React.FC = () => {
   const { compareList, removeFromCompare, clearCompare, isCompareOpen, setIsCompareOpen } = useFavorites();
+  const [allProperties, setAllProperties] = useState<Property[]>(mockListings);
+  const [loading, setLoading] = useState(true);
+
+  // Load all properties (both mock and Firebase)
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        const result = await getAllProperties();
+        const firebaseProperties = result.properties || [];
+        // Combine mock listings with Firebase properties, avoiding duplicates
+        const combinedProperties = [...mockListings];
+        firebaseProperties.forEach(fp => {
+          if (!combinedProperties.some(mp => mp.id === fp.id)) {
+            combinedProperties.push(fp);
+          }
+        });
+        setAllProperties(combinedProperties);
+      } catch (error) {
+        console.error('Error loading properties for compare:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (isCompareOpen) {
+      loadProperties();
+    }
+  }, [isCompareOpen]);
 
   const properties = compareList
-    .map(id => mockListings.find(p => p.id === id))
+    .map(id => allProperties.find(p => p.id === id))
     .filter((p): p is Property => p !== undefined);
 
   const formatPrice = (price: number) => {

@@ -1,19 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Search, Trash2 } from 'lucide-react';
+import { Heart, Search, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
-import { mockListings } from '@/data/listings';
+import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { getAllProperties } from '@/services/firestoreService';
 
 const FavoritesPage: React.FC = () => {
-  const { favorites, removeFavorite } = useFavorites();
+  const { favorites, removeFavorite, loading: favoritesLoading } = useFavorites();
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
 
-  const favoriteProperties = mockListings.filter(p => favorites.includes(p.id));
+  // Load all properties (both mock and Firebase)
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        const result = await getAllProperties();
+        const firebaseProperties = result.properties || [];
+        // Combine mock listings with Firebase properties, avoiding duplicates
+        const combinedProperties = [...mockListings];
+        firebaseProperties.forEach(fp => {
+          if (!combinedProperties.some(mp => mp.id === fp.id)) {
+            combinedProperties.push(fp);
+          }
+        });
+        setAllProperties(combinedProperties);
+      } catch (error) {
+        console.error('Error loading properties:', error);
+        setAllProperties(mockListings);
+      } finally {
+        setLoadingProperties(false);
+      }
+    };
+    loadProperties();
+  }, []);
+
+  // Filter to get favorite properties
+  const favoriteProperties = allProperties.filter(p => favorites.includes(p.id));
+
+  // Show loading state while data is loading
+  const isLoading = favoritesLoading || loadingProperties;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -76,10 +107,10 @@ const FavoritesPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold mb-2">Saved Properties</h1>
             <p className="text-muted-foreground">
-              {favorites.length} {favorites.length === 1 ? 'property' : 'properties'} saved
+              {isLoading ? 'Loading...' : `${favorites.length} ${favorites.length === 1 ? 'property' : 'properties'} saved`}
             </p>
           </div>
-          {favorites.length > 0 && (
+          {!isLoading && favorites.length > 0 && (
             <Button
               variant="outline"
               onClick={() => favorites.forEach(id => removeFavorite(id))}
@@ -91,7 +122,12 @@ const FavoritesPage: React.FC = () => {
           )}
         </div>
 
-        {favorites.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Loading your favorites...</p>
+          </div>
+        ) : favorites.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -133,3 +169,4 @@ const FavoritesPage: React.FC = () => {
 };
 
 export default FavoritesPage;
+

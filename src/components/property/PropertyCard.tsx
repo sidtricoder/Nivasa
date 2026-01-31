@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface PropertyCardProps {
@@ -16,12 +18,27 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'default' }) => {
   const { toggleFavorite, isFavorite, toggleCompare, isInCompare, compareList } = useFavorites();
+  const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   const formatPrice = (price: number) => {
     if (price >= 10000000) {
       return `₹${(price / 10000000).toFixed(2)} Cr`;
     }
     return `₹${(price / 100000).toFixed(2)} L`;
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!currentUser) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to save properties to your favorites.',
+        variant: 'default',
+      });
+      return;
+    }
+    toggleFavorite(property.id);
   };
 
   const canAddToCompare = compareList.length < 3 || isInCompare(property.id);
@@ -66,10 +83,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
                 "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background",
                 isFavorite(property.id) && "text-destructive"
               )}
-              onClick={(e) => {
-                e.preventDefault();
-                toggleFavorite(property.id);
-              }}
+              onClick={handleFavoriteClick}
             >
               <Heart className={cn("h-4 w-4", isFavorite(property.id) && "fill-current")} />
             </Button>
