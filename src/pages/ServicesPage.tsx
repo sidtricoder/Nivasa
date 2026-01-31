@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { getBankRates, getPolicyRates, BankRate, PolicyRates } from '@/services/bankRatesService';
+import SplashCursor from '@/components/ui/SplashCursor';
 
 // ============================================
 // QUIET LUXURY DESIGN SYSTEM
@@ -373,7 +374,7 @@ const ServicesPage: React.FC = () => {
         </motion.div>
 
         {/* Bento Grid - Balanced Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* EMI Calculator (7 columns) */}
           <div className="lg:col-span-7">

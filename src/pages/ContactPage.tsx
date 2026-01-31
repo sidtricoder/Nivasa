@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SplashCursor from '@/components/ui/SplashCursor';
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -114,6 +115,9 @@ const ContactPage: React.FC = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Splash Cursor Effect */}
+      <SplashCursor />
+      
       {/* Soft flowing gradient background */}
       <div 
         className="fixed inset-0 -z-10"

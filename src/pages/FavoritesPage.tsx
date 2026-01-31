@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
+import SplashCursor from '@/components/ui/SplashCursor';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { getAllProperties } from '@/services/firestoreService';
@@ -48,6 +49,9 @@ const FavoritesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Splash Cursor Effect */}
+      <SplashCursor />
+      
       {/* Soft flowing gradient background - flowing top-right to bottom-left */}
       <div 
         className="fixed inset-0 -z-10"
