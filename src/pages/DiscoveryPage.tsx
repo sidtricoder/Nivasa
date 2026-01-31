@@ -1932,7 +1932,7 @@ const DiscoveryPage: React.FC = () => {
                               ease: [0.22, 1, 0.36, 1]
                             }}
                           >
-                            <PropertyCard property={property} />
+                            <PropertyCard property={property} variant={viewMode === 'list' ? 'compact' : 'default'} />
                           </motion.div>
                         ))}
                       </motion.div>
