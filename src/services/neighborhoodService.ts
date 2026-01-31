@@ -275,36 +275,62 @@ export const calculateSafeHavenScore = (amenities: NearbyAmenity[]): number => {
 
 /**
  * Calculate Walk Score based on nearby amenities
+ * More realistic scoring that considers distance decay and category limits
  */
 const calculateWalkScore = (amenities: NearbyAmenity[]): number => {
-  let score = 40;
+  let score = 25; // Lower base score
 
+  // Category weights - what matters for walkability
   const categoryWeights: Record<string, number> = {
-    school: 8,
-    hospital: 10,
-    metro: 15,
-    park: 8,
-    mall: 12,
-    restaurant: 6,
+    metro: 12,     // Transit is key for walkability
+    restaurant: 4, // Daily convenience
+    mall: 8,       // Shopping access
+    park: 5,       // Recreation
+    school: 4,     // Education
+    hospital: 6,   // Essential service
   };
 
-  const categoryCounts: Record<string, number> = {};
+  // Maximum contribution per category
+  const maxPerCategory: Record<string, number> = {
+    metro: 15,
+    restaurant: 15,
+    mall: 12,
+    park: 10,
+    school: 8,
+    hospital: 8,
+  };
+
+  const categoryTotals: Record<string, number> = {};
 
   for (const amenity of amenities) {
-    if (amenity.distanceMeters > 1500) continue;
+    // Only count amenities within 1km for walk score
+    if (amenity.distanceMeters > 1000) continue;
     
-    const weight = categoryWeights[amenity.type] || 4;
-    const distanceFactor = Math.pow(1 - (amenity.distanceMeters / 1800), 1.5);
+    const weight = categoryWeights[amenity.type] || 2;
     
-    const categoryCount = categoryCounts[amenity.type] || 0;
-    const diminishingFactor = 1 / Math.sqrt(categoryCount + 1);
+    // Distance decay factor - closer is better
+    // 0-200m: 100%, 200-500m: 70%, 500-800m: 40%, 800-1000m: 20%
+    let distanceFactor = 1;
+    if (amenity.distanceMeters > 800) distanceFactor = 0.2;
+    else if (amenity.distanceMeters > 500) distanceFactor = 0.4;
+    else if (amenity.distanceMeters > 200) distanceFactor = 0.7;
     
-    score += weight * distanceFactor * diminishingFactor;
-    categoryCounts[amenity.type] = categoryCount + 1;
+    const contribution = weight * distanceFactor;
+    const currentTotal = categoryTotals[amenity.type] || 0;
+    const maxAllowed = maxPerCategory[amenity.type] || 10;
+    
+    // Don't exceed category maximum
+    if (currentTotal < maxAllowed) {
+      const added = Math.min(contribution, maxAllowed - currentTotal);
+      categoryTotals[amenity.type] = currentTotal + added;
+      score += added;
+    }
   }
 
-  const uniqueCategories = Object.keys(categoryCounts).length;
-  score += uniqueCategories * 3;
+  // Bonus for variety (having multiple categories covered)
+  const categoriesCovered = Object.keys(categoryTotals).length;
+  if (categoriesCovered >= 5) score += 5;
+  else if (categoriesCovered >= 3) score += 3;
 
   return Math.min(Math.round(score), 100);
 };

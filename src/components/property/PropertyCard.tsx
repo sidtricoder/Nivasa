@@ -91,12 +91,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
             )}
           </div>
 
-          {/* Walk Score */}
-          <div className="absolute bottom-3 left-3">
-            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm text-foreground">
-              Walk Score: {property.walkScore}
-            </Badge>
-          </div>
+
         </div>
 
         <CardContent className="p-4 space-y-3">

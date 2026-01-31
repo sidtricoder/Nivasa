@@ -461,6 +461,11 @@ const DiscoveryPage: React.FC = () => {
     setAiLocality('');
     setAiCity('');
     setAiState('');
+    // Clear AI-specific filters
+    setAIFilters(null);
+    setShowAIBadge(false);
+    setLandmarkCoords(null);
+    setLandmarkName('');
   };
 
   const activeFiltersCount = [
@@ -822,12 +827,7 @@ const DiscoveryPage: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 ml-1"
-                  onClick={() => {
-                    setShowAIBadge(false);
-                    setAIFilters(null);
-                    setLandmarkCoords(null);
-                    setLandmarkName('');
-                  }}
+                  onClick={clearFilters}
                 >
                   <X className="h-3 w-3" />
                 </Button>
