@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { MessageCircle, User, Building2, Clock, Loader2 } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MessageCircle, User, Building2, Clock, Loader2, Send, ArrowLeft, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   subscribeToAllUserChats,
+  subscribeToMessages,
+  sendChatMessage,
   PropertyChatGroup,
   ChatMessage,
 } from '@/services/chatService';
@@ -15,8 +17,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface EnrichedPropertyChatGroup extends PropertyChatGroup {
   propertyTitle: string;
@@ -34,9 +40,23 @@ interface EnrichedConversation {
 const AllChatsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [chatGroups, setChatGroups] = useState<EnrichedPropertyChatGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedProperty, setExpandedProperty] = useState<string | null>(null);
+  
+  // Active chat state
+  const [activeChat, setActiveChat] = useState<{
+    propertyId: string;
+    propertyTitle: string;
+    otherUserId: string;
+    otherUserName: string;
+  } | null>(null);
+  const [activeChatMessages, setActiveChatMessages] = useState<ChatMessage[]>([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -98,6 +118,60 @@ const AllChatsPage: React.FC = () => {
     return () => unsubscribe();
   }, [currentUser, navigate]);
 
+  // Subscribe to active chat messages
+  useEffect(() => {
+    if (!currentUser || !activeChat) return;
+
+    const unsubscribe = subscribeToMessages(
+      currentUser.uid,
+      activeChat.otherUserId,
+      activeChat.propertyId,
+      (msgs) => {
+        setActiveChatMessages(msgs);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser, activeChat]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (activeChatMessages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [activeChatMessages.length]);
+
+  // Focus input when chat opens
+  useEffect(() => {
+    if (activeChat) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [activeChat]);
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !currentUser || !activeChat || sendingMessage) return;
+
+    setSendingMessage(true);
+    try {
+      await sendChatMessage(
+        currentUser.uid,
+        activeChat.otherUserId,
+        activeChat.propertyId,
+        messageInput.trim()
+      );
+      setMessageInput('');
+      setTimeout(() => inputRef.current?.focus(), 50);
+    } catch (error: any) {
+      toast({
+        title: 'Failed to send message',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -129,8 +203,26 @@ const AllChatsPage: React.FC = () => {
     setExpandedProperty(expandedProperty === propertyId ? null : propertyId);
   };
 
-  const handleConversationClick = (propertyId: string, otherUserId: string) => {
-    navigate(`/property/${propertyId}?chat=${otherUserId}`);
+  const handleConversationClick = (
+    propertyId: string,
+    propertyTitle: string,
+    otherUserId: string,
+    otherUserName: string
+  ) => {
+    // Open inline chat instead of navigating to property page
+    setActiveChat({
+      propertyId,
+      propertyTitle,
+      otherUserId,
+      otherUserName,
+    });
+    setActiveChatMessages([]);
+  };
+
+  const closeActiveChat = () => {
+    setActiveChat(null);
+    setActiveChatMessages([]);
+    setMessageInput('');
   };
 
   if (loading) {
@@ -236,7 +328,9 @@ const AllChatsPage: React.FC = () => {
                               onClick={() =>
                                 handleConversationClick(
                                   group.propertyId,
-                                  conversation.otherUserId
+                                  group.propertyTitle,
+                                  conversation.otherUserId,
+                                  conversation.otherUserName
                                 )
                               }
                             >
@@ -299,6 +393,134 @@ const AllChatsPage: React.FC = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Inline Chat Panel */}
+      <AnimatePresence>
+        {activeChat && (
+          <motion.div
+            initial={{ opacity: 0, x: 400 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 400 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-background border-l shadow-2xl z-50 flex flex-col"
+          >
+            {/* Chat Header */}
+            <div className="p-4 border-b bg-card flex items-center gap-3 shadow-sm">
+              <Button variant="ghost" size="icon" onClick={closeActiveChat} className="shrink-0">
+                <X className="h-5 w-5" />
+              </Button>
+
+              <Avatar className="h-10 w-10 border-2 border-background shrink-0">
+                <AvatarFallback className="bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-base truncate">{activeChat.otherUserName}</h3>
+                <p className="text-xs text-muted-foreground truncate">{activeChat.propertyTitle}</p>
+              </div>
+            </div>
+
+            {/* Messages Area */}
+            <ScrollArea className="flex-1 p-4 bg-muted/30">
+              <div className="space-y-4">
+                {activeChatMessages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                      <MessageCircle className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  activeChatMessages.map((msg) => {
+                    const isOwn = msg.from === currentUser?.uid;
+
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
+                      >
+                        {!isOwn && (
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarFallback className="text-xs bg-primary/10">
+                              {activeChat.otherUserName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+
+                        <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+                          <div
+                            className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${
+                              isOwn
+                                ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                                : 'bg-card border rounded-tl-sm'
+                            }`}
+                          >
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {msg.text}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground mt-1 px-1">
+                            {format(msg.timestamp, 'h:mm a')}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Message Input */}
+            <div className="p-4 border-t bg-card">
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  className="flex-1"
+                  disabled={sendingMessage}
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim() || sendingMessage}
+                  size="icon"
+                  className="shrink-0"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Press Enter to send
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay when chat is open */}
+      <AnimatePresence>
+        {activeChat && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeActiveChat}
+            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+          />
+        )}
+      </AnimatePresence>
 
       <Footer />
     </div>
