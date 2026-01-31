@@ -141,39 +141,107 @@ export const subscribeToMessages = (
     const participants = [userId, otherUserId].sort();
     const conversationId = `${participants[0]}_${participants[1]}_${propertyId}`;
     
-    // Simple query using conversationId - no complex indexes needed
-    const q = query(
+    // Query for new messages with conversationId
+    const newStyleQuery = query(
       messagesRef,
       where('conversationId', '==', conversationId),
       orderBy('timestamp', 'asc')
     );
 
-    const unsubscribe = onSnapshot(
-      q,
+    // Also query for old-style messages (without conversationId)
+    // This handles messages created before the conversationId field was added
+    const oldStyleQuery1 = query(
+      messagesRef,
+      where('from', '==', userId),
+      where('to', '==', otherUserId),
+      where('relatedProperty', '==', propertyId)
+    );
+    
+    const oldStyleQuery2 = query(
+      messagesRef,
+      where('from', '==', otherUserId),
+      where('to', '==', userId),
+      where('relatedProperty', '==', propertyId)
+    );
+
+    let allMessages: ChatMessage[] = [];
+    let newMessages: ChatMessage[] = [];
+    let oldMessages1: ChatMessage[] = [];
+    let oldMessages2: ChatMessage[] = [];
+
+    const updateCallback = () => {
+      // Combine all messages and remove duplicates by id
+      const combined = [...newMessages, ...oldMessages1, ...oldMessages2];
+      const uniqueById = new Map<string, ChatMessage>();
+      combined.forEach(msg => {
+        if (msg.id) uniqueById.set(msg.id, msg);
+      });
+      allMessages = Array.from(uniqueById.values()).sort(
+        (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+      );
+      callback(allMessages);
+    };
+
+    const mapDoc = (doc: any): ChatMessage => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        conversationId: data.conversationId || conversationId,
+        from: data.from,
+        to: data.to,
+        relatedProperty: data.relatedProperty,
+        text: data.text,
+        timestamp: data.timestamp?.toDate() || new Date(),
+        isRead: data.isRead || false,
+      };
+    };
+
+    // Subscribe to new-style messages
+    const unsub1 = onSnapshot(
+      newStyleQuery,
       (snapshot) => {
-        const messages: ChatMessage[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            conversationId: data.conversationId || conversationId,
-            from: data.from,
-            to: data.to,
-            relatedProperty: data.relatedProperty,
-            text: data.text,
-            timestamp: data.timestamp?.toDate() || new Date(),
-            isRead: data.isRead || false,
-          };
-        });
-        callback(messages);
+        newMessages = snapshot.docs.map(mapDoc);
+        updateCallback();
       },
       (error) => {
-        console.error('Error subscribing to messages:', error);
-        // Return empty array on error instead of breaking
-        callback([]);
+        console.error('Error subscribing to new messages:', error);
       }
     );
 
-    return unsubscribe;
+    // Subscribe to old-style messages (direction 1)
+    const unsub2 = onSnapshot(
+      oldStyleQuery1,
+      (snapshot) => {
+        oldMessages1 = snapshot.docs
+          .filter(doc => !doc.data().conversationId) // Only old messages
+          .map(mapDoc);
+        updateCallback();
+      },
+      (error) => {
+        console.error('Error subscribing to old messages (1):', error);
+      }
+    );
+
+    // Subscribe to old-style messages (direction 2)
+    const unsub3 = onSnapshot(
+      oldStyleQuery2,
+      (snapshot) => {
+        oldMessages2 = snapshot.docs
+          .filter(doc => !doc.data().conversationId) // Only old messages
+          .map(mapDoc);
+        updateCallback();
+      },
+      (error) => {
+        console.error('Error subscribing to old messages (2):', error);
+      }
+    );
+
+    // Return combined unsubscribe function
+    return () => {
+      unsub1();
+      unsub2();
+      unsub3();
+    };
   } catch (error) {
     console.error('Error setting up message subscription:', error);
     return () => {};

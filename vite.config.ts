@@ -11,15 +11,6 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     proxy: {
-      // Proxy Replicate API calls to bypass CORS
-      '/api/replicate': {
-        target: 'https://api.replicate.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/replicate/, ''),
-        headers: {
-          'Origin': 'https://api.replicate.com',
-        },
-      },
       // Proxy Hugging Face API calls to bypass CORS (FREE tier!)
       '/api/huggingface': {
         target: 'https://api-inference.huggingface.co',

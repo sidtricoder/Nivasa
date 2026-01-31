@@ -1,5 +1,5 @@
 // Virtual Staging Service
-// Uses Replicate AI to generate staged room images from empty/unfurnished property photos
+// Uses Hugging Face AI (FREE) to generate staged room images from empty/unfurnished property photos
 
 export type StylePreset = 'modern' | 'traditional' | 'minimal' | 'scandinavian' | 'bohemian';
 export type RoomType = 'living-room' | 'bedroom' | 'kitchen' | 'bathroom' | 'office';
@@ -98,14 +98,8 @@ export const generatePrompt = (style: StylePreset, roomType: RoomType): string =
   return `A beautiful ${roomPrompts[roomType]} with ${stylePrompts[style]}. Professional real estate photography, high quality, photorealistic, well-lit, inviting atmosphere, interior design magazine quality, 8k resolution`;
 };
 
-// Replicate API configuration (paid)
-const REPLICATE_API_KEY = import.meta.env.VITE_REPLICATE_API_KEY;
-// Use proxy in development to bypass CORS
-const REPLICATE_API_URL = '/api/replicate/v1/predictions';
-
 // Hugging Face API configuration (FREE tier available!)
 const HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY;
-const HUGGINGFACE_API_URL = '/api/huggingface';
 
 
 // Fallback images for demo mode (when API fails or is not configured)
@@ -286,87 +280,7 @@ const callPollinationsAPI = async (prompt: string): Promise<string | null> => {
 };
 
 
-// Call Replicate API for image generation using interior design model
-const callReplicateAPI = async (prompt: string, imageUrl: string): Promise<string | null> => {
-  console.log('=== Virtual Staging Debug ===');
-  console.log('API Key configured:', !!REPLICATE_API_KEY);
-  console.log('API Key value (first 10 chars):', REPLICATE_API_KEY?.substring(0, 10) + '...');
-  console.log('Image URL:', imageUrl);
-  console.log('Prompt:', prompt.substring(0, 100) + '...');
-  
-  if (!REPLICATE_API_KEY) {
-    console.warn('Replicate API key not configured, using fallback images');
-    return null;
-  }
-
-  try {
-    console.log('Making API request to:', REPLICATE_API_URL);
-    
-    // Use adirik/interior-design model - specifically designed for virtual staging
-    // This model transforms empty rooms into furnished spaces
-    const response = await fetch(REPLICATE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${REPLICATE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        // adirik/interior-design model for virtual staging
-        version: '76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38',
-        input: {
-          image: imageUrl,
-          prompt: prompt,
-          guidance_scale: 15,
-          negative_prompt: 'lowres, watermark, banner, logo, contactinfo, text, deformed, blurry, blur, out of focus, out of frame, surreal, ugly',
-          prompt_strength: 0.8,
-          num_inference_steps: 50,
-        },
-      }),
-    });
-
-    console.log('Response status:', response.status, response.statusText);
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Replicate API error:', error);
-      return null;
-    }
-
-    const prediction = await response.json();
-    console.log('Prediction created:', prediction.id, 'Status:', prediction.status);
-    
-    // Poll for result
-    let result = prediction;
-    let attempts = 0;
-    const maxAttempts = 60; // 60 seconds max wait
-    
-    while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const pollResponse = await fetch(`${REPLICATE_API_URL}/${result.id}`, {
-        headers: {
-          'Authorization': `Token ${REPLICATE_API_KEY}`,
-        },
-      });
-      
-      result = await pollResponse.json();
-      attempts++;
-    }
-
-    if (result.status === 'succeeded' && result.output) {
-      // Handle both array and string outputs
-      return Array.isArray(result.output) ? result.output[0] : result.output;
-    }
-
-    console.error('Replicate generation failed:', result.error || 'Unknown error');
-    return null;
-  } catch (error) {
-    console.error('Error calling Replicate API:', error);
-    return null;
-  }
-};
-
-// Generate a staged image using AI (Hugging Face FREE, or Replicate PAID, with fallback)
+// Generate a staged image using AI (Hugging Face FREE with fallback)
 export const generateStagedImage = async (
   originalImage: string,
   style: StylePreset,
@@ -375,17 +289,11 @@ export const generateStagedImage = async (
   const prompt = generatePrompt(style, roomType);
   let stagedImageUrl: string | null = null;
   
-  // Try Pollinations.ai first (COMPLETELY FREE - no API key needed!)
-  console.log('Trying Pollinations.ai (free)...');
+  // Try Hugging Face first (FREE!)
+  console.log('Trying Hugging Face (free)...');
   stagedImageUrl = await callPollinationsAPI(prompt);
   
-  // If Pollinations fails, try Replicate (paid)
-  if (!stagedImageUrl && REPLICATE_API_KEY) {
-    console.log('Pollinations failed, trying Replicate (paid)...');
-    stagedImageUrl = await callReplicateAPI(prompt, originalImage);
-  }
-  
-  // Fall back to curated images if both APIs fail
+  // Fall back to curated images if API fails
   if (!stagedImageUrl) {
     console.log('Using fallback images for demo');
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -430,8 +338,8 @@ export const getRoomType = (id: RoomType): RoomTypeInfo | undefined => {
   return roomTypes.find(room => room.id === id);
 };
 
-// Check if any AI API is configured (Hugging Face FREE or Replicate PAID)
+// Check if AI API is configured (Hugging Face FREE)
 export const isReplicateConfigured = (): boolean => {
-  return !!HUGGINGFACE_API_KEY || !!REPLICATE_API_KEY;
+  return !!HUGGINGFACE_API_KEY;
 };
 

@@ -138,7 +138,7 @@ const VirtualStagingModal: React.FC<VirtualStagingModalProps> = ({
             <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
               <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                Demo mode shows example {selectedRoom.replace('-', ' ')} designs. Configure Replicate API for AI-powered transformations of your actual photos.
+                Demo mode shows example {selectedRoom.replace('-', ' ')} designs. Configure Hugging Face API for AI-powered transformations of your actual photos.
               </p>
             </div>
           )}
