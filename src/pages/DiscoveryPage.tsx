@@ -1510,15 +1510,6 @@ const DiscoveryPage: React.FC = () => {
                   </Button>
                 </>
               )}
-              <VoiceSearchButton 
-                onResult={(text) => {
-                  setSearchQuery(text);
-                  setIsSearchFocused(false); // Close recent searches
-                  handleAISearch(text);
-                  addRecentSearch(text, getCurrentFilters());
-                }}
-                size="sm"
-              />
             </div>
             
             {/* AI Search Hint while typing */}
