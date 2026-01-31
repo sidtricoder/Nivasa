@@ -40,7 +40,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
-import { RecentSearches, SavedSearches } from '@/components/search';
+import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
 import { useSearchStore } from '@/stores/searchStore';
 import { mockListings, getPriceRange, Property } from '@/data/listings';
 import { toast } from 'sonner';
@@ -229,15 +229,9 @@ const DiscoveryPage: React.FC = () => {
   const [firebaseProperties, setFirebaseProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
 
-  // Calculate dynamic price range including Firebase properties
-  // Deduplicate by ID, prioritizing Firebase data over mock data
-  const allProperties = useMemo(() => {
-    const firebaseIds = new Set(firebaseProperties.map(p => p.id));
-    // Filter out mock listings that exist in Firebase (by ID)
-    const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
-    return [...firebaseProperties, ...uniqueMockListings];
-  }, [firebaseProperties]);
-  
+  // Use only Firebase properties (no mock data to avoid duplicates)
+  const allProperties = useMemo(() => firebaseProperties, [firebaseProperties]);
+
   const dynamicPriceRange = useMemo(() => {
     if (allProperties.length === 0) return priceRange;
     const prices = allProperties.map(p => p.price);
@@ -564,10 +558,10 @@ const DiscoveryPage: React.FC = () => {
             filters.priceMax || dynamicPriceRange.max
           ]);
         }
-        
-        // For locality, try to find exact match in available cities for dropdown
+
+        // For locality, try to find exact match in available localities for dropdown
         if (filters.locality) {
-          const matchedLocality = availableCities.find(
+          const matchedLocality = localities.find(
             loc => loc.toLowerCase() === filters.locality?.toLowerCase()
           );
           if (matchedLocality) {
@@ -700,11 +694,8 @@ const DiscoveryPage: React.FC = () => {
 
   // Memoized filtered listings
   const filteredListings = useMemo(() => {
-    // Combine mock listings with Firebase properties, deduplicating by ID
-    // Firebase properties take priority (they may have been edited)
-    const firebaseIds = new Set(firebaseProperties.map(p => p.id));
-    const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
-    let results = [...firebaseProperties, ...uniqueMockListings];
+    // Use Firebase properties only
+    let results = [...firebaseProperties];
 
     // Search query - match if any significant word from query matches property fields
     if (searchQuery) {
@@ -1124,42 +1115,110 @@ const DiscoveryPage: React.FC = () => {
       <Separator />
 
       {/* Area Range - Custom Slider */}
-      <div className="space-y-4 overflow-hidden">
+      <div className="space-y-4">
         <Label className="text-sm font-medium">Area (sqft)</Label>
-        <div className="px-2">
-          <Slider
-            value={selectedAreaRange}
-            onValueChange={(value) => setSelectedAreaRange(value as [number, number])}
-            min={dynamicAreaRange.min}
-            max={dynamicAreaRange.max}
-            step={50}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span>{selectedAreaRange[0]} sqft</span>
-            <span>{selectedAreaRange[1]} sqft</span>
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>{selectedAreaRange[0]} sqft</span>
+          <span>{selectedAreaRange[1]} sqft</span>
+        </div>
+        <div className="pt-2 pb-1">
+          <div
+            className="relative area-slider-track cursor-pointer select-none"
+            onMouseMove={handleAreaSliderMouseMove}
+            onMouseUp={handleAreaSliderMouseUp}
+            onMouseLeave={handleAreaSliderMouseUp}
+          >
+            {/* Track background */}
+            <div className="w-full h-2 bg-secondary rounded-full relative">
+              {/* Active range */}
+              <div
+                className="absolute h-2 bg-primary rounded-full"
+                style={{
+                  left: `${((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
+                  right: `${100 - ((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
+                }}
+              />
+
+              {/* Min thumb */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                style={{
+                  left: `${((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
+                  transform: `translateX(-50%) translateY(-50%)`,
+                }}
+                onMouseDown={(e) => handleAreaSliderMouseDown(e, 'min')}
+              />
+
+              {/* Max thumb */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                style={{
+                  left: `${((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
+                  transform: `translateX(-50%) translateY(-50%)`,
+                }}
+                onMouseDown={(e) => handleAreaSliderMouseDown(e, 'max')}
+              />
+            </div>
           </div>
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{dynamicAreaRange.min} sqft</span>
+          <span>{dynamicAreaRange.max} sqft</span>
         </div>
       </div>
 
       <Separator />
 
       {/* Walk Score - Custom Slider */}
-      <div className="space-y-4 overflow-hidden">
+      <div className="space-y-4">
         <Label className="text-sm font-medium">Walk Score</Label>
-        <div className="px-2">
-          <Slider
-            value={selectedWalkScoreRange}
-            onValueChange={(value) => setSelectedWalkScoreRange(value as [number, number])}
-            min={0}
-            max={100}
-            step={5}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span>{selectedWalkScoreRange[0]}</span>
-            <span>{selectedWalkScoreRange[1]}</span>
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>{selectedWalkScoreRange[0]}</span>
+          <span>{selectedWalkScoreRange[1]}</span>
+        </div>
+        <div className="pt-2 pb-1">
+          <div
+            className="relative walkscore-slider-track cursor-pointer select-none"
+            onMouseMove={handleWalkScoreSliderMouseMove}
+            onMouseUp={handleWalkScoreSliderMouseUp}
+            onMouseLeave={handleWalkScoreSliderMouseUp}
+          >
+            {/* Track background */}
+            <div className="w-full h-2 bg-secondary rounded-full relative">
+              {/* Active range */}
+              <div
+                className="absolute h-2 bg-primary rounded-full"
+                style={{
+                  left: `${(selectedWalkScoreRange[0] / 100) * 100}%`,
+                  right: `${100 - (selectedWalkScoreRange[1] / 100) * 100}%`,
+                }}
+              />
+
+              {/* Min thumb */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                style={{
+                  left: `${(selectedWalkScoreRange[0] / 100) * 100}%`,
+                  transform: `translateX(-50%) translateY(-50%)`,
+                }}
+                onMouseDown={(e) => handleWalkScoreSliderMouseDown(e, 'min')}
+              />
+
+              {/* Max thumb */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                style={{
+                  left: `${(selectedWalkScoreRange[1] / 100) * 100}%`,
+                  transform: `translateX(-50%) translateY(-50%)`,
+                }}
+                onMouseDown={(e) => handleWalkScoreSliderMouseDown(e, 'max')}
+              />
+            </div>
           </div>
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>0</span>
+          <span>100</span>
         </div>
         <div className="text-xs text-muted-foreground">
           {walkScoreRanges.find(range =>
@@ -1176,7 +1235,7 @@ const DiscoveryPage: React.FC = () => {
           <Checkbox
             id="verified-only"
             checked={verifiedOnly}
-            onCheckedChange={(checked) => setVerifiedOnly(checked === true)}
+            onCheckedChange={setVerifiedOnly}
           />
           <Label htmlFor="verified-only" className="cursor-pointer text-sm">
             Verified Properties Only
@@ -1367,7 +1426,7 @@ const DiscoveryPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-white">
       <Header />
       <CompareModal />
 
@@ -1430,108 +1489,219 @@ const DiscoveryPage: React.FC = () => {
         {/* Content on top of wave */}
         <div className="relative z-10 px-4 pt-6 pb-3">
           <div className="max-w-7xl mx-auto">
-        {/* Search & Controls - Single Line */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-6 min-w-0">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-0">
-            {/* AI/Search Icon with loading state */}
-            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-              {isAISearching ? (
-                <Loader2 className="h-4 w-4 text-primary animate-spin" />
-              ) : searchQuery ? (
-                <div className="relative">
-                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            {/* Premium Hero Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-6"
+            >
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="font-premium text-fluid-2xl font-bold text-foreground mb-2">
+                    Discover Your Dream Home
+                  </h1>
+                  <p className="text-muted-foreground text-lg">
+                    <span className="font-semibold text-primary">{allProperties.length}</span> verified properties waiting for you
+                  </p>
                 </div>
-              ) : (
-                <div className="relative">
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <Sparkles className="h-2.5 w-2.5 text-primary absolute -top-1 -right-1" />
-                </div>
-              )}
-            </div>
-            <Input
-              placeholder="Try: '3BHK under 1 crore in Koramangala with parking'"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                if (!e.target.value) {
-                  setShowAIBadge(false);
-                  setAIFilters(null);
-                }
-              }}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 300)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && searchQuery) {
-                  setIsSearchFocused(false); // Close dropdown
-                  handleAISearch(searchQuery);
-                  addRecentSearch(searchQuery, getCurrentFilters());
-                }
-              }}
-              className="pl-10 pr-16 sm:pr-32"
-              disabled={isAISearching}
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              {searchQuery && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setShowAIBadge(false);
-                      setAIFilters(null);
-                      setIsSearchFocused(false);
-                      // Reset filters including AI location filters
-                      setSelectedPriceRange([priceRange.min, priceRange.max]);
-                      setSelectedBHK([]);
-                      setSelectedCities([]);
-                      setSelectedPropertyTypes([]);
-                      setSelectedLifestyle([]);
-                      setAiLocality('');
-                      setAiCity('');
-                    }}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-7 px-3 gap-1"
-                    onClick={() => {
-                      setIsSearchFocused(false);
-                      handleAISearch(searchQuery);
-                      addRecentSearch(searchQuery, getCurrentFilters());
-                    }}
-                    disabled={isAISearching}
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    Search
-                  </Button>
-                </>
-              )}
-            </div>
-            
-            {/* AI Search Hint while typing */}
-            {isSearchFocused && searchQuery && !isAISearching && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg p-3 z-50">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span>Press <kbd className="px-1.5 py-0.5 bg-secondary rounded text-xs font-mono">Enter</kbd> or click Search for AI-powered results</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">AI-Powered Search</span>
+                  </div>
                 </div>
               </div>
-            )}
-            
-            {/* Recent Searches Dropdown - only show when not typing */}
-            <RecentSearches 
-              isOpen={isSearchFocused && !searchQuery && !isAISearching}
-              onClose={() => setIsSearchFocused(false)}
-              onSelect={(search) => {
-                setSearchQuery(search.query);
-                handleApplyFilters(search.filters);
-              }}
-            />
-          </div>
+
+              {/* Quick Filter Chips */}
+              <div className="flex flex-wrap gap-2">
+                {quickFilterChips.map((chip, index) => {
+                  const Icon = chip.icon;
+                  const isActive =
+                    (chip.id === 'pet-friendly' && selectedLifestyle.includes('pet-friendly')) ||
+                    (chip.id === 'under-1cr' && selectedPriceRange[1] <= 10000000) ||
+                    (chip.id === 'ready-to-move' && selectedPossessionStatus.includes('ready')) ||
+                    (chip.id === 'verified' && verifiedOnly) ||
+                    (chip.id === 'near-metro' && selectedLifestyle.includes('near-metro')) ||
+                    (chip.id === 'premium' && selectedPriceRange[0] >= 20000000);
+
+                  return (
+                    <motion.button
+                      key={chip.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => {
+                        switch (chip.id) {
+                          case 'pet-friendly':
+                            setSelectedLifestyle(prev =>
+                              prev.includes('pet-friendly')
+                                ? prev.filter(l => l !== 'pet-friendly')
+                                : [...prev, 'pet-friendly']
+                            );
+                            break;
+                          case 'under-1cr':
+                            if (selectedPriceRange[1] <= 10000000) {
+                              setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
+                            } else {
+                              setSelectedPriceRange([dynamicPriceRange.min, 10000000]);
+                            }
+                            break;
+                          case 'ready-to-move':
+                            setSelectedPossessionStatus(prev =>
+                              prev.includes('ready')
+                                ? prev.filter(p => p !== 'ready')
+                                : [...prev, 'ready']
+                            );
+                            break;
+                          case 'verified':
+                            setVerifiedOnly(!verifiedOnly);
+                            break;
+                          case 'near-metro':
+                            setSelectedLifestyle(prev =>
+                              prev.includes('near-metro')
+                                ? prev.filter(l => l !== 'near-metro')
+                                : [...prev, 'near-metro']
+                            );
+                            break;
+                          case 'premium':
+                            if (selectedPriceRange[0] >= 20000000) {
+                              setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
+                            } else {
+                              setSelectedPriceRange([20000000, dynamicPriceRange.max]);
+                            }
+                            break;
+                        }
+                      }}
+                      className={`
+                        group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                        transition-all duration-300 hover:scale-105 hover:shadow-md
+                        ${isActive
+                          ? `bg-gradient-to-r ${chip.color} text-white shadow-lg`
+                          : 'bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30'
+                        }
+                      `}
+                    >
+                      <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : ''}`} />
+                      {chip.label}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            {/* Search & Controls - Single Line */}
+            <div className="flex flex-col lg:flex-row gap-4 mb-6 min-w-0">
+              {/* Search Input with Glassmorphism */}
+              <div className={`relative flex-1 min-w-0 group ${isSearchFocused ? 'animate-glow-pulse' : ''}`}>
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* AI/Search Icon with loading state */}
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+                  {isAISearching ? (
+                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                  ) : searchQuery ? (
+                    <div className="relative">
+                      <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <Search className="h-4 w-4 text-muted-foreground" />
+                      <Sparkles className="h-2.5 w-2.5 text-primary absolute -top-1 -right-1" />
+                    </div>
+                  )}
+                </div>
+                <Input
+                  placeholder="Try: '3BHK under 1 crore in Koramangala with parking'"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (!e.target.value) {
+                      setShowAIBadge(false);
+                      setAIFilters(null);
+                    }
+                  }}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 300)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery) {
+                      setIsSearchFocused(false); // Close dropdown
+                      handleAISearch(searchQuery);
+                      addRecentSearch(searchQuery, getCurrentFilters());
+                    }
+                  }}
+                  className="pl-10 pr-16 sm:pr-32 h-12 text-base bg-white/80 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300 shadow-sm hover:shadow-md"
+                  disabled={isAISearching}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {searchQuery && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setShowAIBadge(false);
+                          setAIFilters(null);
+                          setIsSearchFocused(false);
+                          // Reset filters including AI location filters
+                          setSelectedPriceRange([priceRange.min, priceRange.max]);
+                          setSelectedBHK([]);
+                          setSelectedCities([]);
+                          setSelectedPropertyTypes([]);
+                          setSelectedLifestyle([]);
+                          setAiLocality('');
+                          setAiCity('');
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 px-3 gap-1"
+                        onClick={() => {
+                          setIsSearchFocused(false);
+                          handleAISearch(searchQuery);
+                          addRecentSearch(searchQuery, getCurrentFilters());
+                        }}
+                        disabled={isAISearching}
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Search
+                      </Button>
+                    </>
+                  )}
+                  <VoiceSearchButton
+                    onResult={(text) => {
+                      setSearchQuery(text);
+                      setIsSearchFocused(false); // Close recent searches
+                      handleAISearch(text);
+                      addRecentSearch(text, getCurrentFilters());
+                    }}
+                    size="sm"
+                  />
+                </div>
+
+                {/* AI Search Hint while typing */}
+                {isSearchFocused && searchQuery && !isAISearching && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg p-3 z-50">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <span>Press <kbd className="px-1.5 py-0.5 bg-secondary rounded text-xs font-mono">Enter</kbd> or click Search for AI-powered results</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Searches Dropdown - only show when not typing */}
+                <RecentSearches
+                  isOpen={isSearchFocused && !searchQuery && !isAISearching}
+                  onClose={() => setIsSearchFocused(false)}
+                  onSelect={(search) => {
+                    setSearchQuery(search.query);
+                    handleApplyFilters(search.filters);
+                  }}
+                />
+              </div>
 
               {/* All Controls in Single Line */}
               <div className="flex flex-wrap items-center gap-2 lg:gap-3 min-w-0">
@@ -1697,12 +1867,12 @@ const DiscoveryPage: React.FC = () => {
 
         <div className="flex gap-6">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-[220px] flex-shrink-0 overflow-hidden">
+          <aside className="hidden lg:block w-[320px] flex-shrink-0">
             <AmazonStyleFilters FilterContent={FilterContent} />
           </aside>
 
           {/* Results */}
-          <main className="flex-1 min-w-0 overflow-hidden">
+          <main className="flex-1">
             {/* Premium Results Header */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
