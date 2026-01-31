@@ -250,6 +250,16 @@ const DiscoveryPage: React.FC = () => {
     };
   }, [allProperties]);
 
+  // Sync selected area range when dynamic range changes (load)
+  useEffect(() => {
+    if (dynamicAreaRange) {
+      setSelectedAreaRange(prev => [
+        Math.max(dynamicAreaRange.min, prev[0]),
+        Math.min(dynamicAreaRange.max, prev[1])
+      ]);
+    }
+  }, [dynamicAreaRange]);
+
   const availableCities = useMemo(() => {
     const cities = Array.from(new Set(allProperties.map(p => p.location.city)));
     return cities.sort();
@@ -421,14 +431,18 @@ const DiscoveryPage: React.FC = () => {
     if (!isAreaDragging) return;
 
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const trackPadding = 8; // Match the left-2 (8px) padding
+    const effectiveWidth = rect.width - (trackPadding * 2);
+    const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left - trackPadding) / effectiveWidth));
     const value = dynamicAreaRange.min + percentage * (dynamicAreaRange.max - dynamicAreaRange.min);
     const steppedValue = Math.round(value / 50) * 50; // Step of 50
+    // Clamp to valid range
+    const clampedValue = Math.max(dynamicAreaRange.min, Math.min(dynamicAreaRange.max, steppedValue));
 
     if (isAreaDragging === 'min') {
-      setSelectedAreaRange([Math.min(steppedValue, selectedAreaRange[1]), selectedAreaRange[1]]);
+      setSelectedAreaRange([Math.min(clampedValue, selectedAreaRange[1]), selectedAreaRange[1]]);
     } else if (isAreaDragging === 'max') {
-      setSelectedAreaRange([selectedAreaRange[0], Math.max(steppedValue, selectedAreaRange[0])]);
+      setSelectedAreaRange([selectedAreaRange[0], Math.max(clampedValue, selectedAreaRange[0])]);
     }
   };
 
@@ -445,14 +459,18 @@ const DiscoveryPage: React.FC = () => {
         if (!sliderElement) return;
 
         const rect = sliderElement.getBoundingClientRect();
-        const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const trackPadding = 8;
+        const effectiveWidth = rect.width - (trackPadding * 2);
+        const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left - trackPadding) / effectiveWidth));
         const value = dynamicAreaRange.min + percentage * (dynamicAreaRange.max - dynamicAreaRange.min);
         const steppedValue = Math.round(value / 50) * 50;
+        // Clamp to valid range
+        const clampedValue = Math.max(dynamicAreaRange.min, Math.min(dynamicAreaRange.max, steppedValue));
 
         if (isAreaDragging === 'min') {
-          setSelectedAreaRange([Math.min(steppedValue, selectedAreaRange[1]), selectedAreaRange[1]]);
+          setSelectedAreaRange([Math.min(clampedValue, selectedAreaRange[1]), selectedAreaRange[1]]);
         } else if (isAreaDragging === 'max') {
-          setSelectedAreaRange([selectedAreaRange[0], Math.max(steppedValue, selectedAreaRange[0])]);
+          setSelectedAreaRange([selectedAreaRange[0], Math.max(clampedValue, selectedAreaRange[0])]);
         }
       };
 
@@ -476,7 +494,9 @@ const DiscoveryPage: React.FC = () => {
     if (!isWalkScoreDragging) return;
 
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const trackPadding = 8;
+    const effectiveWidth = rect.width - (trackPadding * 2);
+    const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left - trackPadding) / effectiveWidth));
     const value = percentage * 100;
     const steppedValue = Math.round(value / 5) * 5; // Step of 5
 
@@ -500,7 +520,9 @@ const DiscoveryPage: React.FC = () => {
         if (!sliderElement) return;
 
         const rect = sliderElement.getBoundingClientRect();
-        const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const trackPadding = 8;
+        const effectiveWidth = rect.width - (trackPadding * 2);
+        const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left - trackPadding) / effectiveWidth));
         const value = percentage * 100;
         const steppedValue = Math.round(value / 5) * 5;
 
@@ -543,6 +565,7 @@ const DiscoveryPage: React.FC = () => {
       if (result.success && Object.keys(result.filters).length > 1) {
         // Apply extracted filters
         const filters = result.filters;
+        const localities = availableCities; // Fallback for localities since variable was undefined
 
         // Reset filter states
         setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
@@ -1121,40 +1144,41 @@ const DiscoveryPage: React.FC = () => {
           <span>{selectedAreaRange[0]} sqft</span>
           <span>{selectedAreaRange[1]} sqft</span>
         </div>
-        <div className="pt-2 pb-1">
+        <div className="py-3">
           <div
-            className="relative area-slider-track cursor-pointer select-none"
+            className="relative area-slider-track cursor-pointer select-none h-6 flex items-center"
             onMouseMove={handleAreaSliderMouseMove}
             onMouseUp={handleAreaSliderMouseUp}
             onMouseLeave={handleAreaSliderMouseUp}
           >
-            {/* Track background */}
-            <div className="w-full h-2 bg-secondary rounded-full relative">
+            <div className="absolute left-2 right-2 h-2 bg-secondary rounded-full">
               {/* Active range */}
               <div
                 className="absolute h-2 bg-primary rounded-full"
                 style={{
-                  left: `${((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                  right: `${100 - ((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
+                  left: `${Math.max(0, Math.min(100, ((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100))}%`,
+                  right: `${Math.max(0, Math.min(100, 100 - ((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100))}%`,
                 }}
               />
 
               {/* Min thumb */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                className={`absolute w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'min' ? 'scale-110 cursor-grabbing z-10' : 'hover:scale-105'}`}
                 style={{
-                  left: `${((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
+                  left: `${Math.max(0, Math.min(100, ((selectedAreaRange[0] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100))}%`,
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
                 }}
                 onMouseDown={(e) => handleAreaSliderMouseDown(e, 'min')}
               />
 
               {/* Max thumb */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                className={`absolute w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isAreaDragging === 'max' ? 'scale-110 cursor-grabbing z-10' : 'hover:scale-105'}`}
                 style={{
-                  left: `${((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
+                  left: `${Math.max(0, Math.min(100, ((selectedAreaRange[1] - dynamicAreaRange.min) / (dynamicAreaRange.max - dynamicAreaRange.min)) * 100))}%`,
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
                 }}
                 onMouseDown={(e) => handleAreaSliderMouseDown(e, 'max')}
               />
@@ -1176,15 +1200,15 @@ const DiscoveryPage: React.FC = () => {
           <span>{selectedWalkScoreRange[0]}</span>
           <span>{selectedWalkScoreRange[1]}</span>
         </div>
-        <div className="pt-2 pb-1">
+        <div className="py-3">
           <div
-            className="relative walkscore-slider-track cursor-pointer select-none"
+            className="relative walkscore-slider-track cursor-pointer select-none h-6 flex items-center"
             onMouseMove={handleWalkScoreSliderMouseMove}
             onMouseUp={handleWalkScoreSliderMouseUp}
             onMouseLeave={handleWalkScoreSliderMouseUp}
           >
-            {/* Track background */}
-            <div className="w-full h-2 bg-secondary rounded-full relative">
+            {/* Track container with padding for thumbs */}
+            <div className="absolute left-2 right-2 h-2 bg-secondary rounded-full">
               {/* Active range */}
               <div
                 className="absolute h-2 bg-primary rounded-full"
@@ -1196,20 +1220,22 @@ const DiscoveryPage: React.FC = () => {
 
               {/* Min thumb */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                className={`absolute w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'min' ? 'scale-110 cursor-grabbing z-10' : 'hover:scale-105'}`}
                 style={{
                   left: `${(selectedWalkScoreRange[0] / 100) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
                 }}
                 onMouseDown={(e) => handleWalkScoreSliderMouseDown(e, 'min')}
               />
 
               {/* Max thumb */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                className={`absolute w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isWalkScoreDragging === 'max' ? 'scale-110 cursor-grabbing z-10' : 'hover:scale-105'}`}
                 style={{
                   left: `${(selectedWalkScoreRange[1] / 100) * 100}%`,
-                  transform: `translateX(-50%) translateY(-50%)`,
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
                 }}
                 onMouseDown={(e) => handleWalkScoreSliderMouseDown(e, 'max')}
               />
@@ -1235,7 +1261,7 @@ const DiscoveryPage: React.FC = () => {
           <Checkbox
             id="verified-only"
             checked={verifiedOnly}
-            onCheckedChange={setVerifiedOnly}
+            onCheckedChange={(checked) => setVerifiedOnly(checked === true)}
           />
           <Label htmlFor="verified-only" className="cursor-pointer text-sm">
             Verified Properties Only
@@ -1489,107 +1515,6 @@ const DiscoveryPage: React.FC = () => {
         {/* Content on top of wave */}
         <div className="relative z-10 px-4 pt-6 pb-3">
           <div className="max-w-7xl mx-auto">
-            {/* Premium Hero Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-6"
-            >
-              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
-                <div>
-                  <h1 className="font-premium text-fluid-2xl font-bold text-foreground mb-2">
-                    Discover Your Dream Home
-                  </h1>
-                  <p className="text-muted-foreground text-lg">
-                    <span className="font-semibold text-primary">{allProperties.length}</span> verified properties waiting for you
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">AI-Powered Search</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Filter Chips */}
-              <div className="flex flex-wrap gap-2">
-                {quickFilterChips.map((chip, index) => {
-                  const Icon = chip.icon;
-                  const isActive =
-                    (chip.id === 'pet-friendly' && selectedLifestyle.includes('pet-friendly')) ||
-                    (chip.id === 'under-1cr' && selectedPriceRange[1] <= 10000000) ||
-                    (chip.id === 'ready-to-move' && selectedPossessionStatus.includes('ready')) ||
-                    (chip.id === 'verified' && verifiedOnly) ||
-                    (chip.id === 'near-metro' && selectedLifestyle.includes('near-metro')) ||
-                    (chip.id === 'premium' && selectedPriceRange[0] >= 20000000);
-
-                  return (
-                    <motion.button
-                      key={chip.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => {
-                        switch (chip.id) {
-                          case 'pet-friendly':
-                            setSelectedLifestyle(prev =>
-                              prev.includes('pet-friendly')
-                                ? prev.filter(l => l !== 'pet-friendly')
-                                : [...prev, 'pet-friendly']
-                            );
-                            break;
-                          case 'under-1cr':
-                            if (selectedPriceRange[1] <= 10000000) {
-                              setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
-                            } else {
-                              setSelectedPriceRange([dynamicPriceRange.min, 10000000]);
-                            }
-                            break;
-                          case 'ready-to-move':
-                            setSelectedPossessionStatus(prev =>
-                              prev.includes('ready')
-                                ? prev.filter(p => p !== 'ready')
-                                : [...prev, 'ready']
-                            );
-                            break;
-                          case 'verified':
-                            setVerifiedOnly(!verifiedOnly);
-                            break;
-                          case 'near-metro':
-                            setSelectedLifestyle(prev =>
-                              prev.includes('near-metro')
-                                ? prev.filter(l => l !== 'near-metro')
-                                : [...prev, 'near-metro']
-                            );
-                            break;
-                          case 'premium':
-                            if (selectedPriceRange[0] >= 20000000) {
-                              setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
-                            } else {
-                              setSelectedPriceRange([20000000, dynamicPriceRange.max]);
-                            }
-                            break;
-                        }
-                      }}
-                      className={`
-                        group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-                        transition-all duration-300 hover:scale-105 hover:shadow-md
-                        ${isActive
-                          ? `bg-gradient-to-r ${chip.color} text-white shadow-lg`
-                          : 'bg-white/80 hover:bg-white text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30'
-                        }
-                      `}
-                    >
-                      <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : ''}`} />
-                      {chip.label}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </motion.div>
-
             {/* Search & Controls - Single Line */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6 min-w-0">
               {/* Search Input with Glassmorphism */}

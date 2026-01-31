@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Newspaper, 
-  TrendingUp, 
-  TrendingDown, 
-  Building2, 
-  MapPin, 
-  Calendar, 
+import {
+  Newspaper,
+  TrendingUp,
+  TrendingDown,
+  Building2,
+  MapPin,
+  Calendar,
   ExternalLink,
   RefreshCw,
   Filter,
@@ -79,7 +79,7 @@ const mockNews: NewsArticle[] = [
     readTime: 6,
     city: 'Pune'
   },
-  
+
   // POLICY NEWS
   {
     id: '2',
@@ -115,7 +115,7 @@ const mockNews: NewsArticle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=400&h=250&fit=crop',
     readTime: 3
   },
-  
+
   // INVESTMENT NEWS
   {
     id: '3',
@@ -150,7 +150,7 @@ const mockNews: NewsArticle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=250&fit=crop',
     readTime: 6
   },
-  
+
   // TRENDS NEWS
   {
     id: '4',
@@ -196,7 +196,7 @@ const mockNews: NewsArticle[] = [
     imageUrl: 'https://images.unsplash.com/photo-1617802690992-15d93263d3a9?w=400&h=250&fit=crop',
     readTime: 4
   },
-  
+
   // CITY NEWS
   {
     id: '5',
@@ -267,19 +267,19 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
         animate={{ opacity: 1, y: 0 }}
         className="relative group"
       >
-        <a 
-          href={article.sourceUrl} 
-          target="_blank" 
+        <a
+          href={article.sourceUrl}
+          target="_blank"
           rel="noopener noreferrer"
           className="block"
         >
           <Card className="overflow-hidden border-0 rounded-none hover:shadow-lg transition-shadow cursor-pointer">
             <div className="grid md:grid-cols-2 gap-0">
-              <div className="relative aspect-video md:aspect-auto">
+              <div className="relative aspect-video md:aspect-auto md:min-h-[320px]">
                 <img
                   src={article.imageUrl}
                   alt={article.title}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 {article.trending && (
                   <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground gap-1">
@@ -334,9 +334,9 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
       animate={{ opacity: 1, y: 0 }}
       className="group"
     >
-      <a 
-        href={article.sourceUrl} 
-        target="_blank" 
+      <a
+        href={article.sourceUrl}
+        target="_blank"
         rel="noopener noreferrer"
         className="block h-full"
       >
@@ -347,8 +347,8 @@ const NewsCard: React.FC<{ article: NewsArticle; featured?: boolean }> = ({ arti
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            <Badge 
-              variant="secondary" 
+            <Badge
+              variant="secondary"
               className={cn('absolute top-3 left-3 gap-1', categoryConfig[article.category].color, 'text-white')}
             >
               <CategoryIcon className="h-3 w-3" />
@@ -389,7 +389,7 @@ const NewsPage: React.FC = () => {
   const [news, setNews] = useState<NewsArticle[]>(mockNews);
   const [isLoading, setIsLoading] = useState(true);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
-  
+
   // Read category from URL, default to 'all'
   const categoryFromUrl = searchParams.get('category') || 'all';
   const [activeCategory, setActiveCategory] = useState<string>(categoryFromUrl);
@@ -410,7 +410,7 @@ const NewsPage: React.FC = () => {
     try {
       const { fetchRealEstateNews } = await import('@/services/newsService');
       const realNews = await fetchRealEstateNews();
-      
+
       if (realNews.length > 0) {
         setNews(realNews as NewsArticle[]);
         setLastFetched(new Date());
@@ -435,8 +435,8 @@ const NewsPage: React.FC = () => {
     }
   };
 
-  const filteredNews = activeCategory === 'all' 
-    ? news 
+  const filteredNews = activeCategory === 'all'
+    ? news
     : news.filter(article => article.category === activeCategory);
 
   const featuredArticle = filteredNews.find(article => article.trending) || filteredNews[0];
@@ -449,7 +449,7 @@ const NewsPage: React.FC = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Soft flowing gradient background - flowing bottom to top */}
-      <div 
+      <div
         className="fixed inset-0 -z-10"
         style={{
           background: `
@@ -463,35 +463,35 @@ const NewsPage: React.FC = () => {
           `
         }}
       />
-      
+
       {/* Animated gradient blobs */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         {/* Lavender blob - bottom center */}
-        <div 
+        <div
           className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[700px] h-[600px] rounded-full opacity-40 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
           }}
         />
-        
+
         {/* Warm peach blob - top right */}
-        <div 
+        <div
           className="absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full opacity-35 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
           }}
         />
-        
+
         {/* Soft blue blob - top left */}
-        <div 
+        <div
           className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
           }}
         />
-        
+
         {/* Pink accent blob - right side */}
-        <div 
+        <div
           className="absolute top-1/2 -right-20 w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(230, 200, 220, 0.5) 0%, transparent 60%)'
@@ -500,7 +500,7 @@ const NewsPage: React.FC = () => {
       </div>
 
       <Header />
-      
+
       <main className="container py-8">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -513,8 +513,8 @@ const NewsPage: React.FC = () => {
               Stay updated with the latest property market trends, policies, and insights
             </p>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={refreshNews}
             disabled={isLoading}
             className="gap-2"
