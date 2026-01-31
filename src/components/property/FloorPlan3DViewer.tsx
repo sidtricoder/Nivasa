@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,7 +51,13 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
 
   const cameraDistance = Math.max(bounds.maxX, bounds.maxZ) * 0.5;
 
-  const Scene = () => (
+  // Memoize hover handler to prevent re-renders
+  const handleHover = useCallback((roomId: string | null) => {
+    setHoveredRoom(roomId);
+  }, []);
+
+  // Memoize the scene to prevent re-renders
+  const sceneContent = useMemo(() => (
     <>
       <PerspectiveCamera 
         makeDefault 
@@ -67,6 +73,7 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
         minPolarAngle={0.2}
         maxPolarAngle={Math.PI / 2.2}
         target={[bounds.maxX * 0.15, 0, bounds.maxZ * 0.15]}
+        makeDefault
       />
       
       {/* Lighting */}
@@ -96,8 +103,8 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
         <Room3D
           key={room.id}
           room={room}
-          isHovered={hoveredRoom === room.id}
-          onHover={setHoveredRoom}
+          isHovered={false}
+          onHover={() => {}}
         />
       ))}
 
@@ -113,7 +120,7 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
       {/* Environment for reflections */}
       <Environment preset="apartment" />
     </>
-  );
+  ), [floorPlan.rooms, bounds.maxX, bounds.maxZ, cameraDistance]);
 
   const LoadingFallback = () => (
     <div className="absolute inset-0 flex items-center justify-center bg-secondary/30">
@@ -149,9 +156,10 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
                   antialias: true,
                   powerPreference: 'high-performance',
                   failIfMajorPerformanceCaveat: false,
+                  preserveDrawingBuffer: true,
                 }}
               >
-                <Scene />
+                {sceneContent}
               </Canvas>
             </Suspense>
           </motion.div>

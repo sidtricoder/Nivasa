@@ -581,7 +581,7 @@ const PropertyDetailPage: React.FC = () => {
                       </div>
                     )}
                   </TabsContent>
-                  <TabsContent value="floor-plan" className="mt-0">
+                  <TabsContent value="floor-plan" className="mt-0 data-[state=inactive]:hidden" forceMount>
                     <FloorPlan3DViewer floorPlan={property.floorPlan!} />
                   </TabsContent>
                 </CardContent>
