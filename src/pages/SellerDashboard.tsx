@@ -1057,14 +1057,14 @@ const SellerDashboard: React.FC = () => {
             <div className="space-y-2">
               <Label>Property Location *</Label>
               <MapPicker
-                address={`${formData.society}, ${formData.locality}, ${formData.city}`}
+                address={`${formData.society}, ${formData.locality}, ${formData.city}, ${formData.state}, ${formData.pincode}`}
                 initialCoordinates={formData.coordinates.lat !== 0 ? formData.coordinates : undefined}
                 onCoordinatesChange={(coords) => {
                   setFormData(prev => ({ ...prev, coordinates: coords }));
                 }}
               />
               <p className="text-xs text-muted-foreground mt-2">
-                💡 The map will search for "{formData.society || 'the society/area'}" to help you locate the general area. Then you can click or drag the marker to pinpoint the exact property location.
+                💡 Search for your area name or pincode (e.g., "{formData.pincode || formData.city || 'pincode'}"). You can also click directly on the map to set the exact location.
               </p>
             </div>
           </motion.div>

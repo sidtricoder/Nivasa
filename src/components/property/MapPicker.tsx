@@ -1,11 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader2, RefreshCw, Search } from 'lucide-react';
+import { MapPin, Loader2, RefreshCw, Search, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { geocodeAddress, reverseGeocode } from '@/services/geocodingService';
 import loadGoogleMaps from '@/lib/googleMapsLoader';
+
+// India bounds for validation
+const INDIA_BOUNDS = {
+  minLat: 6.5,
+  maxLat: 35.5,
+  minLng: 68.0,
+  maxLng: 97.5,
+  center: { lat: 20.5937, lng: 78.9629 }, // Center of India
+};
+
+const isWithinIndia = (lat: number, lng: number): boolean => {
+  return lat >= INDIA_BOUNDS.minLat && 
+         lat <= INDIA_BOUNDS.maxLat && 
+         lng >= INDIA_BOUNDS.minLng && 
+         lng <= INDIA_BOUNDS.maxLng;
+};
 
 interface MapPickerProps {
   address: string;
@@ -35,6 +51,21 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const [error, setError] = useState<string>('');
   const [coordinates, setCoordinates] = useState(initialCoordinates || { lat: 0, lng: 0 });
   const [searchValue, setSearchValue] = useState(address || '');
+
+  // Update search value when address prop changes
+  useEffect(() => {
+    if (address) {
+      // Clean up address - remove empty parts
+      const cleanAddress = address
+        .split(',')
+        .map(part => part.trim())
+        .filter(part => part && part !== '')
+        .join(', ');
+      if (cleanAddress && cleanAddress !== searchValue) {
+        setSearchValue(cleanAddress);
+      }
+    }
+  }, [address]);
 
   // Initialize map
   useEffect(() => {
@@ -108,6 +139,13 @@ const MapPicker: React.FC<MapPickerProps> = ({
             lat: e.latLng.lat(),
             lng: e.latLng.lng(),
           };
+
+          // Validate location is within India
+          if (!isWithinIndia(newCoords.lat, newCoords.lng)) {
+            setError('Please select a location within India');
+            return;
+          }
+          setError('');
 
           setCoordinates(newCoords);
           onCoordinatesChange(newCoords);
