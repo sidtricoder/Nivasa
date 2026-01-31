@@ -78,8 +78,8 @@ const ContactPage: React.FC = () => {
       icon: MapPin,
       title: 'Visit Us',
       description: 'Our headquarters',
-      value: '123, Brigade Road',
-      secondaryValue: 'Bangalore, Karnataka 560001',
+      value: 'IIIT Bangalore, 26/C',
+      secondaryValue: 'Electronic City Phase 1, Bangalore 560100',
       color: 'from-orange-500/20 to-amber-500/10',
       iconColor: 'text-orange-500',
       iconBg: 'bg-orange-500/10',
@@ -97,11 +97,13 @@ const ContactPage: React.FC = () => {
   ];
 
   const quickHelp = [
-    { question: 'How do I list my property for free?', icon: Building2 },
-    { question: 'What documents are needed for verification?', icon: CheckCircle },
-    { question: 'How does the zero brokerage model work?', icon: Users },
-    { question: 'How can I schedule a property visit?', icon: MapPin },
+    { question: 'How do I list my property for free?', icon: Building2, answer: 'Simply sign up, go to "Post Property" and follow the steps. Listing is completely free with zero brokerage!' },
+    { question: 'What documents are needed for verification?', icon: CheckCircle, answer: 'You need property documents, ID proof, and ownership documents. Our team will guide you through the process.' },
+    { question: 'How does the zero brokerage model work?', icon: Users, answer: 'We connect buyers and sellers directly. No middlemen means no brokerage fees for either party!' },
+    { question: 'How can I schedule a property visit?', icon: MapPin, answer: 'Click "Schedule Visit" on any property page or contact the seller directly through our chat feature.' },
   ];
+
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const stats = [
     { value: '< 24h', label: 'Response Time', icon: Clock },
@@ -255,26 +257,41 @@ const ContactPage: React.FC = () => {
                   </div>
                   Frequently Asked
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {quickHelp.map((item, index) => (
-                    <motion.button
+                    <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.1 }}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100/50 hover:from-[#3B7BFF]/5 hover:to-[#8B5CF6]/5 transition-all group text-left"
                     >
-                      <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                        <item.icon className="h-5 w-5 text-[#6B7280] group-hover:text-[#3B7BFF] transition-colors" />
-                      </div>
-                      <span className="text-[#2B2F36] font-medium group-hover:text-[#3B7BFF] transition-colors">
-                        {item.question}
-                      </span>
-                    </motion.button>
+                      <button
+                        onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                        className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100/50 hover:from-[#3B7BFF]/5 hover:to-[#8B5CF6]/5 transition-all group text-left"
+                      >
+                        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                          <item.icon className="h-5 w-5 text-[#6B7280] group-hover:text-[#3B7BFF] transition-colors" />
+                        </div>
+                        <span className="text-[#2B2F36] font-medium group-hover:text-[#3B7BFF] transition-colors flex-1">
+                          {item.question}
+                        </span>
+                        <ArrowRight className={`h-4 w-4 text-gray-400 transition-transform ${openFaq === index ? 'rotate-90' : ''}`} />
+                      </button>
+                      {openFaq === index && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="px-4 py-3 ml-14 text-sm text-[#6B7280] bg-blue-50/50 rounded-lg mt-2"
+                        >
+                          {item.answer}
+                        </motion.div>
+                      )}
+                    </motion.div>
                   ))}
                 </div>
-                <Link to="/about">
+                <Link to="/about" onClick={() => window.scrollTo(0, 0)}>
                   <Button 
                     variant="outline" 
                     className="w-full mt-6 gap-2 border-2 hover:bg-[#3B7BFF]/5 hover:border-[#3B7BFF]/30"
@@ -289,7 +306,7 @@ const ContactPage: React.FC = () => {
               <div className="bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/50 shadow-lg">
                 <div className="relative h-64">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.0095730792814!2d77.60678931579953!3d12.970598190854766!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0xf8dfc3e8517e4fe0!2sBrigade%20Road%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1625000000000!5m2!1sen!2sin"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3890.0463477358957!2d77.66270731579812!3d12.839231990934847!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae6c8524254023%3A0xbb8e6478e6a8f724!2sIIIT%20Bangalore!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -299,7 +316,7 @@ const ContactPage: React.FC = () => {
                     className="grayscale hover:grayscale-0 transition-all duration-500"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-transparent p-4">
-                    <p className="text-sm font-medium text-[#2B2F36]">📍 123, Brigade Road, Bangalore</p>
+                    <p className="text-sm font-medium text-[#2B2F36]">📍 IIIT Bangalore, Electronic City</p>
                   </div>
                 </div>
               </div>
@@ -396,20 +413,27 @@ const ContactPage: React.FC = () => {
                         <label className="block text-sm font-semibold text-[#2B2F36]">
                           Subject *
                         </label>
-                        <select
-                          name="subject"
-                          value={formData.subject}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 bg-white/50 backdrop-blur transition-all appearance-none cursor-pointer"
-                        >
-                          <option value="">Select a topic</option>
-                          <option value="buying">Buying a Property</option>
-                          <option value="selling">Selling a Property</option>
-                          <option value="verification">Property Verification</option>
-                          <option value="support">Technical Support</option>
-                          <option value="other">Other</option>
-                        </select>
+                        <div className="relative">
+                          <select
+                            name="subject"
+                            value={formData.subject}
+                            onChange={handleChange}
+                            required
+                            className="flex w-full rounded-xl border-2 border-gray-100 bg-white/50 px-5 py-2 text-base focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 backdrop-blur transition-all appearance-none cursor-pointer file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Select a topic</option>
+                            <option value="buying">Buying a Property</option>
+                            <option value="selling">Selling a Property</option>
+                            <option value="verification">Property Verification</option>
+                            <option value="support">Technical Support</option>
+                            <option value="other">Other</option>
+                          </select>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

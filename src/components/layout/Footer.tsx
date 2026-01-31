@@ -42,24 +42,24 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-foreground">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/discover" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/discover" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Browse Properties
                 </Link>
               </li>
               <li>
-                <Link to="/seller" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/seller" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   List Your Property
                 </Link>
               </li>
               <li>
-                <Link to="/favorites" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/favorites" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Saved Properties
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  How It Works
-                </a>
+                <Link to="/about" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  About Us
+                </Link>
               </li>
             </ul>
           </div>
@@ -69,24 +69,24 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-foreground">Resources</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Buying Guide
-                </a>
+                <Link to="/news" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  News & Updates
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Selling Guide
-                </a>
+                <Link to="/services" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Our Services
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/emi-calculator" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   EMI Calculator
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Market Trends
-                </a>
+                <Link to="/contact" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Contact Us
+                </Link>
               </li>
             </ul>
           </div>
@@ -98,7 +98,7 @@ const Footer: React.FC = () => {
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <span className="text-sm text-muted-foreground">
-                  123 Tech Park, Koramangala,<br />Bangalore 560034
+                  IIIT Bangalore, 26/C,<br />Electronic City Phase 1,<br />Bangalore 560100
                 </span>
               </li>
               <li className="flex items-center gap-2">

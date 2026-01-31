@@ -62,27 +62,21 @@ const AboutPage: React.FC = () => {
   const team = [
     {
       name: 'Aditya Mittal',
-      role: 'Founder & CEO',
+      role: 'Co-Founder & CEO',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-      bio: 'Visionary leader with 10+ years in real estate tech',
+      bio: 'Visionary leader passionate about transforming real estate',
     },
     {
-      name: 'Priya Sharma',
-      role: 'Chief Technology Officer',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
-      bio: 'Tech innovator building the future of proptech',
-    },
-    {
-      name: 'Rahul Verma',
-      role: 'Head of Operations',
+      name: 'Divyanshu Ghosh',
+      role: 'Co-Founder & CTO',
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
-      bio: 'Ensuring seamless experiences across all touchpoints',
+      bio: 'Tech innovator building cutting-edge proptech solutions',
     },
     {
-      name: 'Sneha Patel',
-      role: 'Head of Customer Success',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
-      bio: 'Dedicated to making every customer journey delightful',
+      name: 'Siddharth Tripathi',
+      role: 'Co-Founder & COO',
+      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
+      bio: 'Operations expert ensuring seamless customer experiences',
     },
   ];
 
@@ -414,7 +408,7 @@ const AboutPage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {team.map((member, index) => (
               <motion.div
                 key={member.name}
