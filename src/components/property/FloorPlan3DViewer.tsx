@@ -151,6 +151,7 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
             <Suspense fallback={<LoadingFallback />}>
               <Canvas 
                 shadows
+                frameloop="demand"
                 camera={{ position: [20, 25, 20], fov: 50 }}
                 gl={{ 
                   antialias: true,

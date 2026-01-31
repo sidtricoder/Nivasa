@@ -27,7 +27,8 @@ import CompareModal from '@/components/property/CompareModal';
 import WhyNivasa from '@/components/landing/WhyNivasa';
 import FAQSection from '@/components/landing/FAQSection';
 import BounceCards from '@/components/ui/BounceCards';
-import { mockListings } from '@/data/listings';
+import { mockListings, Property } from '@/data/listings';
+import { getAllProperties } from '@/services/firestoreService';
 
 const lifestyleFilters = [
   { label: 'Pet Friendly', icon: PawPrint, query: 'pet-friendly' },
@@ -122,6 +123,25 @@ const CountUp: React.FC<{ end: number; suffix?: string; prefix?: string; duratio
 
 const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>(mockListings.slice(0, 3));
+
+  // Load properties from Firestore for the "Selling Fast" section
+  useEffect(() => {
+    const loadFeaturedProperties = async () => {
+      try {
+        const result = await getAllProperties(3);
+        const firebaseProperties = result.properties || [];
+        // Use Firebase properties if available, otherwise fallback to mock
+        if (firebaseProperties.length > 0) {
+          setFeaturedProperties(firebaseProperties.slice(0, 3));
+        }
+      } catch (error) {
+        console.error('Error loading featured properties:', error);
+        // Keep using mock listings on error
+      }
+    };
+    loadFeaturedProperties();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,7 +220,7 @@ const LandingPage: React.FC = () => {
 
           {/* Property Grid - Only 3 properties, seamless cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-            {mockListings.slice(0, 3).map((property, index) => (
+            {featuredProperties.map((property, index) => (
               <motion.div
                 key={property.id}
                 initial={{ opacity: 0, y: 30 }}

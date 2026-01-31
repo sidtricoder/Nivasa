@@ -208,7 +208,13 @@ const DiscoveryPage: React.FC = () => {
   const [loadingProperties, setLoadingProperties] = useState(true);
 
   // Calculate dynamic price range including Firebase properties
-  const allProperties = useMemo(() => [...mockListings, ...firebaseProperties], [firebaseProperties]);
+  // Deduplicate by ID, prioritizing Firebase data over mock data
+  const allProperties = useMemo(() => {
+    const firebaseIds = new Set(firebaseProperties.map(p => p.id));
+    // Filter out mock listings that exist in Firebase (by ID)
+    const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
+    return [...firebaseProperties, ...uniqueMockListings];
+  }, [firebaseProperties]);
   
   const dynamicPriceRange = useMemo(() => {
     if (allProperties.length === 0) return priceRange;
@@ -423,9 +429,9 @@ const DiscoveryPage: React.FC = () => {
           ]);
         }
         
-        // For locality, try to find exact match in available localities for dropdown
+        // For locality, try to find exact match in available cities for dropdown
         if (filters.locality) {
-          const matchedLocality = localities.find(
+          const matchedLocality = availableCities.find(
             loc => loc.toLowerCase() === filters.locality?.toLowerCase()
           );
           if (matchedLocality) {
@@ -558,8 +564,11 @@ const DiscoveryPage: React.FC = () => {
 
   // Memoized filtered listings
   const filteredListings = useMemo(() => {
-    // Combine mock listings with Firebase properties
-    let results = [...mockListings, ...firebaseProperties];
+    // Combine mock listings with Firebase properties, deduplicating by ID
+    // Firebase properties take priority (they may have been edited)
+    const firebaseIds = new Set(firebaseProperties.map(p => p.id));
+    const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
+    let results = [...firebaseProperties, ...uniqueMockListings];
 
     // Search query - match if any significant word from query matches property fields
     if (searchQuery) {
@@ -984,7 +993,7 @@ const DiscoveryPage: React.FC = () => {
         <div className="px-2">
           <Slider
             value={selectedAreaRange}
-            onValueChange={setSelectedAreaRange}
+            onValueChange={(value) => setSelectedAreaRange(value as [number, number])}
             min={dynamicAreaRange.min}
             max={dynamicAreaRange.max}
             step={50}
@@ -1005,7 +1014,7 @@ const DiscoveryPage: React.FC = () => {
         <div className="px-2">
           <Slider
             value={selectedWalkScoreRange}
-            onValueChange={setSelectedWalkScoreRange}
+            onValueChange={(value) => setSelectedWalkScoreRange(value as [number, number])}
             min={0}
             max={100}
             step={5}
@@ -1031,7 +1040,7 @@ const DiscoveryPage: React.FC = () => {
           <Checkbox
             id="verified-only"
             checked={verifiedOnly}
-            onCheckedChange={setVerifiedOnly}
+            onCheckedChange={(checked) => setVerifiedOnly(checked === true)}
           />
           <Label htmlFor="verified-only" className="cursor-pointer text-sm">
             Verified Properties Only
