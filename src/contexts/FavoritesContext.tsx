@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 interface FavoritesContextType {
@@ -31,89 +31,77 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load favorites from Firebase when user logs in
+  // Real-time sync with Firebase using onSnapshot
   useEffect(() => {
-    const loadFavorites = async () => {
-      if (!currentUser) {
-        setFavorites([]);
-        setLoading(false);
-        return;
-      }
+    if (!currentUser) {
+      setFavorites([]);
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const docRef = doc(db, FAVORITES_COLLECTION, currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        
+    const docRef = doc(db, FAVORITES_COLLECTION, currentUser.uid);
+    
+    // Use onSnapshot for real-time updates
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setFavorites(data.propertyIds || []);
         } else {
-          // Create empty favorites document for new user
-          await setDoc(docRef, { propertyIds: [], updatedAt: new Date() });
+          // Document doesn't exist yet - create it
+          setDoc(docRef, { propertyIds: [], updatedAt: new Date() })
+            .catch(err => console.error('Error creating favorites doc:', err));
           setFavorites([]);
         }
-      } catch (error) {
-        console.error('Error loading favorites:', error);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error in favorites listener:', error);
         setFavorites([]);
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    loadFavorites();
+    return () => unsubscribe();
   }, [currentUser]);
 
-  // Save to Firebase helper
-  const saveFavoriteToFirebase = async (propertyId: string, action: 'add' | 'remove') => {
+  // Save favorites to Firebase
+  const saveFavorites = useCallback(async (newFavorites: string[]) => {
     if (!currentUser) return;
-
+    
     try {
       const docRef = doc(db, FAVORITES_COLLECTION, currentUser.uid);
-      
-      if (action === 'add') {
-        await updateDoc(docRef, {
-          propertyIds: arrayUnion(propertyId),
-          updatedAt: new Date(),
-        });
-      } else {
-        await updateDoc(docRef, {
-          propertyIds: arrayRemove(propertyId),
-          updatedAt: new Date(),
-        });
-      }
+      await setDoc(docRef, { 
+        propertyIds: newFavorites, 
+        updatedAt: new Date() 
+      });
     } catch (error) {
-      console.error('Error saving favorite to Firebase:', error);
+      console.error('Error saving favorites:', error);
     }
-  };
+  }, [currentUser]);
 
   const addFavorite = useCallback((propertyId: string) => {
-    setFavorites(prev => {
-      if (!prev.includes(propertyId)) {
-        saveFavoriteToFirebase(propertyId, 'add');
-        return [...prev, propertyId];
-      }
-      return prev;
-    });
-  }, [currentUser]);
+    if (!currentUser) return;
+    const newFavorites = favorites.includes(propertyId) 
+      ? favorites 
+      : [...favorites, propertyId];
+    saveFavorites(newFavorites);
+  }, [currentUser, favorites, saveFavorites]);
 
   const removeFavorite = useCallback((propertyId: string) => {
-    setFavorites(prev => {
-      saveFavoriteToFirebase(propertyId, 'remove');
-      return prev.filter(id => id !== propertyId);
-    });
-  }, [currentUser]);
+    if (!currentUser) return;
+    const newFavorites = favorites.filter(id => id !== propertyId);
+    saveFavorites(newFavorites);
+  }, [currentUser, favorites, saveFavorites]);
 
   const toggleFavorite = useCallback((propertyId: string) => {
-    setFavorites(prev => {
-      if (prev.includes(propertyId)) {
-        saveFavoriteToFirebase(propertyId, 'remove');
-        return prev.filter(id => id !== propertyId);
-      } else {
-        saveFavoriteToFirebase(propertyId, 'add');
-        return [...prev, propertyId];
-      }
-    });
-  }, [currentUser]);
+    if (!currentUser) return;
+    const newFavorites = favorites.includes(propertyId)
+      ? favorites.filter(id => id !== propertyId)
+      : [...favorites, propertyId];
+    saveFavorites(newFavorites);
+  }, [currentUser, favorites, saveFavorites]);
 
   const isFavorite = useCallback((propertyId: string) => {
     return favorites.includes(propertyId);

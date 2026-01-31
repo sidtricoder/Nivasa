@@ -21,7 +21,8 @@ import {
   Users,
   Loader2,
   X,
-  AlertTriangle
+  AlertTriangle,
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -57,6 +58,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CompareModal from '@/components/property/CompareModal';
 import MapPicker from '@/components/property/MapPicker';
+import FirebaseChatDrawer from '@/components/communication/FirebaseChatDrawer';
 
 const steps = [
   { id: 1, title: 'Basics', icon: Home, description: 'Property details' },
@@ -87,6 +89,13 @@ const SellerDashboard: React.FC = () => {
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
   const [leads, setLeads] = useState<PropertyLead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
+  
+  // Chat drawer state for messaging leads
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatBuyerId, setChatBuyerId] = useState<string>('');
+  const [chatBuyerName, setChatBuyerName] = useState<string>('');
+  const [chatPropertyId, setChatPropertyId] = useState<string>('');
+  const [chatPropertyTitle, setChatPropertyTitle] = useState<string>('');
   
   // Image files state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -1623,15 +1632,32 @@ const SellerDashboard: React.FC = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <Badge variant="secondary" className="mb-1">
-                                      {lead.status}
-                                    </Badge>
-                                    <p className="text-xs text-muted-foreground">
-                                      {lead.createdAt?.toDate ? 
-                                        new Date(lead.createdAt.toDate()).toLocaleDateString() : 
-                                        'Recently'}
-                                    </p>
+                                  <div className="flex items-center gap-3">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="gap-2"
+                                      onClick={() => {
+                                        setChatBuyerId(lead.userId);
+                                        setChatBuyerName(lead.userName);
+                                        setChatPropertyId(lead.propertyId);
+                                        setChatPropertyTitle(property?.title || 'Property');
+                                        setIsChatOpen(true);
+                                      }}
+                                    >
+                                      <MessageCircle className="h-4 w-4" />
+                                      Message
+                                    </Button>
+                                    <div className="text-right">
+                                      <Badge variant="secondary" className="mb-1">
+                                        {lead.status}
+                                      </Badge>
+                                      <p className="text-xs text-muted-foreground">
+                                        {lead.createdAt?.toDate ? 
+                                          new Date(lead.createdAt.toDate()).toLocaleDateString() : 
+                                          'Recently'}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
                               ))}
@@ -1647,6 +1673,16 @@ const SellerDashboard: React.FC = () => {
           </Tabs>
         </div>
       </main>
+
+      {/* Chat drawer for messaging leads */}
+      <FirebaseChatDrawer
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        propertyId={chatPropertyId}
+        sellerId={chatBuyerId}
+        sellerName={chatBuyerName}
+        propertyTitle={chatPropertyTitle}
+      />
 
       <Footer />
     </div>
