@@ -22,6 +22,21 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
 
+  // Validate floor plan data
+  if (!floorPlan || !floorPlan.rooms || floorPlan.rooms.length === 0) {
+    return (
+      <div className={cn('flex flex-col items-center justify-center p-8 rounded-xl bg-muted/50 min-h-[300px]', className)}>
+        <Box className="h-12 w-12 text-muted-foreground mb-3" />
+        <p className="text-muted-foreground text-center">
+          No floor plan data available
+        </p>
+        <p className="text-sm text-muted-foreground/70 text-center mt-1">
+          The seller hasn't uploaded a floor plan yet
+        </p>
+      </div>
+    );
+  }
+
   const hoveredRoomData = floorPlan.rooms.find(r => r.id === hoveredRoom);
 
   // Calculate bounds for camera positioning
