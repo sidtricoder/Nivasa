@@ -34,7 +34,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
-import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
+import { RecentSearches, SavedSearches } from '@/components/search';
 import { useSearchStore } from '@/stores/searchStore';
 import { mockListings, getPriceRange, Property } from '@/data/listings';
 import { toast } from 'sonner';
@@ -1374,15 +1374,6 @@ const DiscoveryPage: React.FC = () => {
                   </Button>
                 </>
               )}
-              <VoiceSearchButton 
-                onResult={(text) => {
-                  setSearchQuery(text);
-                  setIsSearchFocused(false); // Close recent searches
-                  handleAISearch(text);
-                  addRecentSearch(text, getCurrentFilters());
-                }}
-                size="sm"
-              />
             </div>
             
             {/* AI Search Hint while typing */}
