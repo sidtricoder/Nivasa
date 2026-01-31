@@ -103,6 +103,10 @@ const SellerDashboard: React.FC = () => {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState('');
   
+  // 360° Panorama images state
+  const [panoramaUrls, setPanoramaUrls] = useState<string[]>([]);
+  const [panoramaUrlInput, setPanoramaUrlInput] = useState('');
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -137,6 +141,7 @@ const SellerDashboard: React.FC = () => {
     hasParking: false,
     coordinates: { lat: 0, lng: 0 },
     sellerPhone: '',
+    panoramaImages: [] as string[],
   });
 
   const progress = (currentStep / steps.length) * 100;
@@ -461,6 +466,7 @@ const SellerDashboard: React.FC = () => {
         isNewListing: true,
         listedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        panoramaImages: panoramaUrls.length > 0 ? panoramaUrls : undefined,
       };
 
       if (editingPropertyId) {
@@ -532,11 +538,14 @@ const SellerDashboard: React.FC = () => {
       hasParking: false,
       coordinates: { lat: 0, lng: 0 },
       sellerPhone: '',
+      panoramaImages: [],
     });
     setSelectedFiles([]);
     setImagePreviews([]);
     setImageUrls([]);
     setUrlInput('');
+    setPanoramaUrls([]);
+    setPanoramaUrlInput('');
     setCurrentStep(1);
     setEditingPropertyId(null);
   };
@@ -583,7 +592,9 @@ const SellerDashboard: React.FC = () => {
       hasParking: property.hasParking,
       coordinates: property.location.coordinates,
       sellerPhone: property.seller?.phone || '',
+      panoramaImages: property.panoramaImages || [],
     });
+    setPanoramaUrls(property.panoramaImages || []);
     setImagePreviews(property.images);
     setEditingPropertyId(property.id);
     setActiveTab('new-listing');
@@ -619,35 +630,6 @@ const SellerDashboard: React.FC = () => {
       setCurrentStep(prev => prev - 1);
     }
   };
-
-  // Price Estimator Logic
-  const estimatedPrice = React.useMemo(() => {
-    const basePrice = 5000; // per sqft base
-    const sqft = parseInt(formData.sqft) || 0;
-    const bhk = parseInt(formData.bhk) || 0;
-    
-    if (!sqft) return 0;
-    
-    let pricePerSqft = basePrice;
-    
-    // Adjust for locality (mock adjustment)
-    const localityMultiplier: Record<string, number> = {
-      'koramangala': 1.5,
-      'indiranagar': 1.6,
-      'whitefield': 1.1,
-      'hsr': 1.3,
-    };
-    pricePerSqft *= localityMultiplier[formData.locality.toLowerCase()] || 1;
-    
-    // Adjust for BHK
-    pricePerSqft += bhk * 200;
-    
-    // Adjust for property type
-    if (formData.propertyType === 'villa') pricePerSqft *= 1.3;
-    if (formData.propertyType === 'penthouse') pricePerSqft *= 1.5;
-    
-    return sqft * pricePerSqft;
-  }, [formData.sqft, formData.bhk, formData.locality, formData.propertyType]);
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -831,26 +813,6 @@ const SellerDashboard: React.FC = () => {
                   onChange={(e) => handleInputChange('price', e.target.value)}
                 />
               </div>
-              
-              {estimatedPrice > 0 && (
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calculator className="h-5 w-5 text-primary" />
-                      <span className="font-medium">Price Estimator</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Based on your inputs, similar properties are priced around:
-                    </p>
-                    <p className="text-2xl font-bold text-primary">
-                      {formatPrice(estimatedPrice)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ₹{Math.round(estimatedPrice / parseInt(formData.sqft || '1')).toLocaleString()}/sqft
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             {/* Seller Phone Number */}
@@ -939,6 +901,66 @@ const SellerDashboard: React.FC = () => {
                   Add URL
                 </Button>
               </div>
+            </div>
+
+            <Separator />
+
+            {/* 360° Panorama Images */}
+            <div className="space-y-3">
+              <Label className="text-base font-medium">360° Panorama Images (Optional)</Label>
+              <p className="text-sm text-muted-foreground">
+                Add URLs to 360° panorama images for an immersive virtual tour. Use Google Street View app or a 360° camera.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/360-image.jpg"
+                  value={panoramaUrlInput}
+                  onChange={(e) => setPanoramaUrlInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (panoramaUrlInput.trim()) {
+                        setPanoramaUrls(prev => [...prev, panoramaUrlInput.trim()]);
+                        setPanoramaUrlInput('');
+                      }
+                    }
+                  }}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => {
+                    if (panoramaUrlInput.trim()) {
+                      setPanoramaUrls(prev => [...prev, panoramaUrlInput.trim()]);
+                      setPanoramaUrlInput('');
+                    }
+                  }}
+                  disabled={!panoramaUrlInput.trim()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add 360°
+                </Button>
+              </div>
+              
+              {/* 360° URL Preview List */}
+              {panoramaUrls.length > 0 && (
+                <div className="space-y-2">
+                  {panoramaUrls.map((url, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-lg">
+                      <Eye className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate flex-1">{url}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setPanoramaUrls(prev => prev.filter((_, idx) => idx !== i))}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Upload Progress */}

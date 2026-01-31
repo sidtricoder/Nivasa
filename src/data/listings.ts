@@ -60,6 +60,7 @@ export interface Property {
   // Virtual tour & media
   panoee3DTourUrl?: string;
   videoUrl?: string;
+  panoramaImages?: string[]; // 360° panorama images
 }
 
 export interface Seller {

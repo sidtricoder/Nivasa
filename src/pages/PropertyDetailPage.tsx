@@ -61,6 +61,7 @@ import VastuComplianceBadge from '@/components/property/VastuComplianceBadge';
 import GaussianSplatViewer from '@/components/property/GaussianSplatViewer';
 import Interactive360Panorama from '@/components/property/Interactive360Panorama';
 import Panoee3DTour from '@/components/property/Panoee3DTour';
+import PannellumViewer from '@/components/property/PannellumViewer';
 import GoogleMapEmbed from '@/components/property/GoogleMapEmbed';
 import GoogleStreetView from '@/components/property/GoogleStreetView';
 import PropertyChatbot from '@/components/property/PropertyChatbot';
@@ -519,7 +520,12 @@ const PropertyDetailPage: React.FC = () => {
                     />
                   </TabsContent>
                   <TabsContent value="3d-tour" className="mt-0">
-                    {property.panoee3DTourUrl ? (
+                    {property.panoramaImages && property.panoramaImages.length > 0 ? (
+                      <PannellumViewer 
+                        panoramaImages={property.panoramaImages}
+                        height="450px"
+                      />
+                    ) : property.panoee3DTourUrl ? (
                       <Panoee3DTour 
                         tourUrl={property.panoee3DTourUrl}
                         title={`${property.title} - Virtual Tour`}
