@@ -482,9 +482,7 @@ const PropertyDetailPage: React.FC = () => {
                     </TabsTrigger>
                     <TabsTrigger value="street-view">Street View</TabsTrigger>
                     <TabsTrigger value="3d-tour">3D Tour</TabsTrigger>
-                    {property.floorPlan && (
-                      <TabsTrigger value="floor-plan">Floor Plan</TabsTrigger>
-                    )}
+                    <TabsTrigger value="floor-plan">Floor Plan</TabsTrigger>
                   </TabsList>
                 </CardHeader>
                 <CardContent>
@@ -581,11 +579,9 @@ const PropertyDetailPage: React.FC = () => {
                       </div>
                     )}
                   </TabsContent>
-                  {property.floorPlan && (
-                    <TabsContent value="floor-plan" className="mt-0">
-                      <FloorPlan3DViewer floorPlan={property.floorPlan} />
-                    </TabsContent>
-                  )}
+                  <TabsContent value="floor-plan" className="mt-0">
+                    <FloorPlan3DViewer floorPlan={property.floorPlan!} />
+                  </TabsContent>
                 </CardContent>
               </Tabs>
             </Card>
