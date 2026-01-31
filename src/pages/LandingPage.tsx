@@ -26,6 +26,7 @@ import MinimalPropertyCard from '@/components/property/MinimalPropertyCard';
 import CompareModal from '@/components/property/CompareModal';
 import WhyNivasa from '@/components/landing/WhyNivasa';
 import FAQSection from '@/components/landing/FAQSection';
+import BounceCards from '@/components/ui/BounceCards';
 import { mockListings } from '@/data/listings';
 
 const lifestyleFilters = [
@@ -299,6 +300,56 @@ const LandingPage: React.FC = () => {
                 <p className="text-sm uppercase tracking-widest text-white/70">VERIFIED PROPERTIES</p>
               </motion.div>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Happy Families Section with Bounce Cards */}
+      <section className="py-28 lg:py-36 bg-background overflow-hidden">
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <p className="text-primary text-sm font-semibold tracking-[0.2em] uppercase mb-5">
+              CREATING MEMORIES
+            </p>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground mb-5">
+              Happy Families, Happy Homes
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Every property is a story waiting to unfold. See the joy we've helped create.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="flex justify-center items-center"
+          >
+            <BounceCards
+              images={[
+                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&h=700&fit=crop",
+                "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&h=700&fit=crop",
+                "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=500&h=700&fit=crop",
+                "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=500&h=700&fit=crop",
+                "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=500&h=700&fit=crop"
+              ]}
+              containerWidth={900}
+              containerHeight={550}
+              enableHover={true}
+              transformStyles={[
+                'rotate(14deg) translate(-320px)',
+                'rotate(7deg) translate(-160px)',
+                'rotate(-2deg)',
+                'rotate(-9deg) translate(160px)',
+                'rotate(5deg) translate(320px)'
+              ]}
+            />
           </motion.div>
         </div>
       </section>

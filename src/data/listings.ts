@@ -281,6 +281,18 @@ export const mockListings: Property[] = [
     isNewListing: false,
     listedAt: "2024-01-10T08:00:00Z",
     updatedAt: "2024-01-18T12:30:00Z",
+    floorPlan: {
+      rooms: [
+        { id: 'room-1', name: 'Living Room', type: 'living', width: 14, length: 11, position: { x: 0, y: 0 } },
+        { id: 'room-2', name: 'Kitchen', type: 'kitchen', width: 9, length: 7, position: { x: 14, y: 0 } },
+        { id: 'room-3', name: 'Master Bedroom', type: 'bedroom', width: 12, length: 11, position: { x: 0, y: 11 } },
+        { id: 'room-4', name: 'Bedroom 2', type: 'bedroom', width: 11, length: 10, position: { x: 12, y: 11 } },
+        { id: 'room-5', name: 'Master Bath', type: 'bathroom', width: 7, length: 5, position: { x: 0, y: 22 } },
+        { id: 'room-6', name: 'Bathroom 2', type: 'bathroom', width: 5, length: 5, position: { x: 7, y: 22 } },
+        { id: 'room-7', name: 'Balcony', type: 'balcony', width: 10, length: 4, position: { x: 0, y: -4 } },
+      ],
+      totalSqft: 900,
+    },
   },
   {
     id: "prop-003",
@@ -351,6 +363,22 @@ export const mockListings: Property[] = [
     isNewListing: true,
     listedAt: "2024-01-18T14:00:00Z",
     updatedAt: "2024-01-20T09:15:00Z",
+    floorPlan: {
+      rooms: [
+        { id: 'room-1', name: 'Living Room', type: 'living', width: 20, length: 15, position: { x: 0, y: 0 } },
+        { id: 'room-2', name: 'Kitchen', type: 'kitchen', width: 12, length: 10, position: { x: 20, y: 0 } },
+        { id: 'room-3', name: 'Dining Room', type: 'dining', width: 14, length: 12, position: { x: 20, y: 10 } },
+        { id: 'room-4', name: 'Master Bedroom', type: 'bedroom', width: 16, length: 14, position: { x: 0, y: 15 } },
+        { id: 'room-5', name: 'Bedroom 2', type: 'bedroom', width: 14, length: 12, position: { x: 16, y: 15 } },
+        { id: 'room-6', name: 'Bedroom 3', type: 'bedroom', width: 12, length: 11, position: { x: 0, y: 29 } },
+        { id: 'room-7', name: 'Bedroom 4', type: 'bedroom', width: 12, length: 11, position: { x: 12, y: 29 } },
+        { id: 'room-8', name: 'Master Bath', type: 'bathroom', width: 10, length: 8, position: { x: 16, y: 27 } },
+        { id: 'room-9', name: 'Bathroom 2', type: 'bathroom', width: 8, length: 6, position: { x: 30, y: 15 } },
+        { id: 'room-10', name: 'Balcony', type: 'balcony', width: 20, length: 6, position: { x: 0, y: -6 } },
+        { id: 'room-11', name: 'Utility', type: 'utility', width: 8, length: 6, position: { x: 32, y: 0 } },
+      ],
+      totalSqft: 3000,
+    },
   },
   {
     id: "prop-004",
