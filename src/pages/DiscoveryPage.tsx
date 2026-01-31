@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -36,7 +36,7 @@ import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
 import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
 import { useSearchStore } from '@/stores/searchStore';
-import { mockListings, getUniqueLocalities, getPriceRange, Property } from '@/data/listings';
+import { mockListings, getPriceRange, Property } from '@/data/listings';
 import { toast } from 'sonner';
 import { PropertyCardSkeleton } from '@/components/ui/skeletons';
 
@@ -64,10 +64,144 @@ const sortOptions = [
   { value: 'walk-score', label: 'Walk Score' },
 ];
 
+const furnishingOptions = [
+  { value: 'unfurnished', label: 'Unfurnished' },
+  { value: 'semi-furnished', label: 'Semi Furnished' },
+  { value: 'fully-furnished', label: 'Fully Furnished' },
+];
+
+const facingOptions = [
+  { value: 'north', label: 'North' },
+  { value: 'south', label: 'South' },
+  { value: 'east', label: 'East' },
+  { value: 'west', label: 'West' },
+  { value: 'north-east', label: 'North East' },
+  { value: 'north-west', label: 'North West' },
+  { value: 'south-east', label: 'South East' },
+  { value: 'south-west', label: 'South West' },
+];
+
+const floorPreferenceOptions = [
+  { value: 'ground', label: 'Ground Floor' },
+  { value: 'middle', label: 'Middle Floors (2-10)' },
+  { value: 'high', label: 'High Floors (11+)' },
+];
+
+const possessionOptions = [
+  { value: 'ready', label: 'Ready to Move' },
+  { value: 'under-construction', label: 'Under Construction' },
+];
+
+const walkScoreRanges = [
+  { min: 90, max: 100, label: 'Walker\'s Paradise (90-100)' },
+  { min: 70, max: 89, label: 'Very Walkable (70-89)' },
+  { min: 50, max: 69, label: 'Somewhat Walkable (50-69)' },
+  { min: 25, max: 49, label: 'Car-Dependent (25-49)' },
+  { min: 0, max: 24, label: 'Car-Dependent (0-24)' },
+];
+
+// Amazon-style Filters Component
+interface AmazonStyleFiltersProps {
+  FilterContent: React.ComponentType;
+}
+
+const AmazonStyleFilters: React.FC<AmazonStyleFiltersProps> = ({ FilterContent }) => {
+  const [isSticky, setIsSticky] = useState(false);
+  const filterContainerRef = useRef<HTMLDivElement>(null);
+  const filterContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (filterContainerRef.current && filterContentRef.current) {
+        const container = filterContainerRef.current;
+        const content = filterContentRef.current;
+        const containerRect = container.getBoundingClientRect();
+        const contentHeight = content.scrollHeight;
+        const containerHeight = container.clientHeight;
+        const scrollTop = container.scrollTop;
+        
+        // Check if user has scrolled to the bottom of the filters
+        const hasScrolledToBottom = scrollTop + containerHeight >= contentHeight - 10;
+        
+        // Also check if the container is at the top of viewport for sticky behavior
+        const shouldBeSticky = containerRect.top <= 24 && hasScrolledToBottom;
+        
+        setIsSticky(shouldBeSticky);
+      }
+    };
+
+    const container = filterContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      window.addEventListener('scroll', handleScroll);
+      
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #a1a1a1;
+        }
+      `}</style>
+      
+      <div
+        ref={filterContainerRef}
+        className={`
+          transition-all duration-300 border rounded-lg bg-card
+          ${isSticky 
+            ? 'fixed top-24 left-1/2 transform -translate-x-[50vw] translate-x-[160px] z-40 shadow-lg' 
+            : 'relative'
+          }
+        `}
+        style={{
+          height: isSticky ? '70vh' : '80vh',
+          width: '320px'
+        }}
+      >
+        <div 
+          className="pl-4 pr-2 py-4 h-full overflow-y-auto custom-scrollbar"
+          ref={filterContentRef}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Filters</h3>
+            {isSticky && (
+              <Badge variant="secondary" className="text-xs">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                Sticky Mode
+              </Badge>
+            )}
+          </div>
+          
+          {/* Filter Content - Make it taller to enable scrolling */}
+          <div className="space-y-6">
+            <FilterContent />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const DiscoveryPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const priceRange = getPriceRange();
-  const localities = getUniqueLocalities();
 
   // Firebase state
   const [firebaseProperties, setFirebaseProperties] = useState<Property[]>([]);
@@ -85,6 +219,20 @@ const DiscoveryPage: React.FC = () => {
     };
   }, [allProperties]);
 
+  const dynamicAreaRange = useMemo(() => {
+    if (allProperties.length === 0) return { min: 500, max: 5000 };
+    const areas = allProperties.map(p => p.specs.sqft);
+    return {
+      min: Math.min(...areas),
+      max: Math.max(...areas),
+    };
+  }, [allProperties]);
+
+  const availableCities = useMemo(() => {
+    const cities = Array.from(new Set(allProperties.map(p => p.location.city)));
+    return cities.sort();
+  }, [allProperties]);
+
   // Filter State
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number]>([
@@ -92,11 +240,18 @@ const DiscoveryPage: React.FC = () => {
     priceRange.max,
   ]);
   const [selectedBHK, setSelectedBHK] = useState<number[]>([]);
-  const [selectedLocality, setSelectedLocality] = useState<string>('all');
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [selectedLifestyle, setSelectedLifestyle] = useState<string[]>(
     searchParams.get('filter') ? [searchParams.get('filter')!] : []
   );
+  const [selectedAreaRange, setSelectedAreaRange] = useState<[number, number]>([500, 5000]);
+  const [selectedWalkScoreRange, setSelectedWalkScoreRange] = useState<[number, number]>([0, 100]);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [selectedFurnishing, setSelectedFurnishing] = useState<string[]>([]);
+  const [selectedFacing, setSelectedFacing] = useState<string[]>([]);
+  const [selectedFloorPreference, setSelectedFloorPreference] = useState<string[]>([]);
+  const [selectedPossessionStatus, setSelectedPossessionStatus] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -125,6 +280,11 @@ const DiscoveryPage: React.FC = () => {
   const [maxPriceInput, setMaxPriceInput] = useState<string>('');
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
 
+  // Amazon-style filter states
+  const [isFilterSticky, setIsFilterSticky] = useState(false);
+  const [displayedProperties, setDisplayedProperties] = useState(12); // Initial load
+  const LOAD_MORE_COUNT = 12;
+
   // Sync input fields with slider values
   useEffect(() => {
     // Display in Crores if >= 1 Crore (100 Lakhs), otherwise in Lakhs
@@ -139,6 +299,11 @@ const DiscoveryPage: React.FC = () => {
         : Math.round(selectedPriceRange[1] / 100000).toString()
     );
   }, [selectedPriceRange]);
+
+  // Reset displayed properties when filters change
+  useEffect(() => {
+    setDisplayedProperties(LOAD_MORE_COUNT);
+  }, [selectedPriceRange, selectedBHK, selectedCities, selectedPropertyTypes, selectedLifestyle, selectedAreaRange, selectedWalkScoreRange, verifiedOnly, selectedFurnishing, selectedFacing, selectedFloorPreference, selectedPossessionStatus, searchQuery, sortBy, aiFilters]);
 
   const handleMinPriceChange = (value: string) => {
     setMinPriceInput(value);
@@ -246,7 +411,7 @@ const DiscoveryPage: React.FC = () => {
         // Reset filter states
         setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
         setSelectedBHK([]);
-        setSelectedLocality('all');
+        setSelectedCities([]);
         setSelectedPropertyTypes([]);
         setSelectedLifestyle([]);
         
@@ -264,7 +429,8 @@ const DiscoveryPage: React.FC = () => {
             loc => loc.toLowerCase() === filters.locality?.toLowerCase()
           );
           if (matchedLocality) {
-            setSelectedLocality(matchedLocality);
+            // For backward compatibility, add the matched city to selectedCities
+            setSelectedCities([matchedLocality]);
           }
           // Also store for flexible AI filtering (partial match)
           setAiLocality(filters.locality.toLowerCase());
@@ -372,7 +538,7 @@ const DiscoveryPage: React.FC = () => {
     query: searchQuery,
     priceRange: selectedPriceRange,
     bhk: selectedBHK,
-    localities: selectedLocality !== 'all' ? [selectedLocality] : [],
+    localities: selectedCities, // Changed from selectedLocality to selectedCities
     propertyTypes: selectedPropertyTypes,
     lifestyles: selectedLifestyle,
     sortBy: sortBy,
@@ -383,7 +549,7 @@ const DiscoveryPage: React.FC = () => {
     if (filters.priceRange) setSelectedPriceRange(filters.priceRange);
     if (filters.bhk) setSelectedBHK(filters.bhk);
     if (filters.localities && filters.localities.length > 0) {
-      setSelectedLocality(filters.localities[0]);
+      setSelectedCities(filters.localities); // Changed from setSelectedLocality to setSelectedCities
     }
     if (filters.propertyTypes) setSelectedPropertyTypes(filters.propertyTypes);
     if (filters.lifestyles) setSelectedLifestyle(filters.lifestyles);
@@ -421,13 +587,68 @@ const DiscoveryPage: React.FC = () => {
       results = results.filter(p => selectedBHK.includes(p.specs.bhk));
     }
 
-    // Locality (dropdown exact match)
-    if (selectedLocality && selectedLocality !== 'all') {
-      results = results.filter(p => p.location.locality === selectedLocality);
+    // Cities (multiple selection)
+    if (selectedCities.length > 0) {
+      results = results.filter(p => selectedCities.includes(p.location.city));
     }
     
-    // AI Locality filter (flexible partial matching when dropdown not set)
-    if (aiLocality && selectedLocality === 'all') {
+    // Area range
+    results = results.filter(
+      p => p.specs.sqft >= selectedAreaRange[0] && p.specs.sqft <= selectedAreaRange[1]
+    );
+
+    // Walk score range
+    results = results.filter(
+      p => p.walkScore >= selectedWalkScoreRange[0] && p.walkScore <= selectedWalkScoreRange[1]
+    );
+
+    // Verified only filter
+    if (verifiedOnly) {
+      results = results.filter(p => p.seller.isVerified && p.verification.ownerVerified);
+    }
+
+    // Furnishing filter
+    if (selectedFurnishing.length > 0) {
+      results = results.filter(p => selectedFurnishing.includes(p.specs.furnishing));
+    }
+
+    // Facing direction filter
+    if (selectedFacing.length > 0) {
+      results = results.filter(p => selectedFacing.some(facing => 
+        p.specs.facing.toLowerCase().includes(facing) || facing.includes(p.specs.facing.toLowerCase())
+      ));
+    }
+
+    // Floor preference filter
+    if (selectedFloorPreference.length > 0) {
+      results = results.filter(p => {
+        const floor = p.specs.floor;
+        return selectedFloorPreference.some(pref => {
+          switch (pref) {
+            case 'ground': return floor === 0 || floor === 1;
+            case 'middle': return floor >= 2 && floor <= 10;
+            case 'high': return floor >= 11;
+            default: return false;
+          }
+        });
+      });
+    }
+
+    // Possession status filter
+    if (selectedPossessionStatus.length > 0) {
+      results = results.filter(p => {
+        if (selectedPossessionStatus.includes('ready')) {
+          return p.specs.propertyAge >= 0; // Ready properties have age >= 0
+        }
+        if (selectedPossessionStatus.includes('under-construction')) {
+          return p.specs.propertyAge < 0; // Under construction properties have negative age
+        }
+        return false;
+      });
+    }
+    
+    // AI Locality filter (flexible partial matching when cities not set)
+    if (aiLocality && selectedCities.length === 0) {
       results = results.filter(p => 
         p.location.locality.toLowerCase().includes(aiLocality) ||
         aiLocality.includes(p.location.locality.toLowerCase()) ||
@@ -532,9 +753,16 @@ const DiscoveryPage: React.FC = () => {
     searchQuery,
     selectedPriceRange,
     selectedBHK,
-    selectedLocality,
+    selectedCities,
     selectedPropertyTypes,
     selectedLifestyle,
+    selectedAreaRange,
+    selectedWalkScoreRange,
+    verifiedOnly,
+    selectedFurnishing,
+    selectedFacing,
+    selectedFloorPreference,
+    selectedPossessionStatus,
     sortBy,
     firebaseProperties,
     landmarkCoords,
@@ -543,6 +771,21 @@ const DiscoveryPage: React.FC = () => {
     aiCity,
     aiState,
   ]);
+
+  // Infinite scroll effect - moved after filteredListings declaration
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
+        const totalFiltered = filteredListings.length;
+        if (displayedProperties < totalFiltered) {
+          setDisplayedProperties(prev => Math.min(prev + LOAD_MORE_COUNT, totalFiltered));
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [displayedProperties, filteredListings.length]);
 
   const formatPrice = (price: number) => {
     if (price >= 10000000) {
@@ -555,9 +798,16 @@ const DiscoveryPage: React.FC = () => {
     setSearchQuery('');
     setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max]);
     setSelectedBHK([]);
-    setSelectedLocality('all');
+    setSelectedCities([]);
     setSelectedPropertyTypes([]);
     setSelectedLifestyle([]);
+    setSelectedAreaRange([dynamicAreaRange.min, dynamicAreaRange.max]);
+    setSelectedWalkScoreRange([0, 100]);
+    setVerifiedOnly(false);
+    setSelectedFurnishing([]);
+    setSelectedFacing([]);
+    setSelectedFloorPreference([]);
+    setSelectedPossessionStatus([]);
     setAiLocality('');
     setAiCity('');
     setAiState('');
@@ -570,10 +820,17 @@ const DiscoveryPage: React.FC = () => {
 
   const activeFiltersCount = [
     selectedBHK.length > 0,
-    selectedLocality !== 'all',
+    selectedCities.length > 0,
     selectedPropertyTypes.length > 0,
     selectedLifestyle.length > 0,
     selectedPriceRange[0] !== priceRange.min || selectedPriceRange[1] !== priceRange.max,
+    selectedAreaRange[0] !== 500 || selectedAreaRange[1] !== 5000,
+    selectedWalkScoreRange[0] !== 0 || selectedWalkScoreRange[1] !== 100,
+    verifiedOnly,
+    selectedFurnishing.length > 0,
+    selectedFacing.length > 0,
+    selectedFloorPreference.length > 0,
+    selectedPossessionStatus.length > 0,
   ].filter(Boolean).length;
 
   const FilterContent = () => (
@@ -583,8 +840,8 @@ const DiscoveryPage: React.FC = () => {
         <Label className="text-sm font-medium">Price Range</Label>
         
         {/* Min-Max Input Fields */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 xs:gap-3">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
               <Input
@@ -594,15 +851,15 @@ const DiscoveryPage: React.FC = () => {
                 onBlur={applyPriceInputs}
                 onKeyDown={(e) => e.key === 'Enter' && applyPriceInputs()}
                 placeholder="Min"
-                className="pl-7 pr-8 text-sm h-9 text-center"
+                className="pl-7 pr-8 text-sm h-9 text-center w-full"
               />
               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                 {selectedPriceRange[0] >= 10000000 ? 'Cr' : 'L'}
               </span>
             </div>
           </div>
-          <span className="text-muted-foreground text-sm font-medium">to</span>
-          <div className="flex-1">
+          <span className="text-muted-foreground text-sm font-medium text-center xs:text-left">to</span>
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
               <Input
@@ -612,7 +869,7 @@ const DiscoveryPage: React.FC = () => {
                 onBlur={applyPriceInputs}
                 onKeyDown={(e) => e.key === 'Enter' && applyPriceInputs()}
                 placeholder="Max"
-                className="pl-7 pr-8 text-sm h-9 text-center"
+                className="pl-7 pr-8 text-sm h-9 text-center w-full"
               />
               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                 {selectedPriceRange[1] >= 10000000 ? 'Cr' : 'L'}
@@ -675,12 +932,13 @@ const DiscoveryPage: React.FC = () => {
       {/* BHK */}
       <div className="space-y-3">
         <Label className="text-sm font-medium">BHK Configuration</Label>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
           {bhkOptions.map(bhk => (
             <Button
               key={bhk}
               variant={selectedBHK.includes(bhk) ? 'default' : 'outline'}
               size="sm"
+              className="text-xs sm:text-sm flex-shrink-0"
               onClick={() =>
                 setSelectedBHK(prev =>
                   prev.includes(bhk) ? prev.filter(b => b !== bhk) : [...prev, bhk]
@@ -695,23 +953,203 @@ const DiscoveryPage: React.FC = () => {
 
       <Separator />
 
-      {/* Locality */}
+      {/* Cities */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Locality</Label>
-        <Select value={selectedLocality} onValueChange={setSelectedLocality}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select locality" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Localities</SelectItem>
-            {localities.map(locality => (
-              <SelectItem key={locality} value={locality}>
-                {locality}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label className="text-sm font-medium">Cities</Label>
+        <div className="space-y-2 max-h-32 overflow-y-auto">
+          {availableCities.map(city => (
+            <div key={city} className="flex items-center space-x-2">
+              <Checkbox
+                id={`city-${city}`}
+                checked={selectedCities.includes(city)}
+                onCheckedChange={(checked) =>
+                  setSelectedCities(prev =>
+                    checked ? [...prev, city] : prev.filter(c => c !== city)
+                  )
+                }
+              />
+              <Label htmlFor={`city-${city}`} className="cursor-pointer text-sm">
+                {city}
+              </Label>
+            </div>
+          ))}
+        </div>
       </div>
+
+      <Separator />
+
+      {/* Area Range */}
+      <div className="space-y-4">
+        <Label className="text-sm font-medium">Area (sqft)</Label>
+        <div className="px-2">
+          <Slider
+            value={selectedAreaRange}
+            onValueChange={setSelectedAreaRange}
+            min={dynamicAreaRange.min}
+            max={dynamicAreaRange.max}
+            step={50}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+            <span>{selectedAreaRange[0]} sqft</span>
+            <span>{selectedAreaRange[1]} sqft</span>
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Walk Score */}
+      <div className="space-y-4">
+        <Label className="text-sm font-medium">Walk Score</Label>
+        <div className="px-2">
+          <Slider
+            value={selectedWalkScoreRange}
+            onValueChange={setSelectedWalkScoreRange}
+            min={0}
+            max={100}
+            step={5}
+            className="w-full"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+            <span>{selectedWalkScoreRange[0]}</span>
+            <span>{selectedWalkScoreRange[1]}</span>
+          </div>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {walkScoreRanges.find(range => 
+            selectedWalkScoreRange[0] >= range.min && selectedWalkScoreRange[1] <= range.max
+          )?.label || `${selectedWalkScoreRange[0]}-${selectedWalkScoreRange[1]}`}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Verified Only */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="verified-only"
+            checked={verifiedOnly}
+            onCheckedChange={setVerifiedOnly}
+          />
+          <Label htmlFor="verified-only" className="cursor-pointer text-sm">
+            Verified Properties Only
+          </Label>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Furnishing */}
+      <Collapsible defaultOpen>
+        <CollapsibleTrigger className="flex items-center justify-between w-full">
+          <Label className="text-sm font-medium cursor-pointer">Furnishing</Label>
+          <ChevronDown className="h-4 w-4" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3 space-y-2">
+          {furnishingOptions.map(({ value, label }) => (
+            <div key={value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`furnishing-${value}`}
+                checked={selectedFurnishing.includes(value)}
+                onCheckedChange={(checked) =>
+                  setSelectedFurnishing(prev =>
+                    checked ? [...prev, value] : prev.filter(f => f !== value)
+                  )
+                }
+              />
+              <Label htmlFor={`furnishing-${value}`} className="cursor-pointer text-sm">
+                {label}
+              </Label>
+            </div>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Separator />
+
+      {/* Facing Direction */}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center justify-between w-full">
+          <Label className="text-sm font-medium cursor-pointer">Facing Direction</Label>
+          <ChevronDown className="h-4 w-4" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3 space-y-2">
+          {facingOptions.map(({ value, label }) => (
+            <div key={value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`facing-${value}`}
+                checked={selectedFacing.includes(value)}
+                onCheckedChange={(checked) =>
+                  setSelectedFacing(prev =>
+                    checked ? [...prev, value] : prev.filter(f => f !== value)
+                  )
+                }
+              />
+              <Label htmlFor={`facing-${value}`} className="cursor-pointer text-sm">
+                {label}
+              </Label>
+            </div>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Separator />
+
+      {/* Floor Preference */}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center justify-between w-full">
+          <Label className="text-sm font-medium cursor-pointer">Floor Preference</Label>
+          <ChevronDown className="h-4 w-4" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3 space-y-2">
+          {floorPreferenceOptions.map(({ value, label }) => (
+            <div key={value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`floor-${value}`}
+                checked={selectedFloorPreference.includes(value)}
+                onCheckedChange={(checked) =>
+                  setSelectedFloorPreference(prev =>
+                    checked ? [...prev, value] : prev.filter(f => f !== value)
+                  )
+                }
+              />
+              <Label htmlFor={`floor-${value}`} className="cursor-pointer text-sm">
+                {label}
+              </Label>
+            </div>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Separator />
+
+      {/* Possession Status */}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center justify-between w-full">
+          <Label className="text-sm font-medium cursor-pointer">Possession Status</Label>
+          <ChevronDown className="h-4 w-4" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-3 space-y-2">
+          {possessionOptions.map(({ value, label }) => (
+            <div key={value} className="flex items-center space-x-2">
+              <Checkbox
+                id={`possession-${value}`}
+                checked={selectedPossessionStatus.includes(value)}
+                onCheckedChange={(checked) =>
+                  setSelectedPossessionStatus(prev =>
+                    checked ? [...prev, value] : prev.filter(p => p !== value)
+                  )
+                }
+              />
+              <Label htmlFor={`possession-${value}`} className="cursor-pointer text-sm">
+                {label}
+              </Label>
+            </div>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
 
       <Separator />
 
@@ -788,9 +1226,9 @@ const DiscoveryPage: React.FC = () => {
       <Header />
       <CompareModal />
 
-      <div className="container py-6">
+      <div className="container py-6 max-w-full overflow-x-hidden">
         {/* Search & Controls */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col gap-4 mb-6 min-w-0">
           {/* Search */}
           <div className="relative flex-1">
             {/* AI/Search Icon with loading state */}
@@ -827,7 +1265,7 @@ const DiscoveryPage: React.FC = () => {
                   addRecentSearch(searchQuery, getCurrentFilters());
                 }
               }}
-              className="pl-10 pr-32"
+              className="pl-10 pr-16 sm:pr-32"
               disabled={isAISearching}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -845,7 +1283,7 @@ const DiscoveryPage: React.FC = () => {
                       // Reset filters including AI location filters
                       setSelectedPriceRange([priceRange.min, priceRange.max]);
                       setSelectedBHK([]);
-                      setSelectedLocality('all');
+                      setSelectedCities([]);
                       setSelectedPropertyTypes([]);
                       setSelectedLifestyle([]);
                       setAiLocality('');
@@ -902,7 +1340,7 @@ const DiscoveryPage: React.FC = () => {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 min-w-0">
             {/* Saved Searches */}
             <SavedSearches 
               currentFilters={getCurrentFilters()}
@@ -912,42 +1350,44 @@ const DiscoveryPage: React.FC = () => {
               }}
             />
 
-            {/* Mobile Filter Button */}
-            <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="lg:hidden gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filters
-                  {activeFiltersCount > 0 && (
-                    <Badge variant="secondary" className="ml-1">
-                      {activeFiltersCount}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[350px]">
-                <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)]">
-                  <FilterContent />
-                </div>
-              </SheetContent>
-            </Sheet>
+            {/* Mobile Filter Button and Sort - Same Row on Mobile */}
+            <div className="flex gap-2 min-w-0">
+              <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="lg:hidden gap-2 flex-shrink-0">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    <span className="hidden xs:inline">Filters</span>
+                    {activeFiltersCount > 0 && (
+                      <Badge variant="secondary" className="ml-1">
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] sm:w-[350px] overflow-x-hidden">
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)] overflow-x-hidden">
+                    <FilterContent />
+                  </div>
+                </SheetContent>
+              </Sheet>
 
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {/* Sort */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-[180px] min-w-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* View Toggle */}
             <div className="hidden sm:flex items-center border rounded-md">
@@ -1028,15 +1468,15 @@ const DiscoveryPage: React.FC = () => {
                 />
               </Badge>
             ))}
-            {selectedLocality !== 'all' && (
-              <Badge variant="secondary" className="gap-1">
-                {selectedLocality}
+            {selectedCities.map(city => (
+              <Badge key={city} variant="secondary" className="gap-1">
+                {city}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSelectedLocality('all')}
+                  onClick={() => setSelectedCities(prev => prev.filter(c => c !== city))}
                 />
               </Badge>
-            )}
+            ))}
             {selectedPropertyTypes.map(type => (
               <Badge key={type} variant="secondary" className="gap-1 capitalize">
                 {type}
@@ -1060,11 +1500,8 @@ const DiscoveryPage: React.FC = () => {
 
         <div className="flex gap-6">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-[280px] flex-shrink-0">
-            <div className="sticky top-24 p-4 border rounded-lg bg-card">
-              <h3 className="font-semibold mb-4">Filters</h3>
-              <FilterContent />
-            </div>
+          <aside className="hidden lg:block w-[320px] flex-shrink-0">
+            <AmazonStyleFilters FilterContent={FilterContent} />
           </aside>
 
           {/* Results */}
@@ -1073,6 +1510,11 @@ const DiscoveryPage: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{filteredListings.length}</span> properties found
+                {displayedProperties < filteredListings.length && (
+                  <span className="ml-2">
+                    (showing {displayedProperties} of {filteredListings.length})
+                  </span>
+                )}
                 {loadingProperties && <Loader2 className="inline h-4 w-4 ml-2 animate-spin" />}
               </p>
             </div>
@@ -1107,21 +1549,82 @@ const DiscoveryPage: React.FC = () => {
                   </Button>
                 </motion.div>
               ) : (
-                <motion.div
-                  key={viewMode}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={
-                    viewMode === 'grid'
-                      ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
-                      : 'space-y-4'
-                  }
-                >
-                  {filteredListings.map((property) => (
-                    <PropertyCard key={property.id} property={property} />
-                  ))}
-                </motion.div>
+                <>
+                  <motion.div
+                    key={viewMode}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={
+                      viewMode === 'grid'
+                        ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+                        : 'space-y-4'
+                    }
+                  >
+                    {filteredListings.slice(0, displayedProperties).map((property) => (
+                      <PropertyCard key={property.id} property={property} />
+                    ))}
+                  </motion.div>
+                  
+                  {/* Load More Section */}
+                  {displayedProperties < filteredListings.length && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-12 mb-8 text-center"
+                    >
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-4">
+                          <div className="h-px bg-border flex-1" />
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="text-sm">
+                              Showing {displayedProperties} of {filteredListings.length} properties
+                            </span>
+                          </div>
+                          <div className="h-px bg-border flex-1" />
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => {
+                            const remaining = filteredListings.length - displayedProperties;
+                            const toLoad = Math.min(LOAD_MORE_COUNT, remaining);
+                            setDisplayedProperties(prev => prev + toLoad);
+                          }}
+                          className="min-w-[200px]"
+                        >
+                          Load {Math.min(LOAD_MORE_COUNT, filteredListings.length - displayedProperties)} More Properties
+                        </Button>
+                        
+                        <p className="text-xs text-muted-foreground">
+                          Or keep scrolling to load automatically
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  {/* All Properties Loaded Message */}
+                  {displayedProperties >= filteredListings.length && filteredListings.length > LOAD_MORE_COUNT && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-12 mb-8 text-center"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2 text-green-600">
+                          <div className="w-2 h-2 bg-green-500 rounded-full" />
+                          <span className="text-sm font-medium">
+                            You've seen all {filteredListings.length} properties
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Try adjusting your filters to see more results
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </>
               )}
             </AnimatePresence>
           </main>
