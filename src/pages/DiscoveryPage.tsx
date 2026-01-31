@@ -120,6 +120,106 @@ const DiscoveryPage: React.FC = () => {
   // Search store for recent/saved searches
   const { addRecentSearch, setVoiceTranscript, voiceTranscript } = useSearchStore();
   
+  // Flipkart-style price input handlers
+  const [minPriceInput, setMinPriceInput] = useState<string>('');
+  const [maxPriceInput, setMaxPriceInput] = useState<string>('');
+  const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
+
+  // Sync input fields with slider values
+  useEffect(() => {
+    // Display in Crores if >= 1 Crore (100 Lakhs), otherwise in Lakhs
+    setMinPriceInput(
+      selectedPriceRange[0] >= 10000000 
+        ? (selectedPriceRange[0] / 10000000).toFixed(1)
+        : Math.round(selectedPriceRange[0] / 100000).toString()
+    );
+    setMaxPriceInput(
+      selectedPriceRange[1] >= 10000000
+        ? (selectedPriceRange[1] / 10000000).toFixed(1)
+        : Math.round(selectedPriceRange[1] / 100000).toString()
+    );
+  }, [selectedPriceRange]);
+
+  const handleMinPriceChange = (value: string) => {
+    setMinPriceInput(value);
+  };
+
+  const handleMaxPriceChange = (value: string) => {
+    setMaxPriceInput(value);
+  };
+
+  const applyPriceInputs = () => {
+    // Convert input values based on whether they're in Crores or Lakhs
+    const minVal = selectedPriceRange[0] >= 10000000
+      ? parseFloat(minPriceInput) * 10000000 || dynamicPriceRange.min
+      : parseFloat(minPriceInput) * 100000 || dynamicPriceRange.min;
+    
+    const maxVal = selectedPriceRange[1] >= 10000000
+      ? parseFloat(maxPriceInput) * 10000000 || dynamicPriceRange.max
+      : parseFloat(maxPriceInput) * 100000 || dynamicPriceRange.max;
+    
+    const clampedMin = Math.max(dynamicPriceRange.min, Math.min(minVal, dynamicPriceRange.max));
+    const clampedMax = Math.min(dynamicPriceRange.max, Math.max(maxVal, dynamicPriceRange.min));
+    
+    if (clampedMin <= clampedMax) {
+      setSelectedPriceRange([clampedMin, clampedMax]);
+    } else {
+      setSelectedPriceRange([clampedMax, clampedMin]);
+    }
+  };
+
+  const handleSliderMouseDown = (e: React.MouseEvent, thumb: 'min' | 'max') => {
+    e.preventDefault();
+    setIsDragging(thumb);
+  };
+
+  const handleSliderMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const value = dynamicPriceRange.min + percentage * (dynamicPriceRange.max - dynamicPriceRange.min);
+    
+    if (isDragging === 'min') {
+      setSelectedPriceRange([Math.min(value, selectedPriceRange[1]), selectedPriceRange[1]]);
+    } else if (isDragging === 'max') {
+      setSelectedPriceRange([selectedPriceRange[0], Math.max(value, selectedPriceRange[0])]);
+    }
+  };
+
+  const handleSliderMouseUp = () => {
+    setIsDragging(null);
+  };
+
+  // Add global mouse up listener
+  useEffect(() => {
+    if (isDragging) {
+      const handleGlobalMouseUp = () => setIsDragging(null);
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        const sliderElement = document.querySelector('.price-slider-track');
+        if (!sliderElement) return;
+        
+        const rect = sliderElement.getBoundingClientRect();
+        const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const value = dynamicPriceRange.min + percentage * (dynamicPriceRange.max - dynamicPriceRange.min);
+        
+        if (isDragging === 'min') {
+          setSelectedPriceRange([Math.min(value, selectedPriceRange[1]), selectedPriceRange[1]]);
+        } else if (isDragging === 'max') {
+          setSelectedPriceRange([selectedPriceRange[0], Math.max(value, selectedPriceRange[0])]);
+        }
+      };
+
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      
+      return () => {
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+      };
+    }
+  }, [isDragging, selectedPriceRange, dynamicPriceRange]);
+  
   // AI Search handler
   const handleAISearch = async (query: string) => {
     if (!query.trim()) return;
@@ -478,19 +578,95 @@ const DiscoveryPage: React.FC = () => {
 
   const FilterContent = () => (
     <div className="space-y-6">
-      {/* Price Range */}
+      {/* Price Range - Flipkart Style */}
       <div className="space-y-4">
         <Label className="text-sm font-medium">Price Range</Label>
-        <Slider
-          value={selectedPriceRange}
-          onValueChange={(value) => setSelectedPriceRange(value as [number, number])}
-          min={dynamicPriceRange.min}
-          max={dynamicPriceRange.max}
-          step={10000}
-        />
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>{formatPrice(selectedPriceRange[0])}</span>
-          <span>{formatPrice(selectedPriceRange[1])}</span>
+        
+        {/* Min-Max Input Fields */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+              <Input
+                type="text"
+                value={minPriceInput}
+                onChange={(e) => handleMinPriceChange(e.target.value.replace(/[^0-9.]/g, ''))}
+                onBlur={applyPriceInputs}
+                onKeyDown={(e) => e.key === 'Enter' && applyPriceInputs()}
+                placeholder="Min"
+                className="pl-7 pr-8 text-sm h-9 text-center"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                {selectedPriceRange[0] >= 10000000 ? 'Cr' : 'L'}
+              </span>
+            </div>
+          </div>
+          <span className="text-muted-foreground text-sm font-medium">to</span>
+          <div className="flex-1">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+              <Input
+                type="text"
+                value={maxPriceInput}
+                onChange={(e) => handleMaxPriceChange(e.target.value.replace(/[^0-9.]/g, ''))}
+                onBlur={applyPriceInputs}
+                onKeyDown={(e) => e.key === 'Enter' && applyPriceInputs()}
+                placeholder="Max"
+                className="pl-7 pr-8 text-sm h-9 text-center"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                {selectedPriceRange[1] >= 10000000 ? 'Cr' : 'L'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Range Slider - Custom Mouse Tracking */}
+        <div className="pt-2 pb-1">
+          <div 
+            className="relative price-slider-track cursor-pointer select-none"
+            onMouseMove={handleSliderMouseMove}
+            onMouseUp={handleSliderMouseUp}
+            onMouseLeave={handleSliderMouseUp}
+          >
+            {/* Track background */}
+            <div className="w-full h-2 bg-secondary rounded-full relative">
+              {/* Active range */}
+              <div
+                className="absolute h-2 bg-primary rounded-full"
+                style={{
+                  left: `${((selectedPriceRange[0] - dynamicPriceRange.min) / (dynamicPriceRange.max - dynamicPriceRange.min)) * 100}%`,
+                  right: `${100 - ((selectedPriceRange[1] - dynamicPriceRange.min) / (dynamicPriceRange.max - dynamicPriceRange.min)) * 100}%`,
+                }}
+              />
+              
+              {/* Min thumb */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isDragging === 'min' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                style={{
+                  left: `${((selectedPriceRange[0] - dynamicPriceRange.min) / (dynamicPriceRange.max - dynamicPriceRange.min)) * 100}%`,
+                  transform: `translateX(-50%) translateY(-50%)`,
+                }}
+                onMouseDown={(e) => handleSliderMouseDown(e, 'min')}
+              />
+              
+              {/* Max thumb */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md cursor-grab transition-transform ${isDragging === 'max' ? 'scale-110 cursor-grabbing' : 'hover:scale-105'}`}
+                style={{
+                  left: `${((selectedPriceRange[1] - dynamicPriceRange.min) / (dynamicPriceRange.max - dynamicPriceRange.min)) * 100}%`,
+                  transform: `translateX(-50%) translateY(-50%)`,
+                }}
+                onMouseDown={(e) => handleSliderMouseDown(e, 'max')}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Range Labels */}
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{formatPrice(dynamicPriceRange.min)}</span>
+          <span>{formatPrice(dynamicPriceRange.max)}</span>
         </div>
       </div>
 
