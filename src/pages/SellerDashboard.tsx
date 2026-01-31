@@ -909,11 +909,54 @@ const SellerDashboard: React.FC = () => {
             <div className="space-y-3">
               <Label className="text-base font-medium">360° Panorama Images (Optional)</Label>
               <p className="text-sm text-muted-foreground">
-                Add URLs to 360° panorama images for an immersive virtual tour. Use Google Street View app or a 360° camera.
+                Upload 360° panorama images taken with Google Street View app or a 360° camera for an immersive virtual tour.
               </p>
+              
+              {/* File Upload for 360° */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="https://example.com/360-image.jpg"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="flex-1"
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    if (!e.target.files) return;
+                    const files = Array.from(e.target.files);
+                    if (files.length === 0) return;
+                    
+                    setUploading(true);
+                    try {
+                      // Use a temporary ID for panorama uploads
+                      const tempId = editingPropertyId || `temp-${Date.now()}`;
+                      const uploadedUrls = await uploadPropertyImages(files, tempId, (progress) => {
+                        setUploadProgress(progress);
+                      });
+                      setPanoramaUrls(prev => [...prev, ...uploadedUrls]);
+                      toast({
+                        title: 'Success!',
+                        description: `${uploadedUrls.length} 360° image(s) uploaded`,
+                      });
+                    } catch (error) {
+                      console.error('Upload error:', error);
+                      toast({
+                        title: 'Upload failed',
+                        description: 'Failed to upload 360° images',
+                        variant: 'destructive',
+                      });
+                    } finally {
+                      setUploading(false);
+                      setUploadProgress(0);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+              
+              {/* Or add URL */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Or paste 360° image URL..."
                   value={panoramaUrlInput}
                   onChange={(e) => setPanoramaUrlInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -938,17 +981,18 @@ const SellerDashboard: React.FC = () => {
                   disabled={!panoramaUrlInput.trim()}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add 360°
+                  Add URL
                 </Button>
               </div>
               
               {/* 360° URL Preview List */}
               {panoramaUrls.length > 0 && (
                 <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">{panoramaUrls.length} panorama(s) added</p>
                   {panoramaUrls.map((url, i) => (
                     <div key={i} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-lg">
                       <Eye className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-sm truncate flex-1">{url}</span>
+                      <span className="text-sm truncate flex-1">{url.length > 50 ? url.slice(0, 50) + '...' : url}</span>
                       <Button
                         variant="ghost"
                         size="icon"
