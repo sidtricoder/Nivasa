@@ -1,8 +1,9 @@
 /**
  * Neighborhood Intelligence Service
- * Uses Overpass API (OpenStreetMap) - Completely FREE, no API key needed!
- * Fetches real nearby amenities and calculates SafeHaven Score
+ * Uses Google Places JavaScript API for nearby amenities and calculates scores
  */
+
+import loadGoogleMaps from '@/lib/googleMapsLoader';
 
 // Types for neighborhood data
 export interface NearbyAmenity {
@@ -12,6 +13,7 @@ export interface NearbyAmenity {
   distanceMeters: number;
   lat: number;
   lng: number;
+  rating?: number;
 }
 
 export interface NeighborhoodData {
@@ -28,19 +30,6 @@ export interface NeighborhoodData {
 // Cache for neighborhood data (1 hour TTL)
 const neighborhoodCache = new Map<string, { data: NeighborhoodData; timestamp: number }>();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
-
-// Rate limiting
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 1500; // 1.5 seconds between requests
-
-const waitForRateLimit = async () => {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
-  }
-  lastRequestTime = Date.now();
-};
 
 /**
  * Calculate distance between two coordinates using Haversine formula
@@ -70,180 +59,150 @@ const formatDistance = (meters: number): string => {
 };
 
 /**
- * Map OSM amenity tags to our types
+ * Map Google Places type to our amenity type
  */
-const mapOsmType = (tags: Record<string, string>): NearbyAmenity['type'] | null => {
-  if (tags.amenity === 'school' || tags.amenity === 'university' || tags.amenity === 'college') {
+const mapGoogleType = (types: string[]): NearbyAmenity['type'] | null => {
+  if (types.includes('school') || types.includes('university') || types.includes('secondary_school') || types.includes('primary_school')) {
     return 'school';
   }
-  if (tags.amenity === 'hospital' || tags.amenity === 'clinic' || tags.amenity === 'doctors') {
+  if (types.includes('hospital') || types.includes('doctor') || types.includes('health')) {
     return 'hospital';
   }
-  if (tags.railway === 'station' || tags.station === 'subway' || tags.amenity === 'bus_station') {
+  if (types.includes('subway_station') || types.includes('train_station') || types.includes('transit_station') || types.includes('bus_station')) {
     return 'metro';
   }
-  if (tags.leisure === 'park' || tags.leisure === 'garden' || tags.leisure === 'playground') {
+  if (types.includes('park')) {
     return 'park';
   }
-  if (tags.shop === 'mall' || tags.shop === 'supermarket' || tags.shop === 'department_store') {
+  if (types.includes('shopping_mall') || types.includes('supermarket') || types.includes('department_store')) {
     return 'mall';
   }
-  if (tags.amenity === 'restaurant' || tags.amenity === 'cafe' || tags.amenity === 'fast_food') {
+  if (types.includes('restaurant') || types.includes('cafe') || types.includes('food')) {
     return 'restaurant';
   }
-  if (tags.amenity === 'police') {
+  if (types.includes('police')) {
     return 'police';
   }
-  if (tags.amenity === 'fire_station') {
+  if (types.includes('fire_station')) {
     return 'fire_station';
   }
   return null;
 };
 
-// Multiple Overpass API mirrors for fallback
-const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
+// Hidden div for PlacesService (required by Google Maps API)
+let placesServiceDiv: HTMLDivElement | null = null;
 
-/**
- * Fetch with retry logic and multiple endpoints
- */
-const fetchWithRetry = async (
-  query: string,
-  maxRetries: number = 3
-): Promise<any> => {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    // Cycle through endpoints on each retry
-    const endpoint = OVERPASS_ENDPOINTS[attempt % OVERPASS_ENDPOINTS.length];
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `data=${encodeURIComponent(query)}`,
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        return await response.json();
-      }
-      
-      // If rate limited or server error, try next endpoint
-      if (response.status === 429 || response.status >= 500) {
-        console.warn(`Overpass endpoint ${endpoint} returned ${response.status}, trying next...`);
-        lastError = new Error(`Overpass API error: ${response.status}`);
-        // Wait before retry with exponential backoff
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-        continue;
-      }
-      
-      throw new Error(`Overpass API error: ${response.status}`);
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.warn(`Overpass endpoint ${endpoint} timed out, trying next...`);
-        lastError = new Error('Request timed out');
-      } else {
-        console.warn(`Overpass endpoint ${endpoint} failed:`, error.message);
-        lastError = error;
-      }
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
-    }
+const getPlacesServiceDiv = (): HTMLDivElement => {
+  if (!placesServiceDiv) {
+    placesServiceDiv = document.createElement('div');
+    placesServiceDiv.style.display = 'none';
+    document.body.appendChild(placesServiceDiv);
   }
-  
-  throw lastError || new Error('All Overpass API endpoints failed');
+  return placesServiceDiv;
 };
 
 /**
- * Fetch nearby amenities from Overpass API
+ * Fetch nearby places using Google Maps JavaScript PlacesService
+ */
+const fetchNearbyPlacesJS = async (
+  lat: number,
+  lng: number,
+  type: string,
+  radius: number = 1500
+): Promise<google.maps.places.PlaceResult[]> => {
+  await loadGoogleMaps();
+  
+  return new Promise((resolve) => {
+    const location = new google.maps.LatLng(lat, lng);
+    const service = new google.maps.places.PlacesService(getPlacesServiceDiv());
+    
+    const request: google.maps.places.PlaceSearchRequest = {
+      location,
+      radius,
+      type: type as any,
+    };
+
+    service.nearbySearch(request, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+        resolve(results);
+      } else {
+        console.warn(`Places API returned status: ${status} for type: ${type}`);
+        resolve([]);
+      }
+    });
+  });
+};
+
+/**
+ * Fetch nearby amenities from Google Places API
  */
 export const fetchNearbyAmenities = async (
   lat: number,
   lng: number,
   radius: number = 1500
 ): Promise<NearbyAmenity[]> => {
-  await waitForRateLimit();
+  try {
+    await loadGoogleMaps();
+  } catch (error) {
+    console.warn('Google Maps API not available:', error);
+    return [];
+  }
 
-  // Overpass QL query for multiple amenity types
-  const query = `
-    [out:json][timeout:25];
-    (
-      // Education
-      node["amenity"="school"](around:${radius},${lat},${lng});
-      node["amenity"="university"](around:${radius},${lat},${lng});
-      node["amenity"="college"](around:${radius},${lat},${lng});
-      
-      // Healthcare
-      node["amenity"="hospital"](around:${radius},${lat},${lng});
-      node["amenity"="clinic"](around:${radius},${lat},${lng});
-      
-      // Transport
-      node["railway"="station"](around:${radius * 1.5},${lat},${lng});
-      node["station"="subway"](around:${radius},${lat},${lng});
-      node["amenity"="bus_station"](around:${radius},${lat},${lng});
-      
-      // Parks & Recreation
-      node["leisure"="park"](around:${radius},${lat},${lng});
-      node["leisure"="garden"](around:${radius},${lat},${lng});
-      
-      // Shopping
-      node["shop"="mall"](around:${radius * 2},${lat},${lng});
-      node["shop"="supermarket"](around:${radius},${lat},${lng});
-      
-      // Dining
-      node["amenity"="restaurant"](around:${radius},${lat},${lng});
-      node["amenity"="cafe"](around:${radius},${lat},${lng});
-      
-      // Safety
-      node["amenity"="police"](around:${radius * 2},${lat},${lng});
-      node["amenity"="fire_station"](around:${radius * 2},${lat},${lng});
-    );
-    out body;
-  `;
+  // Place types to search for
+  const searchTypes = [
+    { type: 'school', radius: radius },
+    { type: 'hospital', radius: radius * 1.5 },
+    { type: 'subway_station', radius: radius * 2 },
+    { type: 'park', radius: radius },
+    { type: 'shopping_mall', radius: radius * 2 },
+    { type: 'restaurant', radius: radius },
+    { type: 'police', radius: radius * 2 },
+  ];
 
   try {
-    const data = await fetchWithRetry(query);
+    // Fetch all place types sequentially to avoid rate limits
+    const allResults: google.maps.places.PlaceResult[] = [];
+    
+    for (const { type, radius: r } of searchTypes) {
+      try {
+        const results = await fetchNearbyPlacesJS(lat, lng, type, r);
+        allResults.push(...results);
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (err) {
+        console.warn(`Failed to fetch ${type}:`, err);
+      }
+    }
+
     const amenities: NearbyAmenity[] = [];
-    const seenNames = new Set<string>();
+    const seenPlaceIds = new Set<string>();
 
-    for (const element of data.elements) {
-      if (!element.tags) continue;
+    // Process results
+    allResults.forEach((place) => {
+      if (!place.place_id || seenPlaceIds.has(place.place_id)) return;
+      seenPlaceIds.add(place.place_id);
 
-      const type = mapOsmType(element.tags);
-      if (!type) continue;
+      const type = mapGoogleType(place.types || []);
+      if (!type) return;
 
-      const name = element.tags.name || element.tags['name:en'] || `Unnamed ${type}`;
-      
-      // Skip duplicates
-      const key = `${type}-${name}`;
-      if (seenNames.has(key)) continue;
-      seenNames.add(key);
+      const placeLat = place.geometry?.location?.lat();
+      const placeLng = place.geometry?.location?.lng();
+      if (placeLat === undefined || placeLng === undefined) return;
 
-      const distanceMeters = calculateDistance(lat, lng, element.lat, element.lon);
+      const distanceMeters = calculateDistance(lat, lng, placeLat, placeLng);
 
       amenities.push({
         type,
-        name,
+        name: place.name || `Unnamed ${type}`,
         distance: formatDistance(distanceMeters),
         distanceMeters,
-        lat: element.lat,
-        lng: element.lon,
+        lat: placeLat,
+        lng: placeLng,
+        rating: place.rating,
       });
-    }
+    });
 
-    // Balance results to show variety of amenity types (not just restaurants)
-    // Group by type and take top items from each category
+    // Balance results by type
     const byType: Record<string, NearbyAmenity[]> = {};
     for (const amenity of amenities) {
       if (!byType[amenity.type]) byType[amenity.type] = [];
@@ -255,10 +214,10 @@ export const fetchNearbyAmenities = async (
       byType[type].sort((a, b) => a.distanceMeters - b.distanceMeters);
     }
 
-    // Priority order for display (most important first)
+    // Priority order and limits
     const priorityTypes = ['hospital', 'school', 'metro', 'mall', 'park', 'restaurant', 'police', 'fire_station'];
     const maxPerCategory: Record<string, number> = {
-      restaurant: 4,  // Limit restaurants
+      restaurant: 4,
       hospital: 2,
       school: 2,
       metro: 2,
@@ -268,57 +227,46 @@ export const fetchNearbyAmenities = async (
       fire_station: 1,
     };
 
-    const results: NearbyAmenity[] = [];
-    
-    // First pass: take priority items from each category
+    const finalResults: NearbyAmenity[] = [];
     for (const type of priorityTypes) {
       const items = byType[type] || [];
       const maxItems = maxPerCategory[type] || 2;
-      results.push(...items.slice(0, maxItems));
+      finalResults.push(...items.slice(0, maxItems));
     }
 
-    // Sort final results by distance
-    results.sort((a, b) => a.distanceMeters - b.distanceMeters);
+    // Sort by distance
+    finalResults.sort((a, b) => a.distanceMeters - b.distanceMeters);
 
-    console.log('🏘️ [Neighborhood] Real data fetched from Overpass API:', {
-      totalFound: results.length,
-      types: [...new Set(results.map(a => a.type))],
-      sampleNames: results.slice(0, 5).map(a => `${a.name} (${a.type})`),
+    console.log('🏘️ [Neighborhood] Google Places data fetched:', {
+      totalFound: finalResults.length,
+      types: [...new Set(finalResults.map(a => a.type))],
     });
 
-    return results.slice(0, 16); // Max 16 items for display
+    return finalResults.slice(0, 16);
 
   } catch (error) {
-    console.error('Overpass API error:', error);
+    console.error('Google Places API error:', error);
     throw new Error('Failed to fetch neighborhood data. Please try again.');
   }
 };
 
 /**
  * Calculate SafeHaven Score based on safety infrastructure proximity
- * Commercial areas with many people around are considered safer
  */
 export const calculateSafeHavenScore = (amenities: NearbyAmenity[]): number => {
-  let score = 45; // Higher base score - urban areas are generally safe
+  let score = 45;
 
-  // Police stations (max +20 points)
   const policeStations = amenities.filter(a => a.type === 'police');
-  const policeBonus = Math.min(policeStations.length * 10, 20);
-  score += policeBonus;
+  score += Math.min(policeStations.length * 10, 20);
 
-  // Fire stations (max +10 points)
   const fireStations = amenities.filter(a => a.type === 'fire_station');
-  const fireBonus = Math.min(fireStations.length * 10, 10);
-  score += fireBonus;
+  score += Math.min(fireStations.length * 10, 10);
 
-  // Hospitals nearby boost safety perception (max +10 points)
   const hospitals = amenities.filter(a => a.type === 'hospital' && a.distanceMeters < 2000);
-  const hospitalBonus = Math.min(hospitals.length * 5, 10);
-  score += hospitalBonus;
+  score += Math.min(hospitals.length * 5, 10);
 
-  // Busy commercial areas are safer - lots of restaurants/cafes = well-lit, people around
   const restaurants = amenities.filter(a => a.type === 'restaurant' && a.distanceMeters < 500);
-  if (restaurants.length >= 8) score += 15; // Very busy commercial area
+  if (restaurants.length >= 8) score += 15;
   else if (restaurants.length >= 5) score += 10;
   else if (restaurants.length >= 3) score += 5;
 
@@ -327,19 +275,17 @@ export const calculateSafeHavenScore = (amenities: NearbyAmenity[]): number => {
 
 /**
  * Calculate Walk Score based on nearby amenities
- * Premium locations with many walkable amenities score higher
  */
 const calculateWalkScore = (amenities: NearbyAmenity[]): number => {
-  let score = 40; // Higher base score for urban areas
+  let score = 40;
 
-  // Categories and their weight
   const categoryWeights: Record<string, number> = {
     school: 8,
     hospital: 10,
     metro: 15,
     park: 8,
     mall: 12,
-    restaurant: 6, // Lower weight but will accumulate
+    restaurant: 6,
   };
 
   const categoryCounts: Record<string, number> = {};
@@ -348,10 +294,8 @@ const calculateWalkScore = (amenities: NearbyAmenity[]): number => {
     if (amenity.distanceMeters > 1500) continue;
     
     const weight = categoryWeights[amenity.type] || 4;
-    // Closer = much better score (exponential benefit for nearby places)
     const distanceFactor = Math.pow(1 - (amenity.distanceMeters / 1800), 1.5);
     
-    // First amenity in category gets full points, subsequent get less (but still count)
     const categoryCount = categoryCounts[amenity.type] || 0;
     const diminishingFactor = 1 / Math.sqrt(categoryCount + 1);
     
@@ -359,7 +303,6 @@ const calculateWalkScore = (amenities: NearbyAmenity[]): number => {
     categoryCounts[amenity.type] = categoryCount + 1;
   }
 
-  // Bonus for having many different categories nearby (variety bonus)
   const uniqueCategories = Object.keys(categoryCounts).length;
   score += uniqueCategories * 3;
 
@@ -367,35 +310,26 @@ const calculateWalkScore = (amenities: NearbyAmenity[]): number => {
 };
 
 /**
- * Calculate Connectivity Score based on transit and infrastructure
- * Premium urban areas with good infrastructure score higher
+ * Calculate Connectivity Score
  */
 const calculateConnectivityScore = (amenities: NearbyAmenity[]): number => {
-  let score = 45; // Higher base for urban areas
+  let score = 45;
 
-  // Metro/Railway stations (max +30 points)
   const transitStations = amenities.filter(a => a.type === 'metro');
   for (const station of transitStations) {
-    if (station.distanceMeters < 500) {
-      score += 15;
-    } else if (station.distanceMeters < 1000) {
-      score += 10;
-    } else if (station.distanceMeters < 2000) {
-      score += 6;
-    }
+    if (station.distanceMeters < 500) score += 15;
+    else if (station.distanceMeters < 1000) score += 10;
+    else if (station.distanceMeters < 2000) score += 6;
   }
 
-  // Hospitals and schools add to infrastructure (max +15 points)
   const essentialServices = amenities.filter(
     a => (a.type === 'hospital' || a.type === 'school') && a.distanceMeters < 2000
   );
   score += Math.min(essentialServices.length * 4, 15);
 
-  // Malls/shopping indicate commercial hub (max +10 points)
   const shopping = amenities.filter(a => a.type === 'mall' && a.distanceMeters < 3000);
   score += Math.min(shopping.length * 5, 10);
 
-  // Having many restaurants indicates well-connected commercial area
   const restaurants = amenities.filter(a => a.type === 'restaurant' && a.distanceMeters < 500);
   if (restaurants.length >= 5) score += 10;
   else if (restaurants.length >= 3) score += 5;
@@ -404,42 +338,26 @@ const calculateConnectivityScore = (amenities: NearbyAmenity[]): number => {
 };
 
 /**
- * Calculate Lifestyle Score based on entertainment and dining
- * Areas with many restaurants/cafes = high lifestyle score
+ * Calculate Lifestyle Score
  */
 const calculateLifestyleScore = (amenities: NearbyAmenity[]): number => {
-  let score = 35; // Base score
+  let score = 35;
 
-  // Restaurants and cafes - more = better (up to +40 points)
   const dining = amenities.filter(a => a.type === 'restaurant');
   for (const place of dining.slice(0, 10)) {
-    if (place.distanceMeters < 100) {
-      score += 6;
-    } else if (place.distanceMeters < 300) {
-      score += 5;
-    } else if (place.distanceMeters < 600) {
-      score += 4;
-    } else if (place.distanceMeters < 1000) {
-      score += 2;
-    }
+    if (place.distanceMeters < 100) score += 6;
+    else if (place.distanceMeters < 300) score += 5;
+    else if (place.distanceMeters < 600) score += 4;
+    else if (place.distanceMeters < 1000) score += 2;
   }
 
-  // Parks and recreation (max +15 points)
   const parks = amenities.filter(a => a.type === 'park' && a.distanceMeters < 1500);
   score += Math.min(parks.length * 8, 15);
 
-  // Shopping/malls (max +10 points)
   const malls = amenities.filter(a => a.type === 'mall' && a.distanceMeters < 2000);
   score += Math.min(malls.length * 5, 10);
 
   return Math.min(Math.max(score, 0), 100);
-};
-
-/**
- * Calculate Safety Score (alias using SafeHaven calculation)
- */
-const calculateSafetyScore = (amenities: NearbyAmenity[]): number => {
-  return calculateSafeHavenScore(amenities);
 };
 
 /**
@@ -449,10 +367,8 @@ export const getNeighborhoodData = async (
   lat: number,
   lng: number
 ): Promise<NeighborhoodData> => {
-  // Create cache key from coordinates (rounded to 4 decimal places for proximity matching)
   const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
   
-  // Check cache
   const cached = neighborhoodCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return { ...cached.data, isFromCache: true };
@@ -462,7 +378,7 @@ export const getNeighborhoodData = async (
     const amenities = await fetchNearbyAmenities(lat, lng);
     const safeHavenScore = calculateSafeHavenScore(amenities);
     const walkScore = calculateWalkScore(amenities);
-    const safetyScore = calculateSafetyScore(amenities);
+    const safetyScore = calculateSafeHavenScore(amenities);
     const connectivityScore = calculateConnectivityScore(amenities);
     const lifestyleScore = calculateLifestyleScore(amenities);
 
@@ -477,22 +393,17 @@ export const getNeighborhoodData = async (
       isFromCache: false,
     };
 
-    // Cache the result
     neighborhoodCache.set(cacheKey, { data, timestamp: Date.now() });
-
     return data;
   } catch (error) {
     console.error('Failed to fetch neighborhood data:', error);
     
-    // Return cached data if available (even if stale)
     if (cached) {
-      console.log('Using stale cache for neighborhood data');
       return { ...cached.data, isFromCache: true };
     }
     
-    // Return default fallback data when API fails and no cache
-    console.log('Using fallback neighborhood data');
-    const fallbackData: NeighborhoodData = {
+    // Fallback data
+    return {
       amenities: [],
       safeHavenScore: 70,
       walkScore: 65,
@@ -500,10 +411,8 @@ export const getNeighborhoodData = async (
       connectivityScore: 60,
       lifestyleScore: 65,
       lastUpdated: new Date().toISOString(),
-      isFromCache: true, // Mark as cached to indicate it's not live data
+      isFromCache: true,
     };
-    
-    return fallbackData;
   }
 };
 

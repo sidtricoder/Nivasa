@@ -62,6 +62,7 @@ import GaussianSplatViewer from '@/components/property/GaussianSplatViewer';
 import Interactive360Panorama from '@/components/property/Interactive360Panorama';
 import Panoee3DTour from '@/components/property/Panoee3DTour';
 import GoogleMapEmbed from '@/components/property/GoogleMapEmbed';
+import GoogleStreetView from '@/components/property/GoogleStreetView';
 import PropertyChatbot from '@/components/property/PropertyChatbot';
 import VirtualStagingModal from '@/components/property/VirtualStagingModal';
 import NeighborhoodDashboard from '@/components/property/NeighborhoodDashboard';
@@ -457,10 +458,10 @@ const PropertyDetailPage: React.FC = () => {
                     </div>
                   </TabsContent>
                   <TabsContent value="street-view" className="mt-0">
-                    <GoogleMapEmbed 
+                    <GoogleStreetView 
                       coordinates={property.location.coordinates}
                       address={`${property.location.address}, ${property.location.locality}, ${property.location.city}`}
-                      title={property.location.locality}
+                      title="Street View"
                     />
                   </TabsContent>
                   <TabsContent value="3d-tour" className="mt-0">

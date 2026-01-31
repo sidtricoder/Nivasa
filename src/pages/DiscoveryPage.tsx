@@ -38,6 +38,8 @@ import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/s
 import { useSearchStore } from '@/stores/searchStore';
 import { mockListings, getUniqueLocalities, getPriceRange, Property } from '@/data/listings';
 import { toast } from 'sonner';
+import { PropertyCardSkeleton } from '@/components/ui/skeletons';
+
 
 
 const propertyTypes = [
@@ -113,6 +115,7 @@ const DiscoveryPage: React.FC = () => {
   // AI Location filters (flexible matching, independent of dropdown)
   const [aiLocality, setAiLocality] = useState<string>('');
   const [aiCity, setAiCity] = useState<string>('');
+  const [aiState, setAiState] = useState<string>('');
 
   // Search store for recent/saved searches
   const { addRecentSearch, setVoiceTranscript, voiceTranscript } = useSearchStore();
@@ -127,6 +130,7 @@ const DiscoveryPage: React.FC = () => {
     setLandmarkName('');
     setAiLocality('');
     setAiCity('');
+    setAiState('');
     
     try {
       const result = await extractFiltersFromQuery(query);
@@ -165,6 +169,11 @@ const DiscoveryPage: React.FC = () => {
         // Store city for filtering (AI extracted)
         if (filters.city) {
           setAiCity(filters.city.toLowerCase());
+        }
+        
+        // Store state for filtering (AI extracted)
+        if (filters.state) {
+          setAiState(filters.state.toLowerCase());
         }
         
         if (filters.propertyType) setSelectedPropertyTypes([filters.propertyType]);
@@ -310,10 +319,21 @@ const DiscoveryPage: React.FC = () => {
       );
     }
     
-    // AI City filter
+    // AI City filter (flexible matching)
     if (aiCity) {
       results = results.filter(p => 
-        p.location.city.toLowerCase() === aiCity
+        p.location.city.toLowerCase() === aiCity ||
+        p.location.city.toLowerCase().includes(aiCity) ||
+        aiCity.includes(p.location.city.toLowerCase())
+      );
+    }
+    
+    // AI State filter
+    if (aiState) {
+      results = results.filter(p => 
+        p.location.state?.toLowerCase() === aiState ||
+        p.location.state?.toLowerCase().includes(aiState) ||
+        aiState.includes(p.location.state?.toLowerCase() || '')
       );
     }
 
@@ -404,6 +424,7 @@ const DiscoveryPage: React.FC = () => {
     landmarkCoords,
     aiLocality,
     aiCity,
+    aiState,
   ]);
 
   const formatPrice = (price: number) => {
@@ -422,6 +443,7 @@ const DiscoveryPage: React.FC = () => {
     setSelectedLifestyle([]);
     setAiLocality('');
     setAiCity('');
+    setAiState('');
   };
 
   const activeFiltersCount = [
@@ -840,10 +862,11 @@ const DiscoveryPage: React.FC = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-16"
+                  className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
                 >
-                  <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-                  <p className="text-muted-foreground">Loading properties...</p>
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <PropertyCardSkeleton key={i} />
+                  ))}
                 </motion.div>
               ) : filteredListings.length === 0 ? (
                 <motion.div

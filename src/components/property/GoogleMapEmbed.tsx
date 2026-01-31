@@ -1,22 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { MapPin, ExternalLink } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix Leaflet default icon issue
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
+import loadGoogleMaps from '@/lib/googleMapsLoader';
 
 interface GoogleMapEmbedProps {
   coordinates: { lat: number; lng: number };
@@ -32,37 +19,88 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
   className 
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   const { lat, lng } = coordinates;
   
-  // OpenStreetMap link (opens in new tab)
-  const openStreetMapLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`;
+  // Google Maps link
+  const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    let isMounted = true;
 
-    // Create map
-    mapInstanceRef.current = L.map(mapRef.current).setView([lat, lng], 17);
+    const initMap = async () => {
+      if (!mapRef.current) return;
 
-    // Add OpenStreetMap tiles (FREE!)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(mapInstanceRef.current);
+      try {
+        setIsLoading(true);
+        setError('');
+        
+        await loadGoogleMaps();
+        
+        if (!isMounted || !mapRef.current) return;
 
-    // Add marker
-    const marker = L.marker([lat, lng]).addTo(mapInstanceRef.current);
-    
-    if (title || address) {
-      marker.bindPopup(`<strong>${title}</strong>${address ? `<br>${address}` : ''}`).openPopup();
-    }
+        // Create map
+        mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+          center: { lat, lng },
+          zoom: 17,
+          mapTypeControl: false,
+          streetViewControl: true,
+          fullscreenControl: true,
+          zoomControl: true,
+          styles: [
+            {
+              featureType: 'poi',
+              elementType: 'labels',
+              stylers: [{ visibility: 'off' }]
+            }
+          ]
+        });
+
+        // Add marker
+        markerRef.current = new google.maps.Marker({
+          position: { lat, lng },
+          map: mapInstanceRef.current,
+          title: title,
+          animation: google.maps.Animation.DROP,
+        });
+
+        // Add info window
+        if (title || address) {
+          const infoWindow = new google.maps.InfoWindow({
+            content: `<div style="padding: 8px;"><strong>${title}</strong>${address ? `<br><small>${address}</small>` : ''}</div>`
+          });
+          
+          markerRef.current.addListener('click', () => {
+            infoWindow.open(mapInstanceRef.current, markerRef.current);
+          });
+          
+          // Open by default
+          infoWindow.open(mapInstanceRef.current, markerRef.current);
+        }
+
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error('Map initialization error:', err);
+        if (isMounted) {
+          setError(err.message || 'Failed to load map');
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initMap();
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+      isMounted = false;
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
       }
+      mapInstanceRef.current = null;
     };
   }, [lat, lng, title, address]);
 
@@ -80,13 +118,13 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
             asChild
           >
             <a 
-              href={openStreetMapLink}
+              href={googleMapsLink}
               target="_blank"
               rel="noopener noreferrer"
               className="gap-2"
             >
               <ExternalLink className="h-4 w-4" />
-              Open in Maps
+              Open in Google Maps
             </a>
           </Button>
         </div>
@@ -94,7 +132,17 @@ const GoogleMapEmbed: React.FC<GoogleMapEmbedProps> = ({
           <p className="text-sm text-muted-foreground">{address}</p>
         )}
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+            <p className="text-sm text-destructive text-center px-4">{error}</p>
+          </div>
+        )}
         <div
           ref={mapRef}
           className="w-full aspect-video bg-muted"

@@ -1,9 +1,10 @@
 /**
  * Geocoding Service
- * Uses Photon API (OpenStreetMap) - Completely FREE, no API key needed!
- * Photon is CORS-friendly and works from localhost
- * Docs: https://photon.komoot.io/
+ * Uses Google Geocoding API for address-to-coordinates conversion
+ * Docs: https://developers.google.com/maps/documentation/geocoding
  */
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export interface GeocodeResult {
   lat: number;
@@ -13,32 +14,19 @@ export interface GeocodeResult {
 }
 
 /**
- * Convert address to coordinates using Photon (OpenStreetMap Geocoding)
- * FREE - No API key, no credit card, CORS-enabled
- * Better for localhost development than Nominatim
+ * Convert address to coordinates using Google Geocoding API
  */
-let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests
-
-const waitForRateLimit = async () => {
-  const now = Date.now();
-  const timeSinceLastRequest = now - lastRequestTime;
-  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-    await new Promise(resolve => setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest));
-  }
-  lastRequestTime = Date.now();
-};
-
 export const geocodeAddress = async (address: string): Promise<GeocodeResult> => {
   if (!address || address.trim().length < 3) {
     throw new Error('Please enter a valid address with at least 3 characters');
   }
 
-  await waitForRateLimit();
+  if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+    throw new Error('Google Maps API key is not configured. Please add VITE_GOOGLE_MAPS_API_KEY to your .env file.');
+  }
 
   const encodedAddress = encodeURIComponent(address);
-  // Using Photon API - CORS-friendly alternative to Nominatim
-  const url = `https://photon.komoot.io/api/?q=${encodedAddress}&limit=1`;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${GOOGLE_MAPS_API_KEY}`;
 
   try {
     const response = await fetch(url);
@@ -49,31 +37,25 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult> =>
 
     const data = await response.json();
 
-    if (data.features && data.features.length > 0) {
-      const result = data.features[0];
-      const coords = result.geometry.coordinates; // [lng, lat] in GeoJSON
-      const props = result.properties;
-      
-      // Build formatted address
-      const addressParts = [
-        props.name,
-        props.street,
-        props.city || props.county,
-        props.state,
-        props.country
-      ].filter(Boolean);
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      const result = data.results[0];
+      const location = result.geometry.location;
 
       return {
-        lat: coords[1], // Photon returns [lng, lat]
-        lng: coords[0],
-        formattedAddress: addressParts.join(', '),
-        placeId: props.osm_id?.toString() || 'unknown',
+        lat: location.lat,
+        lng: location.lng,
+        formattedAddress: result.formatted_address,
+        placeId: result.place_id || 'unknown',
       };
+    } else if (data.status === 'ZERO_RESULTS') {
+      throw new Error('Address not found. Please try a more specific location.');
+    } else if (data.status === 'REQUEST_DENIED') {
+      throw new Error('Google Maps API key is invalid or the Geocoding API is not enabled.');
     } else {
-      throw new Error('Address not found. Please try a more general location (e.g., just the area name and city).');
+      throw new Error(`Geocoding failed: ${data.status}`);
     }
   } catch (error: any) {
-    if (error.message.includes('not found')) {
+    if (error.message.includes('not found') || error.message.includes('API')) {
       throw error;
     }
     console.error('Geocoding error:', error);
@@ -82,14 +64,14 @@ export const geocodeAddress = async (address: string): Promise<GeocodeResult> =>
 };
 
 /**
- * Reverse geocode - convert coordinates to address
- * Uses Photon reverse API
+ * Reverse geocode - convert coordinates to address using Google Geocoding API
  */
 export const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
-  await waitForRateLimit();
+  if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+    throw new Error('Google Maps API key is not configured.');
+  }
 
-  // Photon reverse geocoding
-  const url = `https://photon.komoot.io/reverse?lon=${lng}&lat=${lat}`;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`;
 
   try {
     const response = await fetch(url);
@@ -100,17 +82,8 @@ export const reverseGeocode = async (lat: number, lng: number): Promise<string> 
 
     const data = await response.json();
 
-    if (data.features && data.features.length > 0) {
-      const props = data.features[0].properties;
-      const addressParts = [
-        props.name,
-        props.street,
-        props.city || props.county,
-        props.state,
-        props.country
-      ].filter(Boolean);
-      
-      return addressParts.join(', ');
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      return data.results[0].formatted_address;
     } else {
       throw new Error('Unable to find address for coordinates');
     }

@@ -1,10 +1,10 @@
-// AI-powered property search using Groq API
+// AI-powered property search using Google Gemini API
 // Extracts structured filters from natural language queries
 
 import { geocodeAddress, GeocodeResult } from './geocodingService';
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 
 // Calculate distance between two coordinates in kilometers using Haversine formula
 export function calculateDistance(
@@ -53,10 +53,11 @@ export interface AIExtractedFilters {
   maxSqft?: number;
   facing?: string;
   nearLandmark?: string; // Landmark/POI for location-based search
+  state?: string; // Indian state for state-level searches
   searchQuery?: string; // Original query for display
 }
 
-const SYSTEM_PROMPT = `You are a property search assistant for an Indian real estate platform called Nivasa/HavenHub based in Bangalore.
+const SYSTEM_PROMPT = `You are a property search assistant for an Indian real estate platform called Nivasa/HavenHub.
 
 Extract structured search filters from user's natural language query. Return ONLY valid JSON.
 
@@ -65,8 +66,9 @@ Available filters:
 - propertyType: "apartment" | "villa" | "house" | "penthouse"
 - priceMin: number (in INR - convert lakhs/crores: 1 lakh = 100000, 1 crore = 10000000)
 - priceMax: number (in INR)
-- locality: string (common Bangalore areas: Koramangala, Whitefield, HSR Layout, Indiranagar, Sarjapur, Hebbal, UB City, etc.)
-- city: string (default: Bangalore)
+- locality: string (area/locality within the city)
+- city: string (Indian city like Mumbai, Delhi, Bangalore, Gujarat, Ahmedabad, Pune, Hyderabad, Chennai, Kolkata, Jaipur, Surat, etc.)
+- state: string (Indian state like Maharashtra, Karnataka, Gujarat, Tamil Nadu, Telangana, etc.)
 - furnishing: "unfurnished" | "semi-furnished" | "fully-furnished"
 - amenities: array of strings (Swimming Pool, Gym, Parking, Garden, Clubhouse, etc.)
 - isPetFriendly: boolean
@@ -82,14 +84,20 @@ Price conversion examples:
 - "above 80 lakh" → priceMin: 8000000
 - "between 1-2 crore" → priceMin: 10000000, priceMax: 20000000
 
+City/State examples:
+- "property in Gujarat" → state: "Gujarat"
+- "flat in Ahmedabad" → city: "Ahmedabad"
+- "house in Mumbai" → city: "Mumbai"
+- "3BHK in Surat" → city: "Surat", bhk: 3
+- "property in Koramangala Bangalore" → locality: "Koramangala", city: "Bangalore"
+
 Landmark examples:
-- "property near Forum Mall" → nearLandmark: "Forum Mall Bangalore"
-- "house near Manipal Hospital" → nearLandmark: "Manipal Hospital Bangalore"
-- "flat near Orion Mall" → nearLandmark: "Orion Mall Bangalore"
-- "near Cubbon Park" → nearLandmark: "Cubbon Park Bangalore"
+- "property near Forum Mall" → nearLandmark: "Forum Mall"
+- "house near Manipal Hospital" → nearLandmark: "Manipal Hospital"
+- "flat near Gateway of India" → nearLandmark: "Gateway of India"
 
 Return ONLY a JSON object, no explanations. If a filter is not mentioned, don't include it.
-Example: {"bhk": 2, "nearLandmark": "Forum Mall Bangalore"}`;
+Example: {"bhk": 2, "city": "Ahmedabad", "state": "Gujarat"}`;
 
 export interface AISearchResult {
   success: boolean;
@@ -108,8 +116,8 @@ export async function extractFiltersFromQuery(query: string): Promise<AISearchRe
     };
   }
 
-  if (!GROQ_API_KEY) {
-    console.error('Groq API key not configured');
+  if (!GEMINI_API_KEY) {
+    console.error('Gemini API key not configured');
     return {
       success: false,
       filters: { searchQuery: query },
@@ -119,29 +127,35 @@ export async function extractFiltersFromQuery(query: string): Promise<AISearchRe
   }
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'moonshotai/Kimi-K2-Instruct',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: query }
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: SYSTEM_PROMPT + '\n\nUser query: ' + query }]
+          }
         ],
-        temperature: 0.1,
-        max_tokens: 500
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 500,
+          topP: 0.95,
+          topK: 40
+        }
       })
     });
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Gemini API error:', errorData);
       throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '{}';
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     
     // Parse the JSON response
     let filters: AIExtractedFilters;
@@ -198,9 +212,10 @@ export function formatExtractedFilters(filters: AIExtractedFilters): string[] {
       parts.push(`Above ₹${(price / 100000).toFixed(0)} L`);
     }
   }
-  if (filters.nearLandmark) parts.push(`Near ${filters.nearLandmark.replace(' Bangalore', '')}`);
+  if (filters.nearLandmark) parts.push(`Near ${filters.nearLandmark}`);
   if (filters.locality) parts.push(filters.locality);
-  if (filters.city && filters.city !== 'Bangalore') parts.push(filters.city);
+  if (filters.city) parts.push(filters.city);
+  if (filters.state) parts.push(filters.state);
   if (filters.furnishing) parts.push(filters.furnishing.replace('-', ' '));
   if (filters.isPetFriendly) parts.push('Pet Friendly');
   if (filters.hasParking) parts.push('Parking');

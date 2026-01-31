@@ -1,23 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader2, RefreshCw } from 'lucide-react';
+import { MapPin, Loader2, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 import { geocodeAddress, reverseGeocode } from '@/services/geocodingService';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix Leaflet default icon issue
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
+import loadGoogleMaps from '@/lib/googleMapsLoader';
 
 interface MapPickerProps {
   address: string;
@@ -28,8 +16,7 @@ interface MapPickerProps {
 
 /**
  * MapPicker Component
- * Interactive map with draggable marker using Leaflet + OpenStreetMap
- * 100% FREE - No API key, no credit card needed!
+ * Interactive Google Map with draggable marker and Places Autocomplete
  */
 const MapPicker: React.FC<MapPickerProps> = ({
   address,
@@ -38,115 +25,175 @@ const MapPicker: React.FC<MapPickerProps> = ({
   onAddressUpdate,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  
   const [loading, setLoading] = useState(false);
+  const [mapLoading, setMapLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [coordinates, setCoordinates] = useState(initialCoordinates || { lat: 0, lng: 0 });
+  const [searchValue, setSearchValue] = useState(address || '');
 
   // Initialize map
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    let isMounted = true;
 
-    // Small delay to ensure container has dimensions
-    setTimeout(() => {
+    const initMap = async () => {
       if (!mapRef.current) return;
 
-      // Create map centered on coordinates or default location
-      const center: [number, number] = coordinates.lat !== 0 
-        ? [coordinates.lat, coordinates.lng]
-        : [28.6139, 77.2090]; // Default to Delhi
-
       try {
-        mapInstanceRef.current = L.map(mapRef.current).setView(center, coordinates.lat !== 0 ? 15 : 12);
+        setMapLoading(true);
+        await loadGoogleMaps();
+        
+        if (!isMounted || !mapRef.current) return;
 
-        // Add OpenStreetMap tiles (FREE!)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 19,
-        }).addTo(mapInstanceRef.current);
+        // Default center (Delhi if no coordinates)
+        const center = coordinates.lat !== 0 
+          ? { lat: coordinates.lat, lng: coordinates.lng }
+          : { lat: 28.6139, lng: 77.2090 };
 
-        // Add draggable marker
-        markerRef.current = L.marker(center, {
+        // Create map
+        mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+          center,
+          zoom: coordinates.lat !== 0 ? 15 : 12,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: true,
+          zoomControl: true,
+        });
+
+        // Create draggable marker
+        markerRef.current = new google.maps.Marker({
+          position: center,
+          map: mapInstanceRef.current,
           draggable: true,
-        }).addTo(mapInstanceRef.current);
-
-        // Bind popup to marker
-        markerRef.current.bindPopup('📍 Drag me to adjust location!').openPopup();
+          title: 'Drag to adjust location',
+          animation: google.maps.Animation.DROP,
+        });
 
         // Handle marker drag
-        markerRef.current.on('dragend', async () => {
+        markerRef.current.addListener('dragend', async () => {
           if (!markerRef.current) return;
           
-          const position = markerRef.current.getLatLng();
+          const position = markerRef.current.getPosition();
+          if (!position) return;
+
           const newCoords = {
-            lat: position.lat,
-            lng: position.lng,
+            lat: position.lat(),
+            lng: position.lng(),
           };
 
           setCoordinates(newCoords);
           onCoordinatesChange(newCoords);
 
-          // Update popup
-          markerRef.current.setPopupContent(`✅ Updated: ${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`).openPopup();
-
-          // Optionally reverse geocode
+          // Reverse geocode
           if (onAddressUpdate) {
             try {
               const updatedAddress = await reverseGeocode(newCoords.lat, newCoords.lng);
               onAddressUpdate(updatedAddress);
+              setSearchValue(updatedAddress);
             } catch (error) {
               console.error('Reverse geocoding failed:', error);
             }
           }
         });
 
-        // Allow clicking on map to move marker
-        mapInstanceRef.current.on('click', (e: L.LeafletMouseEvent) => {
-          if (!markerRef.current) return;
+        // Handle map click
+        mapInstanceRef.current.addListener('click', async (e: google.maps.MapMouseEvent) => {
+          if (!markerRef.current || !e.latLng) return;
 
           const newCoords = {
-            lat: e.latlng.lat,
-            lng: e.latlng.lng,
+            lat: e.latLng.lat(),
+            lng: e.latLng.lng(),
           };
 
           setCoordinates(newCoords);
           onCoordinatesChange(newCoords);
+          markerRef.current.setPosition(e.latLng);
 
-          markerRef.current.setLatLng(e.latlng);
-          markerRef.current.setPopupContent(`✅ Updated: ${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`).openPopup();
+          // Reverse geocode
+          if (onAddressUpdate) {
+            try {
+              const updatedAddress = await reverseGeocode(newCoords.lat, newCoords.lng);
+              onAddressUpdate(updatedAddress);
+              setSearchValue(updatedAddress);
+            } catch (error) {
+              console.error('Reverse geocoding failed:', error);
+            }
+          }
         });
 
-        // Force map to resize after initialization
-        setTimeout(() => {
-          mapInstanceRef.current?.invalidateSize();
-        }, 100);
+        // Initialize Places Autocomplete
+        if (searchInputRef.current) {
+          autocompleteRef.current = new google.maps.places.Autocomplete(searchInputRef.current, {
+            componentRestrictions: { country: 'in' }, // Restrict to India
+            fields: ['geometry', 'formatted_address', 'name'],
+          });
 
-      } catch (error) {
-        console.error('Map initialization error:', error);
+          autocompleteRef.current.addListener('place_changed', () => {
+            const place = autocompleteRef.current?.getPlace();
+            if (!place?.geometry?.location) return;
+
+            const newCoords = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            };
+
+            setCoordinates(newCoords);
+            onCoordinatesChange(newCoords);
+
+            // Update map and marker
+            if (mapInstanceRef.current && markerRef.current) {
+              mapInstanceRef.current.setCenter(newCoords);
+              mapInstanceRef.current.setZoom(15);
+              markerRef.current.setPosition(newCoords);
+            }
+
+            // Update address
+            if (onAddressUpdate && place.formatted_address) {
+              onAddressUpdate(place.formatted_address);
+              setSearchValue(place.formatted_address);
+            }
+          });
+        }
+
+        setMapLoading(false);
+      } catch (err: any) {
+        console.error('Map initialization error:', err);
+        if (isMounted) {
+          setError(err.message || 'Failed to load map');
+          setMapLoading(false);
+        }
       }
-    }, 100);
+    };
+
+    initMap();
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+      isMounted = false;
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
       }
+      mapInstanceRef.current = null;
     };
   }, []);
 
-  // Update marker position when coordinates change externally
+  // Update marker when coordinates change externally
   useEffect(() => {
     if (markerRef.current && mapInstanceRef.current && coordinates.lat !== 0) {
-      const newPos: [number, number] = [coordinates.lat, coordinates.lng];
-      markerRef.current.setLatLng(newPos);
-      mapInstanceRef.current.setView(newPos, 15);
+      const newPos = { lat: coordinates.lat, lng: coordinates.lng };
+      markerRef.current.setPosition(newPos);
+      mapInstanceRef.current.setCenter(newPos);
+      mapInstanceRef.current.setZoom(15);
     }
   }, [coordinates]);
 
-  // Geocode address when it changes
+  // Manual geocode handler
   const handleGeocodeAddress = async () => {
-    if (!address) {
+    if (!searchValue) {
       setError('Please enter an address first');
       return;
     }
@@ -155,7 +202,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     setError('');
 
     try {
-      const result = await geocodeAddress(address);
+      const result = await geocodeAddress(searchValue);
       const newCoords = { lat: result.lat, lng: result.lng };
       
       setCoordinates(newCoords);
@@ -163,19 +210,14 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
       // Update map and marker
       if (mapInstanceRef.current && markerRef.current) {
-        const newPos: [number, number] = [newCoords.lat, newCoords.lng];
-        mapInstanceRef.current.setView(newPos, 15, { animate: true });
-        markerRef.current.setLatLng(newPos);
-        markerRef.current.setPopupContent(`📍 ${result.formattedAddress}`).openPopup();
-        
-        // Force map to recalculate size
-        setTimeout(() => {
-          mapInstanceRef.current?.invalidateSize();
-        }, 100);
+        mapInstanceRef.current.setCenter(newCoords);
+        mapInstanceRef.current.setZoom(15);
+        markerRef.current.setPosition(newCoords);
       }
 
       if (onAddressUpdate) {
         onAddressUpdate(result.formattedAddress);
+        setSearchValue(result.formattedAddress);
       }
     } catch (error: any) {
       setError(error.message || 'Failed to geocode address');
@@ -184,40 +226,51 @@ const MapPicker: React.FC<MapPickerProps> = ({
     }
   };
 
-  // Auto-geocode when address changes
-  useEffect(() => {
-    if (address && coordinates.lat === 0 && coordinates.lng === 0) {
-      handleGeocodeAddress();
-    }
-  }, [address]);
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          <div>
-            <p className="font-medium">Property Location</p>
-            <p className="text-xs text-muted-foreground">
-              {coordinates.lat !== 0 && coordinates.lng !== 0
-                ? `${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`
-                : 'Coordinates not set'}
-            </p>
-          </div>
+      {/* Search with Autocomplete */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            ref={searchInputRef}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Search for an address..."
+            className="pl-9"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleGeocodeAddress();
+              }
+            }}
+          />
         </div>
         <Button
           variant="outline"
-          size="sm"
           onClick={handleGeocodeAddress}
-          disabled={loading || !address}
+          disabled={loading || !searchValue}
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          <span className="ml-2">Find Address</span>
+          <span className="ml-2 hidden sm:inline">Find</span>
         </Button>
+      </div>
+
+      {/* Coordinates display */}
+      <div className="flex items-center gap-2">
+        <MapPin className="h-5 w-5 text-primary" />
+        <div>
+          <p className="font-medium text-sm">Property Location</p>
+          <p className="text-xs text-muted-foreground">
+            {coordinates.lat !== 0 && coordinates.lng !== 0
+              ? `${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`
+              : 'Search or click on map to set location'}
+          </p>
+        </div>
       </div>
 
       {error && (
@@ -226,7 +279,12 @@ const MapPicker: React.FC<MapPickerProps> = ({
         </Alert>
       )}
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden relative">
+        {mapLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted z-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
         <div
           ref={mapRef}
           className="w-full h-[400px] bg-muted"
@@ -237,7 +295,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       <Alert>
         <MapPin className="h-4 w-4" />
         <AlertDescription>
-          <strong>How to set location:</strong> Click "Find Address" to locate the area, then <strong>click anywhere on the map</strong> or <strong>drag the marker</strong> to pinpoint exact location.
+          <strong>Tip:</strong> Type an address above for suggestions, or <strong>click anywhere on the map</strong> or <strong>drag the marker</strong> to set the exact location.
         </AlertDescription>
       </Alert>
     </div>

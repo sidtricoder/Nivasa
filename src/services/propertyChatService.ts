@@ -1,10 +1,10 @@
-// AI-powered property chatbot service using Groq API
+// AI-powered property chatbot service using Google Gemini API
 // Answers buyer questions about a specific property
 
 import { Property } from '@/data/listings';
 
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -89,6 +89,39 @@ Rules:
 }
 
 /**
+ * Convert chat history to Gemini format
+ */
+function convertToGeminiFormat(history: ChatMessage[], systemPrompt: string, userMessage: string) {
+  const contents: any[] = [];
+  
+  // Add system context as first user message
+  contents.push({
+    role: 'user',
+    parts: [{ text: systemPrompt + '\n\nNow answer user questions based on this property data.' }]
+  });
+  contents.push({
+    role: 'model',
+    parts: [{ text: 'I understand. I\'ll help answer questions about this property based on the information provided. How can I help you?' }]
+  });
+
+  // Add conversation history
+  for (const msg of history) {
+    contents.push({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    });
+  }
+
+  // Add current user message
+  contents.push({
+    role: 'user',
+    parts: [{ text: userMessage }]
+  });
+
+  return contents;
+}
+
+/**
  * Send a message to the property chatbot and get a response
  */
 export async function sendPropertyChatMessage(
@@ -96,37 +129,37 @@ export async function sendPropertyChatMessage(
   userMessage: string,
   conversationHistory: ChatMessage[] = []
 ): Promise<string> {
-  if (!GROQ_API_KEY) {
+  if (!GEMINI_API_KEY) {
     return "I'm sorry, the AI assistant is not configured. Please contact the seller directly for questions about this property.";
   }
 
   const systemPrompt = generatePropertyContext(property);
 
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...conversationHistory,
-          { role: 'user', content: userMessage }
-        ],
-        temperature: 0.7,
-        max_tokens: 300
+        contents: convertToGeminiFormat(conversationHistory, systemPrompt, userMessage),
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 300,
+          topP: 0.95,
+          topK: 40
+        }
       })
     });
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Gemini API error:', errorData);
       throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
     return content.trim() || "I couldn't understand that. Could you please rephrase your question?";
   } catch (error) {
