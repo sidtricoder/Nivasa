@@ -110,18 +110,25 @@ const updateConversation = async (
 
     if (snapshot.empty) {
       // Create new conversation
+      console.log('Creating new conversation:', conversationId);
       await addDoc(conversationsRef, conversationData);
     } else {
-      // Update existing conversation
+      // Update existing conversation - include participants to ensure permissions check passes
       const docRef = snapshot.docs[0].ref;
+      console.log('Updating existing conversation:', conversationId);
       await updateDoc(docRef, {
+        participants, // Include participants in update to satisfy Firestore rules
         lastMessage,
         lastMessageTime: Timestamp.fromDate(new Date()),
         unreadCount: (snapshot.docs[0].data().unreadCount || 0) + 1,
       });
     }
-  } catch (error) {
+    console.log('Conversation updated successfully');
+  } catch (error: any) {
     console.error('Error updating conversation:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    // Don't throw - allow message to be sent even if conversation metadata fails
   }
 };
 
@@ -250,8 +257,10 @@ export const subscribeToConversations = (
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('Conversations snapshot received:', snapshot.docs.length, 'documents');
         const conversations: ChatConversation[] = snapshot.docs.map((doc) => {
           const data = doc.data();
+          console.log('Conversation data:', data);
           return {
             id: data.id,
             participants: data.participants,
@@ -263,10 +272,13 @@ export const subscribeToConversations = (
             propertyImage: data.propertyImage,
           };
         });
+        console.log('Parsed conversations:', conversations);
         callback(conversations);
       },
       (error) => {
         console.error('Error subscribing to conversations:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
       }
     );
 
@@ -351,5 +363,295 @@ export const deleteMessage = async (messageId: string): Promise<void> => {
   } catch (error) {
     console.error('Error deleting message:', error);
     throw error;
+  }
+};
+
+/**
+ * Get all chats for the current user, grouped by property
+ */
+export interface PropertyChatGroup {
+  propertyId: string;
+  propertyTitle?: string;
+  conversations: {
+    otherUserId: string;
+    otherUserName?: string;
+    messages: ChatMessage[];
+    lastMessage: ChatMessage | null;
+    unreadCount: number;
+  }[];
+}
+
+export const getAllUserChatsGroupedByProperty = async (
+  userId: string
+): Promise<PropertyChatGroup[]> => {
+  try {
+    const messagesRef = collection(db, CHATS_COLLECTION);
+    
+    // Query for messages where user is sender
+    const sentQuery = query(
+      messagesRef,
+      where('from', '==', userId)
+    );
+    
+    // Query for messages where user is receiver
+    const receivedQuery = query(
+      messagesRef,
+      where('to', '==', userId)
+    );
+    
+    // Execute both queries
+    const [sentSnapshot, receivedSnapshot] = await Promise.all([
+      getDocs(sentQuery),
+      getDocs(receivedQuery)
+    ]);
+    
+    // Combine all messages
+    const allMessages: ChatMessage[] = [
+      ...sentSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          conversationId: data.conversationId || '',
+          from: data.from,
+          to: data.to,
+          relatedProperty: data.relatedProperty,
+          text: data.text,
+          timestamp: data.timestamp?.toDate() || new Date(),
+          isRead: data.isRead || false,
+        };
+      }),
+      ...receivedSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          conversationId: data.conversationId || '',
+          from: data.from,
+          to: data.to,
+          relatedProperty: data.relatedProperty,
+          text: data.text,
+          timestamp: data.timestamp?.toDate() || new Date(),
+          isRead: data.isRead || false,
+        };
+      })
+    ];
+    
+    // Group messages by property and conversation
+    const propertyGroups = new Map<string, Map<string, ChatMessage[]>>();
+    
+    allMessages.forEach(message => {
+      // Determine the other user in the conversation
+      const otherUserId = message.from === userId ? message.to : message.from;
+      
+      // Get or create property group
+      if (!propertyGroups.has(message.relatedProperty)) {
+        propertyGroups.set(message.relatedProperty, new Map());
+      }
+      
+      const propertyConversations = propertyGroups.get(message.relatedProperty)!;
+      
+      // Get or create conversation with this user
+      if (!propertyConversations.has(otherUserId)) {
+        propertyConversations.set(otherUserId, []);
+      }
+      
+      propertyConversations.get(otherUserId)!.push(message);
+    });
+    
+    // Convert to array format and sort messages
+    const result: PropertyChatGroup[] = [];
+    
+    propertyGroups.forEach((conversations, propertyId) => {
+      const conversationsArray = Array.from(conversations.entries()).map(([otherUserId, messages]) => {
+        // Sort messages by timestamp
+        const sortedMessages = messages.sort((a, b) => 
+          a.timestamp.getTime() - b.timestamp.getTime()
+        );
+        
+        // Calculate unread count (messages sent to current user that are unread)
+        const unreadCount = sortedMessages.filter(
+          msg => msg.to === userId && !msg.isRead
+        ).length;
+        
+        return {
+          otherUserId,
+          messages: sortedMessages,
+          lastMessage: sortedMessages[sortedMessages.length - 1] || null,
+          unreadCount,
+        };
+      });
+      
+      // Sort conversations by last message time (most recent first)
+      conversationsArray.sort((a, b) => {
+        const timeA = a.lastMessage?.timestamp.getTime() || 0;
+        const timeB = b.lastMessage?.timestamp.getTime() || 0;
+        return timeB - timeA;
+      });
+      
+      result.push({
+        propertyId,
+        conversations: conversationsArray,
+      });
+    });
+    
+    // Sort property groups by most recent activity
+    result.sort((a, b) => {
+      const lastTimeA = a.conversations[0]?.lastMessage?.timestamp.getTime() || 0;
+      const lastTimeB = b.conversations[0]?.lastMessage?.timestamp.getTime() || 0;
+      return lastTimeB - lastTimeA;
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Error fetching user chats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Subscribe to all chats for the current user in real-time
+ */
+export const subscribeToAllUserChats = (
+  userId: string,
+  callback: (chats: PropertyChatGroup[]) => void
+): (() => void) => {
+  try {
+    const messagesRef = collection(db, CHATS_COLLECTION);
+    
+    // Create queries for both sent and received messages
+    const sentQuery = query(
+      messagesRef,
+      where('from', '==', userId),
+      orderBy('timestamp', 'desc')
+    );
+    
+    const receivedQuery = query(
+      messagesRef,
+      where('to', '==', userId),
+      orderBy('timestamp', 'desc')
+    );
+    
+    let sentMessages: ChatMessage[] = [];
+    let receivedMessages: ChatMessage[] = [];
+    
+    const processMessages = () => {
+      const allMessages = [...sentMessages, ...receivedMessages];
+      
+      // Group by property and conversation
+      const propertyGroups = new Map<string, Map<string, ChatMessage[]>>();
+      
+      allMessages.forEach(message => {
+        const otherUserId = message.from === userId ? message.to : message.from;
+        
+        if (!propertyGroups.has(message.relatedProperty)) {
+          propertyGroups.set(message.relatedProperty, new Map());
+        }
+        
+        const propertyConversations = propertyGroups.get(message.relatedProperty)!;
+        
+        if (!propertyConversations.has(otherUserId)) {
+          propertyConversations.set(otherUserId, []);
+        }
+        
+        propertyConversations.get(otherUserId)!.push(message);
+      });
+      
+      // Convert to result format
+      const result: PropertyChatGroup[] = [];
+      
+      propertyGroups.forEach((conversations, propertyId) => {
+        const conversationsArray = Array.from(conversations.entries()).map(([otherUserId, messages]) => {
+          const sortedMessages = messages.sort((a, b) => 
+            a.timestamp.getTime() - b.timestamp.getTime()
+          );
+          
+          const unreadCount = sortedMessages.filter(
+            msg => msg.to === userId && !msg.isRead
+          ).length;
+          
+          return {
+            otherUserId,
+            messages: sortedMessages,
+            lastMessage: sortedMessages[sortedMessages.length - 1] || null,
+            unreadCount,
+          };
+        });
+        
+        conversationsArray.sort((a, b) => {
+          const timeA = a.lastMessage?.timestamp.getTime() || 0;
+          const timeB = b.lastMessage?.timestamp.getTime() || 0;
+          return timeB - timeA;
+        });
+        
+        result.push({
+          propertyId,
+          conversations: conversationsArray,
+        });
+      });
+      
+      result.sort((a, b) => {
+        const lastTimeA = a.conversations[0]?.lastMessage?.timestamp.getTime() || 0;
+        const lastTimeB = b.conversations[0]?.lastMessage?.timestamp.getTime() || 0;
+        return lastTimeB - lastTimeA;
+      });
+      
+      callback(result);
+    };
+    
+    // Subscribe to sent messages
+    const unsubscribeSent = onSnapshot(
+      sentQuery,
+      (snapshot) => {
+        sentMessages = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            conversationId: data.conversationId || '',
+            from: data.from,
+            to: data.to,
+            relatedProperty: data.relatedProperty,
+            text: data.text,
+            timestamp: data.timestamp?.toDate() || new Date(),
+            isRead: data.isRead || false,
+          };
+        });
+        processMessages();
+      },
+      (error) => {
+        console.error('Error in sent messages subscription:', error);
+      }
+    );
+    
+    // Subscribe to received messages
+    const unsubscribeReceived = onSnapshot(
+      receivedQuery,
+      (snapshot) => {
+        receivedMessages = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            conversationId: data.conversationId || '',
+            from: data.from,
+            to: data.to,
+            relatedProperty: data.relatedProperty,
+            text: data.text,
+            timestamp: data.timestamp?.toDate() || new Date(),
+            isRead: data.isRead || false,
+          };
+        });
+        processMessages();
+      },
+      (error) => {
+        console.error('Error in received messages subscription:', error);
+      }
+    );
+    
+    // Return combined unsubscribe function
+    return () => {
+      unsubscribeSent();
+      unsubscribeReceived();
+    };
+  } catch (error) {
+    console.error('Error setting up chat subscription:', error);
+    return () => {};
   }
 };

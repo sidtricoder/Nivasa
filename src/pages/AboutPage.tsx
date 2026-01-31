@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SplashCursor from '@/components/ui/SplashCursor';
+import '@/styles/glow-card.css';
 
 const AboutPage: React.FC = () => {
   const stats = [
@@ -204,14 +205,14 @@ const AboutPage: React.FC = () => {
                 transition={{ delay: index * 0.1 }}
                 className="relative group"
               >
-                <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#3B7BFF]/10 to-[#8B5CF6]/10 flex items-center justify-center mx-auto mb-4">
-                    <stat.icon className="h-6 w-6 text-[#3B7BFF]" />
+                <div className="glow-card variant-blue h-full min-h-[160px]">
+                  <div className="flex flex-col items-center justify-end h-full">
+                    <stat.icon className="h-8 w-8 text-[#40c9ff] mb-3" />
+                    <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+                      {stat.value}
+                    </div>
+                    <p className="text-sm text-white/70 font-medium card-highlight">{stat.label}</p>
                   </div>
-                  <div className="text-3xl md:text-4xl font-bold text-[#2B2F36] mb-1">
-                    {stat.value}
-                  </div>
-                  <p className="text-sm text-[#6B7280] font-medium">{stat.label}</p>
                 </div>
               </motion.div>
             ))}
@@ -328,12 +329,12 @@ const AboutPage: React.FC = () => {
                 transition={{ delay: index * 0.1 }}
                 className="group"
               >
-                <div className="h-full bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-2">
-                  <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${value.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                    <value.icon className={`h-7 w-7 ${value.iconColor}`} />
+                <div className="glow-card variant-purple h-full min-h-[280px]">
+                  <div className="flex flex-col h-full">
+                    <value.icon className="h-10 w-10 text-[#EC4899] mb-4" />
+                    <h3 className="card-heading text-xl mb-3">{value.title}</h3>
+                    <p className="text-white/80 leading-relaxed flex-grow">{value.description}</p>
                   </div>
-                  <h3 className="text-xl font-bold text-[#2B2F36] mb-3">{value.title}</h3>
-                  <p className="text-[#6B7280] leading-relaxed">{value.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -373,10 +374,10 @@ const AboutPage: React.FC = () => {
                   className={`flex items-center gap-8 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}
                 >
                   <div className={`flex-1 ${index % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
-                    <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-white/50 shadow-lg inline-block">
-                      <span className="text-[#3B7BFF] font-bold text-lg">{milestone.year}</span>
-                      <h3 className="text-xl font-bold text-[#2B2F36] mt-1">{milestone.title}</h3>
-                      <p className="text-[#6B7280] mt-2">{milestone.description}</p>
+                    <div className="glow-card variant-green inline-block min-w-[280px]">
+                      <span className="text-[#34D399] font-bold text-lg block mb-2">{milestone.year}</span>
+                      <h3 className="card-heading text-xl mt-1">{milestone.title}</h3>
+                      <p className="text-white/70 mt-2">{milestone.description}</p>
                     </div>
                   </div>
                   
@@ -422,20 +423,17 @@ const AboutPage: React.FC = () => {
                 transition={{ delay: index * 0.1 }}
                 className="group"
               >
-                <div className="bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-2">
-                  <div className="relative h-64 overflow-hidden">
+                <div className="glow-card variant-orange min-h-[400px]">
+                  <div className="relative h-48 -m-3 mb-4 overflow-hidden rounded-lg">
                     <img 
                       src={member.image} 
                       alt={member.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-[#2B2F36]">{member.name}</h3>
-                    <p className="text-[#3B7BFF] font-medium text-sm mb-2">{member.role}</p>
-                    <p className="text-[#6B7280] text-sm">{member.bio}</p>
-                  </div>
+                  <h3 className="card-heading text-lg">{member.name}</h3>
+                  <p className="text-[#FBBF24] font-medium text-sm mb-2 card-highlight">{member.role}</p>
+                  <p className="text-white/70 text-sm">{member.bio}</p>
                 </div>
               </motion.div>
             ))}

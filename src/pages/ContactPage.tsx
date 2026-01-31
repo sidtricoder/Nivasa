@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SplashCursor from '@/components/ui/SplashCursor';
+import '@/styles/glow-card.css';
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -199,13 +200,14 @@ const ContactPage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + index * 0.1 }}
-                className="bg-white/60 backdrop-blur-xl rounded-2xl p-5 text-center border border-white/50 shadow-lg"
               >
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#3B7BFF]/10 to-[#8B5CF6]/10 flex items-center justify-center mx-auto mb-3">
-                  <stat.icon className="h-5 w-5 text-[#3B7BFF]" />
+                <div className="glow-card variant-blue h-full min-h-[140px]">
+                  <div className="flex flex-col items-center justify-end h-full">
+                    <stat.icon className="h-6 w-6 text-[#40c9ff] mb-2" />
+                    <div className="text-2xl font-bold text-white">{stat.value}</div>
+                    <p className="text-sm text-white/70 card-highlight">{stat.label}</p>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-[#2B2F36]">{stat.value}</div>
-                <p className="text-sm text-[#6B7280]">{stat.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -225,14 +227,14 @@ const ContactPage: React.FC = () => {
                 transition={{ delay: index * 0.1 }}
                 className="group"
               >
-                <div className="h-full bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-2">
-                  <div className={`h-14 w-14 rounded-2xl ${method.iconBg} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                    <method.icon className={`h-7 w-7 ${method.iconColor}`} />
+                <div className="glow-card variant-purple h-full min-h-[240px]">
+                  <div className="flex flex-col h-full">
+                    <method.icon className="h-8 w-8 text-[#EC4899] mb-4" />
+                    <h3 className="card-heading text-lg mb-1">{method.title}</h3>
+                    <p className="text-sm text-white/60 mb-4">{method.description}</p>
+                    <p className="font-medium text-white">{method.value}</p>
+                    <p className="text-sm text-white/70 card-highlight">{method.secondaryValue}</p>
                   </div>
-                  <h3 className="text-lg font-bold text-[#2B2F36] mb-1">{method.title}</h3>
-                  <p className="text-sm text-[#6B7280] mb-4">{method.description}</p>
-                  <p className="font-medium text-[#2B2F36]">{method.value}</p>
-                  <p className="text-sm text-[#6B7280]">{method.secondaryValue}</p>
                 </div>
               </motion.div>
             ))}
@@ -254,11 +256,9 @@ const ContactPage: React.FC = () => {
               className="lg:col-span-2 space-y-8"
             >
               {/* Quick Help */}
-              <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-white/50 shadow-lg">
-                <h3 className="text-xl font-bold text-[#2B2F36] mb-6 flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[#3B7BFF]/10 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-[#3B7BFF]" />
-                  </div>
+              <div className="glow-card variant-green min-h-[400px]">
+                <h3 className="card-heading text-xl mb-6 flex items-center gap-3">
+                  <Sparkles className="h-6 w-6 text-[#34D399]" />
                   Frequently Asked
                 </h3>
                 <div className="space-y-3">
@@ -272,22 +272,22 @@ const ContactPage: React.FC = () => {
                     >
                       <button
                         onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                        className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100/50 hover:from-[#3B7BFF]/5 hover:to-[#8B5CF6]/5 transition-all group text-left"
+                        className="w-full flex items-center gap-4 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all group text-left backdrop-blur"
                       >
-                        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                          <item.icon className="h-5 w-5 text-[#6B7280] group-hover:text-[#3B7BFF] transition-colors" />
+                        <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shadow-sm">
+                          <item.icon className="h-4 w-4 text-white group-hover:text-[#34D399] transition-colors" />
                         </div>
-                        <span className="text-[#2B2F36] font-medium group-hover:text-[#3B7BFF] transition-colors flex-1">
+                        <span className="text-white font-medium text-sm group-hover:text-[#34D399] transition-colors flex-1">
                           {item.question}
                         </span>
-                        <ArrowRight className={`h-4 w-4 text-gray-400 transition-transform ${openFaq === index ? 'rotate-90' : ''}`} />
+                        <ArrowRight className={`h-4 w-4 text-white/60 transition-transform ${openFaq === index ? 'rotate-90' : ''}`} />
                       </button>
                       {openFaq === index && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="px-4 py-3 ml-14 text-sm text-[#6B7280] bg-blue-50/50 rounded-lg mt-2"
+                          className="px-3 py-2 ml-12 text-xs text-white/70 bg-white/10 rounded-lg mt-2 backdrop-blur"
                         >
                           {item.answer}
                         </motion.div>
@@ -298,7 +298,7 @@ const ContactPage: React.FC = () => {
                 <Link to="/about" onClick={() => window.scrollTo(0, 0)}>
                   <Button 
                     variant="outline" 
-                    className="w-full mt-6 gap-2 border-2 hover:bg-[#3B7BFF]/5 hover:border-[#3B7BFF]/30"
+                    className="w-full mt-6 gap-2 border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50"
                   >
                     Learn More About Us
                     <ArrowRight className="h-4 w-4" />
@@ -334,14 +334,12 @@ const ContactPage: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="lg:col-span-3"
             >
-              <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-8 md:p-10 border border-white/50 shadow-xl">
+              <div className="glow-card variant-blue min-h-[600px]">
                 <div className="flex items-center gap-4 mb-8">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#3B7BFF] to-[#8B5CF6] flex items-center justify-center shadow-lg shadow-blue-500/25">
-                    <Send className="h-6 w-6 text-white" />
-                  </div>
+                  <Send className="h-8 w-8 text-[#40c9ff]" />
                   <div>
-                    <h2 className="text-2xl font-bold text-[#2B2F36]">Send us a Message</h2>
-                    <p className="text-[#6B7280]">We'll get back to you within 24 hours</p>
+                    <h2 className="card-heading text-2xl">Send us a Message</h2>
+                    <p className="text-white/70">We'll get back to you within 24 hours</p>
                   </div>
                 </div>
 
@@ -359,10 +357,10 @@ const ContactPage: React.FC = () => {
                     >
                       <CheckCircle className="h-10 w-10 text-white" />
                     </motion.div>
-                    <h3 className="text-2xl font-bold text-[#2B2F36] mb-3">
+                    <h3 className="card-heading text-2xl mb-3">
                       Message Sent Successfully!
                     </h3>
-                    <p className="text-[#6B7280] text-lg">
+                    <p className="text-white/70 text-lg">
                       We'll get back to you within 24 hours.
                     </p>
                   </motion.div>
@@ -370,7 +368,7 @@ const ContactPage: React.FC = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-[#2B2F36]">
+                        <label className="block text-sm font-semibold text-white">
                           Your Name *
                         </label>
                         <Input
@@ -380,11 +378,11 @@ const ContactPage: React.FC = () => {
                           onChange={handleChange}
                           required
                           placeholder="John Doe"
-                          className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 bg-white/50 backdrop-blur transition-all"
+                          className="w-full px-5 py-4 rounded-xl border-2 border-white/20 focus:border-white/40 focus:ring-2 focus:ring-white/20 bg-white/10 backdrop-blur transition-all text-white placeholder:text-white/50"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-[#2B2F36]">
+                        <label className="block text-sm font-semibold text-white">
                           Email Address *
                         </label>
                         <Input
@@ -394,14 +392,14 @@ const ContactPage: React.FC = () => {
                           onChange={handleChange}
                           required
                           placeholder="john@example.com"
-                          className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 bg-white/50 backdrop-blur transition-all"
+                          className="w-full px-5 py-4 rounded-xl border-2 border-white/20 focus:border-white/40 focus:ring-2 focus:ring-white/20 bg-white/10 backdrop-blur transition-all text-white placeholder:text-white/50"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-[#2B2F36]">
+                        <label className="block text-sm font-semibold text-white">
                           Phone Number
                         </label>
                         <Input
@@ -410,11 +408,11 @@ const ContactPage: React.FC = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           placeholder="+91 98765 43210"
-                          className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 bg-white/50 backdrop-blur transition-all"
+                          className="w-full px-5 py-4 rounded-xl border-2 border-white/20 focus:border-white/40 focus:ring-2 focus:ring-white/20 bg-white/10 backdrop-blur transition-all text-white placeholder:text-white/50"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-[#2B2F36]">
+                        <label className="block text-sm font-semibold text-white">
                           Subject *
                         </label>
                         <div className="relative">
@@ -423,17 +421,17 @@ const ContactPage: React.FC = () => {
                             value={formData.subject}
                             onChange={handleChange}
                             required
-                            className="flex w-full rounded-xl border-2 border-gray-100 bg-white/50 px-5 py-2 text-base focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 backdrop-blur transition-all appearance-none cursor-pointer file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-2 text-base focus:border-white/40 focus:ring-2 focus:ring-white/20 backdrop-blur transition-all appearance-none cursor-pointer file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-white/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
                           >
-                            <option value="">Select a topic</option>
-                            <option value="buying">Buying a Property</option>
-                            <option value="selling">Selling a Property</option>
-                            <option value="verification">Property Verification</option>
-                            <option value="support">Technical Support</option>
-                            <option value="other">Other</option>
+                            <option value="" className="bg-black">Select a topic</option>
+                            <option value="buying" className="bg-black">Buying a Property</option>
+                            <option value="selling" className="bg-black">Selling a Property</option>
+                            <option value="verification" className="bg-black">Property Verification</option>
+                            <option value="support" className="bg-black">Technical Support</option>
+                            <option value="other" className="bg-black">Other</option>
                           </select>
                           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-4 w-4 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </div>
@@ -442,7 +440,7 @@ const ContactPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-[#2B2F36]">
+                      <label className="block text-sm font-semibold text-white">
                         Your Message *
                       </label>
                       <textarea
@@ -452,14 +450,14 @@ const ContactPage: React.FC = () => {
                         required
                         rows={5}
                         placeholder="Tell us how we can help you..."
-                        className="w-full px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-[#3B7BFF] focus:ring-2 focus:ring-[#3B7BFF]/20 bg-white/50 backdrop-blur resize-none transition-all"
+                        className="w-full px-5 py-4 rounded-xl border-2 border-white/20 focus:border-white/40 focus:ring-2 focus:ring-white/20 bg-white/10 backdrop-blur resize-none transition-all text-white placeholder:text-white/50"
                       />
                     </div>
 
                     <Button 
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full bg-gradient-to-r from-[#3B7BFF] to-[#8B5CF6] hover:from-[#2563EB] hover:to-[#7C3AED] text-white py-7 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
+                      className="w-full bg-gradient-to-r from-[#40c9ff] to-[#e81cff] hover:from-[#2aaae6] hover:to-[#d10ae6] text-white py-7 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all"
                     >
                       {isSubmitting ? (
                         <>
