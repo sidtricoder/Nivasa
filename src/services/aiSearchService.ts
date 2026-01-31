@@ -66,8 +66,8 @@ Available filters:
 - propertyType: "apartment" | "villa" | "house" | "penthouse"
 - priceMin: number (in INR - convert lakhs/crores: 1 lakh = 100000, 1 crore = 10000000)
 - priceMax: number (in INR)
-- locality: string (area/locality within the city)
-- city: string (Indian city like Mumbai, Delhi, Bangalore, Gujarat, Ahmedabad, Pune, Hyderabad, Chennai, Kolkata, Jaipur, Surat, etc.)
+- locality: string (area/locality within the city - use for neighborhoods like Koramangala, Indiranagar, Bandra, Andheri, etc.)
+- city: string (Indian city - ALWAYS include when locality is mentioned)
 - state: string (Indian state like Maharashtra, Karnataka, Gujarat, Tamil Nadu, Telangana, etc.)
 - furnishing: "unfurnished" | "semi-furnished" | "fully-furnished"
 - amenities: array of strings (Swimming Pool, Gym, Parking, Garden, Clubhouse, etc.)
@@ -76,7 +76,15 @@ Available filters:
 - minSqft: number
 - maxSqft: number
 - facing: string (East, West, North, South)
-- nearLandmark: string (use this when user mentions "near X" where X is a mall, hospital, school, metro, landmark, etc.)
+- nearLandmark: string (ONLY for specific POIs like malls, hospitals, schools, metro stations - NOT for neighborhoods)
+
+IMPORTANT - Known Indian localities and their cities (use locality + city, NOT nearLandmark):
+BANGALORE: Koramangala, Indiranagar, Whitefield, HSR Layout, Jayanagar, JP Nagar, Marathahalli, Electronic City, Sarjapur Road, Bellandur, BTM Layout, Hebbal, Yelahanka, Banashankari, Malleshwaram
+MUMBAI: Bandra, Andheri, Powai, Juhu, Worli, Lower Parel, Goregaon, Malad, Borivali, Thane, Navi Mumbai, Dadar, Colaba, Marine Drive
+DELHI: Dwarka, Rohini, Vasant Kunj, Saket, Greater Kailash, Defence Colony, Hauz Khas, Janakpuri, Pitampura, Lajpat Nagar
+PUNE: Hinjewadi, Baner, Kothrud, Wakad, Viman Nagar, Hadapsar, Kharadi, Magarpatta
+HYDERABAD: Jubilee Hills, Banjara Hills, Gachibowli, Hitech City, Madhapur, Kondapur, Kukatpally
+CHENNAI: Anna Nagar, T Nagar, Adyar, Velachery, OMR, Porur, Nungambakkam
 
 Price conversion examples:
 - "under 50 lakh" → priceMax: 5000000
@@ -84,20 +92,14 @@ Price conversion examples:
 - "above 80 lakh" → priceMin: 8000000
 - "between 1-2 crore" → priceMin: 10000000, priceMax: 20000000
 
-City/State examples:
-- "property in Gujarat" → state: "Gujarat"
-- "flat in Ahmedabad" → city: "Ahmedabad"
-- "house in Mumbai" → city: "Mumbai"
-- "3BHK in Surat" → city: "Surat", bhk: 3
-- "property in Koramangala Bangalore" → locality: "Koramangala", city: "Bangalore"
+CRITICAL EXAMPLES:
+- "3BHK near Koramangala under 1 crore" → {"bhk": 3, "locality": "Koramangala", "city": "Bangalore", "priceMax": 10000000}
+- "flat in Bandra" → {"locality": "Bandra", "city": "Mumbai"}
+- "property near Indiranagar" → {"locality": "Indiranagar", "city": "Bangalore"}
+- "house near Forum Mall Bangalore" → {"nearLandmark": "Forum Mall", "city": "Bangalore"}
+- "2BHK in Hinjewadi Pune" → {"bhk": 2, "locality": "Hinjewadi", "city": "Pune"}
 
-Landmark examples:
-- "property near Forum Mall" → nearLandmark: "Forum Mall"
-- "house near Manipal Hospital" → nearLandmark: "Manipal Hospital"
-- "flat near Gateway of India" → nearLandmark: "Gateway of India"
-
-Return ONLY a JSON object, no explanations. If a filter is not mentioned, don't include it.
-Example: {"bhk": 2, "city": "Ahmedabad", "state": "Gujarat"}`;
+Return ONLY a JSON object, no explanations. If a filter is not mentioned, don't include it.`;
 
 export interface AISearchResult {
   success: boolean;

@@ -135,6 +135,10 @@ const DiscoveryPage: React.FC = () => {
     try {
       const result = await extractFiltersFromQuery(query);
       
+      // Debug logging - see what AI extracted
+      console.log('AI Search Query:', query);
+      console.log('AI Extracted Filters:', result.filters);
+      
       if (result.success && Object.keys(result.filters).length > 1) {
         // Apply extracted filters
         const filters = result.filters;
