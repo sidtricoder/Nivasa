@@ -73,22 +73,38 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-foreground">Resources</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/news" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link 
+                  to="/news" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
                   News & Updates
                 </Link>
               </li>
               <li>
-                <Link to="/services" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link 
+                  to="/services" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
                   Our Services
                 </Link>
               </li>
               <li>
-                <Link to="/emi-calculator" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link 
+                  to="/emi-calculator" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
                   EMI Calculator
                 </Link>
               </li>
               <li>
-                <Link to="/contact" onClick={() => window.scrollTo(0, 0)} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link 
+                  to="/contact" 
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
                   Contact Us
                 </Link>
               </li>
