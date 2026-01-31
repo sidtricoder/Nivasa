@@ -22,13 +22,10 @@ const CompareModal: React.FC = () => {
       try {
         const result = await getAllProperties();
         const firebaseProperties = result.properties || [];
-        // Combine mock listings with Firebase properties, avoiding duplicates
-        const combinedProperties = [...mockListings];
-        firebaseProperties.forEach(fp => {
-          if (!combinedProperties.some(mp => mp.id === fp.id)) {
-            combinedProperties.push(fp);
-          }
-        });
+        // Deduplicate by ID, prioritizing Firebase properties (they may have been edited)
+        const firebaseIds = new Set(firebaseProperties.map(p => p.id));
+        const uniqueMockListings = mockListings.filter(p => !firebaseIds.has(p.id));
+        const combinedProperties = [...firebaseProperties, ...uniqueMockListings];
         setAllProperties(combinedProperties);
       } catch (error) {
         console.error('Error loading properties for compare:', error);

@@ -35,6 +35,7 @@ import {
 import {
   addProperty,
   getPropertiesBySeller,
+  getPropertiesBySellerEmail,
   updateProperty,
   deleteProperty,
   PropertyLead,
@@ -180,7 +181,14 @@ const SellerDashboard: React.FC = () => {
     
     setLoadingListings(true);
     try {
-      const listings = await getPropertiesBySeller(currentUser.uid);
+      // First try to get by seller ID
+      let listings = await getPropertiesBySeller(currentUser.uid);
+      
+      // If no listings found by ID, try by email (for seeded properties)
+      if (listings.length === 0 && currentUser.email) {
+        listings = await getPropertiesBySellerEmail(currentUser.email);
+      }
+      
       setUserListings(listings);
     } catch (error: any) {
       toast({

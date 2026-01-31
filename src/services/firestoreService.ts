@@ -558,9 +558,6 @@ export const getLeadsByProperty = async (propertyId: string): Promise<PropertyLe
   }
 };
 
-/**
- * Update lead status
- */
 export const updateLeadStatus = async (
   leadId: string,
   status: PropertyLead['status']
@@ -571,4 +568,101 @@ export const updateLeadStatus = async (
   } catch (error: any) {
     throw new Error('Failed to update lead status');
   }
+};
+
+/**
+ * Get properties by seller email (fallback for ownership lookup)
+ */
+export const getPropertiesBySellerEmail = async (email: string): Promise<Property[]> => {
+  try {
+    const propertiesRef = collection(db, COLLECTIONS.PROPERTIES);
+    const q = query(
+      propertiesRef,
+      where('seller.email', '==', email)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const properties: Property[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      properties.push(doc.data() as Property);
+    });
+    
+    // Sort in memory
+    return properties.sort((a, b) => {
+      const dateA = new Date(a.listedAt).getTime();
+      const dateB = new Date(b.listedAt).getTime();
+      return dateB - dateA;
+    });
+  } catch (error: any) {
+    throw new Error(`Failed to get properties by email: ${error.message}`);
+  }
+};
+
+/**
+ * Seed mock properties to Firestore with a specific seller
+ */
+export const seedPropertiesToFirestore = async (
+  sellerId: string,
+  sellerName: string,
+  sellerEmail: string,
+  sellerPhone?: string
+): Promise<{ success: number; failed: number }> => {
+  // Import mock listings dynamically to avoid circular imports
+  const { mockListings } = await import('../data/listings');
+  
+  let success = 0;
+  let failed = 0;
+  
+  for (const property of mockListings) {
+    try {
+      const propertyRef = doc(db, COLLECTIONS.PROPERTIES, property.id);
+      
+      // Check if property already exists
+      const existingDoc = await getDoc(propertyRef);
+      if (existingDoc.exists()) {
+        console.log(`Property ${property.id} already exists, updating seller info...`);
+        // Update seller info for existing properties
+        await updateDoc(propertyRef, {
+          seller: {
+            id: sellerId,
+            name: sellerName,
+            email: sellerEmail,
+            phone: sellerPhone || '+91 98765 43210',
+            isVerified: true,
+            memberSince: '2024-01-01',
+            responseRate: 95,
+          },
+          updatedAt: serverTimestamp(),
+        });
+        success++;
+        continue;
+      }
+      
+      // Create new property with seller info
+      const propertyData = {
+        ...property,
+        seller: {
+          id: sellerId,
+          name: sellerName,
+          email: sellerEmail,
+          phone: sellerPhone || '+91 98765 43210',
+          isVerified: true,
+          memberSince: '2024-01-01',
+          responseRate: 95,
+        },
+        listedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      await setDoc(propertyRef, propertyData);
+      success++;
+      console.log(`Seeded property: ${property.id} - ${property.title}`);
+    } catch (error: any) {
+      console.error(`Failed to seed property ${property.id}:`, error);
+      failed++;
+    }
+  }
+  
+  return { success, failed };
 };
