@@ -335,7 +335,40 @@ const PropertyDetailPage: React.FC = () => {
                   Compare
                 </Button>
               )}
-              <Button variant="secondary" size="sm" className="gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="gap-2"
+                onClick={async () => {
+                  const shareData = {
+                    title: property.title,
+                    text: `Check out this property: ${property.title} - ${formatPrice(property.price)}`,
+                    url: window.location.href,
+                  };
+                  
+                  try {
+                    if (navigator.share && navigator.canShare?.(shareData)) {
+                      await navigator.share(shareData);
+                    } else {
+                      // Fallback: copy to clipboard
+                      await navigator.clipboard.writeText(window.location.href);
+                      toast({
+                        title: 'Link copied!',
+                        description: 'Property link copied to clipboard',
+                      });
+                    }
+                  } catch (error) {
+                    // User cancelled or error
+                    if ((error as Error).name !== 'AbortError') {
+                      await navigator.clipboard.writeText(window.location.href);
+                      toast({
+                        title: 'Link copied!',
+                        description: 'Property link copied to clipboard',
+                      });
+                    }
+                  }
+                }}
+              >
                 <Share2 className="h-4 w-4" />
                 Share
               </Button>
