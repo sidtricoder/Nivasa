@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 import { useFavorites } from '@/contexts/FavoritesContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { InboxButton } from '@/components/communication';
 import { UserProfile } from '@/components/auth';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ const popularCities = [
 
 const Header: React.FC = () => {
   const { favorites, compareList, setIsCompareOpen } = useFavorites();
+  const { currentUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -285,22 +287,24 @@ const Header: React.FC = () => {
             </AnimatePresence>
           </div>
 
-          {/* Favorites */}
-          <Link to="/favorites">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`gap-2 ${textColor} ${hoverBg}`}
-            >
-              <Heart className="h-4 w-4" />
-              Favorites
-              {favorites.length > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
-                  {favorites.length}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+          {/* Favorites - Only show when logged in */}
+          {currentUser && (
+            <Link to="/favorites">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 ${textColor} ${hoverBg}`}
+              >
+                <Heart className="h-4 w-4" />
+                Favorites
+                {favorites.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
+                    {favorites.length}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
 
           {/* Services */}
           <Link to="/services">
@@ -378,17 +382,19 @@ const Header: React.FC = () => {
             </AnimatePresence>
           </div>
 
-          {/* Post Property */}
-          <Link to="/seller">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`gap-2 ${textColor} ${hoverBg}`}
-            >
-              <Building2 className="h-4 w-4" />
-              Post Property
-            </Button>
-          </Link>
+          {/* Post Property - Only show when logged in */}
+          {currentUser && (
+            <Link to="/seller">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 ${textColor} ${hoverBg}`}
+              >
+                <Building2 className="h-4 w-4" />
+                Post Property
+              </Button>
+            </Link>
+          )}
         </nav>
 
         {/* Actions */}
