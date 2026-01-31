@@ -60,6 +60,9 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
   
   // If propertyId is provided, we're in direct chat mode
   const isDirectChat = !!(propertyId && sellerId);
+  
+  // Check if current user is the seller of this property
+  const isSeller = currentUser?.uid === sellerId;
 
   // Subscribe to ALL messages for the property when in direct chat mode
   useEffect(() => {
@@ -72,12 +75,34 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
       propertyId,
       (msgs) => {
         console.log('Received ALL messages:', msgs.length);
-        setMessages(msgs);
+        
+        // FILTER MESSAGES BASED ON USER ROLE:
+        // For BUYERS: Only show messages between buyer and seller
+        // For SELLERS: Show all messages (they see all conversations)
+        let filteredMessages = msgs;
+        
+        if (!isSeller && sellerId) {
+          // Buyer: Filter to only show messages between current user and seller
+          filteredMessages = msgs.filter(msg => 
+            (msg.from === currentUser.uid && msg.to === sellerId) ||
+            (msg.from === sellerId && msg.to === currentUser.uid)
+          );
+          console.log('Buyer view - filtered to', filteredMessages.length, 'messages with seller');
+          
+          // Mark messages from seller as read
+          if (filteredMessages.length > 0) {
+            markMessagesAsRead(currentUser.uid, sellerId, propertyId);
+          }
+        } else {
+          console.log('Seller view - showing all', msgs.length, 'messages');
+        }
+        
+        setMessages(filteredMessages);
       }
     );
 
     return () => unsubscribe();
-  }, [currentUser, isOpen, propertyId, sellerId]);
+  }, [currentUser, isOpen, propertyId, sellerId, isSeller]);
 
   // Subscribe to conversations (for conversation list view)
   useEffect(() => {

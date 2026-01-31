@@ -7,6 +7,7 @@ import {
   subscribeToAllUserChats,
   subscribeToMessages,
   sendChatMessage,
+  markMessagesAsRead,
   PropertyChatGroup,
   ChatMessage,
 } from '@/services/chatService';
@@ -127,7 +128,19 @@ const AllChatsPage: React.FC = () => {
       activeChat.otherUserId,
       activeChat.propertyId,
       (msgs) => {
-        setActiveChatMessages(msgs);
+        // For sellers in AllChatsPage: Filter to only show messages with the selected user
+        const filteredMessages = msgs.filter(msg =>
+          (msg.from === currentUser.uid && msg.to === activeChat.otherUserId) ||
+          (msg.from === activeChat.otherUserId && msg.to === currentUser.uid)
+        );
+        console.log('Seller chat - filtered to', filteredMessages.length, 'messages with user', activeChat.otherUserId);
+        
+        // Mark messages from other user as read
+        if (filteredMessages.length > 0) {
+          markMessagesAsRead(currentUser.uid, activeChat.otherUserId, activeChat.propertyId);
+        }
+        
+        setActiveChatMessages(filteredMessages);
       }
     );
 
