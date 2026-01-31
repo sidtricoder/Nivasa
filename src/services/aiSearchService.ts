@@ -57,7 +57,7 @@ export interface AIExtractedFilters {
   searchQuery?: string; // Original query for display
 }
 
-const SYSTEM_PROMPT = `You are a property search assistant for an Indian real estate platform called Nivasa/HavenHub.
+const SYSTEM_PROMPT = `You are a property search assistant for an Indian real estate platform called Nivasa.
 
 Extract structured search filters from user's natural language query. Return ONLY valid JSON.
 

@@ -35,6 +35,8 @@ import {
   getPropertiesBySeller,
   updateProperty,
   deleteProperty,
+  PropertyLead,
+  getLeadsBySeller,
 } from '@/services/firestoreService';
 import { Property } from '@/data/listings';
 import { Button } from '@/components/ui/button';
@@ -50,6 +52,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CompareModal from '@/components/property/CompareModal';
@@ -82,6 +85,8 @@ const SellerDashboard: React.FC = () => {
   const [userListings, setUserListings] = useState<Property[]>([]);
   const [loadingListings, setLoadingListings] = useState(false);
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const [leads, setLeads] = useState<PropertyLead[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
   
   // Image files state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -131,6 +136,10 @@ const SellerDashboard: React.FC = () => {
     if (currentUser && activeTab === 'my-listings') {
       loadUserListings();
     }
+    if (currentUser && activeTab === 'leads') {
+      loadUserListings(); // Load listings to show property names
+      loadLeads();
+    }
   }, [currentUser, activeTab]);
 
   const loadUserListings = async () => {
@@ -148,6 +157,24 @@ const SellerDashboard: React.FC = () => {
       });
     } finally {
       setLoadingListings(false);
+    }
+  };
+
+  const loadLeads = async () => {
+    if (!currentUser) return;
+    
+    setLoadingLeads(true);
+    try {
+      const fetchedLeads = await getLeadsBySeller(currentUser.uid);
+      setLeads(fetchedLeads);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load leads',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingLeads(false);
     }
   };
 
@@ -1593,13 +1620,87 @@ const SellerDashboard: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No leads yet</h3>
-                    <p className="text-muted-foreground">
-                      Leads will appear here when buyers contact you
-                    </p>
-                  </div>
+                  {loadingLeads ? (
+                    <div className="text-center py-12">
+                      <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto mb-4" />
+                      <p className="text-muted-foreground">Loading leads...</p>
+                    </div>
+                  ) : leads.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No leads yet</h3>
+                      <p className="text-muted-foreground">
+                        Leads will appear here when buyers express interest in your properties
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Group leads by property */}
+                      {Object.entries(
+                        leads.reduce((acc, lead) => {
+                          if (!acc[lead.propertyId]) {
+                            acc[lead.propertyId] = [];
+                          }
+                          acc[lead.propertyId].push(lead);
+                          return acc;
+                        }, {} as Record<string, PropertyLead[]>)
+                      ).map(([propertyId, propertyLeads]) => {
+                        const property = userListings.find(p => p.id === propertyId);
+                        return (
+                          <div key={propertyId} className="border rounded-lg p-4">
+                            <div className="flex items-center gap-3 mb-4">
+                              <Building2 className="h-5 w-5 text-primary" />
+                              <div>
+                                <h3 className="font-semibold">
+                                  {property?.title || 'Property'}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {propertyLeads.length} interested buyer{propertyLeads.length > 1 ? 's' : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              {propertyLeads.map((lead) => (
+                                <div
+                                  key={lead.id}
+                                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-10 w-10">
+                                      <AvatarFallback>
+                                        {lead.userName.charAt(0).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="font-medium">{lead.userName}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {lead.userEmail}
+                                      </p>
+                                      {lead.userPhone && (
+                                        <p className="text-sm text-muted-foreground">
+                                          {lead.userPhone}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <Badge variant="secondary" className="mb-1">
+                                      {lead.status}
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground">
+                                      {lead.createdAt?.toDate ? 
+                                        new Date(lead.createdAt.toDate()).toLocaleDateString() : 
+                                        'Recently'}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

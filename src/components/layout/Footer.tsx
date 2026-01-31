@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                 <Home className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-foreground">HavenHub</span>
+              <span className="text-xl font-bold text-foreground">Nivasa</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Your trusted P2P real estate platform. Buy and sell properties directly, without intermediaries.
@@ -107,7 +107,7 @@ const Footer: React.FC = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">hello@havenhub.com</span>
+                <span className="text-sm text-muted-foreground">hello@nivasa.com</span>
               </li>
             </ul>
           </div>
@@ -117,7 +117,7 @@ const Footer: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} HavenHub. All rights reserved.
+            © {currentYear} Nivasa. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">

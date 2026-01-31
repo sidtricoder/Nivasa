@@ -5,8 +5,6 @@ import {
   Home, 
   Search, 
   Heart, 
-  Sun, 
-  Moon, 
   Scale, 
   Newspaper, 
   Building2, 
@@ -22,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useTheme } from '@/contexts/ThemeContext';
+
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { InboxButton } from '@/components/communication';
 import { UserProfile } from '@/components/auth';
@@ -34,7 +32,6 @@ const popularCities = [
 ];
 
 const Header: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
   const { favorites, compareList, setIsCompareOpen } = useFavorites();
   const location = useLocation();
   const navigate = useNavigate();
@@ -80,7 +77,7 @@ const Header: React.FC = () => {
           <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${isHomePage ? 'bg-white/20 border border-white/30' : 'bg-primary'}`}>
             <Home className={`h-5 w-5 ${isHomePage ? 'text-white' : 'text-primary-foreground'}`} />
           </div>
-          <span className={`text-xl font-bold ${textColor}`}>HavenHub</span>
+          <span className={`text-xl font-bold ${textColor}`}>Nivasa</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -444,20 +441,6 @@ const Header: React.FC = () => {
 
           {/* User Profile / Auth */}
           <UserProfile />
-
-          {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className={`h-9 w-9 ${textColor} ${hoverBg}`}
-          >
-            {theme === 'light' ? (
-              <Moon className="h-4 w-4" />
-            ) : (
-              <Sun className="h-4 w-4" />
-            )}
-          </Button>
 
           {/* Mobile Favorites */}
           <Link to="/favorites" className="md:hidden relative">

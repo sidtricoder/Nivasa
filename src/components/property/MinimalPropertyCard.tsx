@@ -26,7 +26,7 @@ const MinimalPropertyCard: React.FC<MinimalPropertyCardProps> = ({ property }) =
           />
         </div>
 
-        {/* Content - Simple text like HavenHub */}
+        {/* Content - Simple text like Nivasa */}
         <div className="space-y-1">
           {/* Title - Bold, black */}
           <h3 className="font-bold text-base text-foreground line-clamp-1">

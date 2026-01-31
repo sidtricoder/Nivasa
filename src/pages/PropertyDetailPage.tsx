@@ -70,7 +70,8 @@ import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { cn, } from '@/lib/utils';
 import { format } from 'date-fns';
-import { getProperty } from '@/services/firestoreService';
+import { getProperty, expressInterest, checkUserInterest } from '@/services/firestoreService';
+import { useToast } from '@/hooks/use-toast';
 
 const nearbyTypeIcons: Record<string, React.ComponentType<any>> = {
   school: School,
@@ -96,6 +97,9 @@ const PropertyDetailPage: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isStagingOpen, setIsStagingOpen] = useState(false);
   const [stagingImage, setStagingImage] = useState<string>('');
+  const [hasExpressedInterest, setHasExpressedInterest] = useState(false);
+  const [expressingInterest, setExpressingInterest] = useState(false);
+  const { toast } = useToast();
 
   // Fetch property from mockListings or Firebase
   useEffect(() => {
@@ -128,6 +132,55 @@ const PropertyDetailPage: React.FC = () => {
 
     fetchProperty();
   }, [id]);
+
+  // Check if user has already expressed interest
+  useEffect(() => {
+    const checkInterest = async () => {
+      if (currentUser && property?.id) {
+        const hasInterest = await checkUserInterest(property.id, currentUser.uid);
+        setHasExpressedInterest(hasInterest);
+      }
+    };
+    checkInterest();
+  }, [currentUser, property?.id]);
+
+  const handleExpressInterest = async () => {
+    if (!currentUser) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to express interest in this property.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!property) return;
+
+    setExpressingInterest(true);
+    try {
+      await expressInterest(
+        property.id,
+        currentUser.uid,
+        currentUser.displayName || 'Anonymous User',
+        currentUser.email || '',
+        property.seller.id,
+        currentUser.phoneNumber || undefined
+      );
+      setHasExpressedInterest(true);
+      toast({
+        title: 'Interest Registered',
+        description: 'The seller will be notified about your interest.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to register interest. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setExpressingInterest(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -692,6 +745,31 @@ const PropertyDetailPage: React.FC = () => {
                     size="md"
                   />
                 </div>
+
+                {/* I am Interested Button */}
+                <Button
+                  variant={hasExpressedInterest ? "outline" : "default"}
+                  className="w-full gap-2"
+                  onClick={handleExpressInterest}
+                  disabled={expressingInterest || hasExpressedInterest}
+                >
+                  {expressingInterest ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : hasExpressedInterest ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Interest Registered
+                    </>
+                  ) : (
+                    <>
+                      <Heart className="h-4 w-4" />
+                      I am Interested
+                    </>
+                  )}
+                </Button>
 
                 <div className="relative">
                   <Button
