@@ -66,6 +66,7 @@ import GoogleMapEmbed from '@/components/property/GoogleMapEmbed';
 import GoogleStreetView from '@/components/property/GoogleStreetView';
 import PropertyChatbot from '@/components/property/PropertyChatbot';
 import VirtualStagingModal from '@/components/property/VirtualStagingModal';
+import FloorPlan3DViewer from '@/components/property/FloorPlan3DViewer';
 import NeighborhoodDashboard from '@/components/property/NeighborhoodDashboard';
 import { mockListings, Property } from '@/data/listings';
 import { useFavorites } from '@/contexts/FavoritesContext';
@@ -481,6 +482,9 @@ const PropertyDetailPage: React.FC = () => {
                     </TabsTrigger>
                     <TabsTrigger value="street-view">Street View</TabsTrigger>
                     <TabsTrigger value="3d-tour">3D Tour</TabsTrigger>
+                    {property.floorPlan && (
+                      <TabsTrigger value="floor-plan">Floor Plan</TabsTrigger>
+                    )}
                   </TabsList>
                 </CardHeader>
                 <CardContent>
@@ -577,6 +581,11 @@ const PropertyDetailPage: React.FC = () => {
                       </div>
                     )}
                   </TabsContent>
+                  {property.floorPlan && (
+                    <TabsContent value="floor-plan" className="mt-0">
+                      <FloorPlan3DViewer floorPlan={property.floorPlan} />
+                    </TabsContent>
+                  )}
                 </CardContent>
               </Tabs>
             </Card>
