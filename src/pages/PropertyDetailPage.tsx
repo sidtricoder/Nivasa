@@ -124,6 +124,8 @@ const PropertyDetailPage: React.FC = () => {
 
         // If not in mockListings, fetch from Firebase
         const firebaseProperty = await getProperty(id);
+        console.log('Fetched property from Firebase:', firebaseProperty);
+        console.log('FloorPlan data:', firebaseProperty?.floorPlan);
         setProperty(firebaseProperty);
       } catch (error) {
         console.error('Error fetching property:', error);

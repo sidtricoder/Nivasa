@@ -426,6 +426,10 @@ const SellerDashboard: React.FC = () => {
       // Build complete address from structured fields
       const completeAddress = `${formData.blockNumber}, ${formData.road}, ${formData.society}`;
 
+      // Debug floor plan data
+      console.log('Floor Plan Data being saved:', floorPlanData);
+      console.log('Floor Plan Image:', floorPlanImage ? 'Present' : 'Not present');
+
       const propertyData: Omit<Property, 'id'> = {
         title: formData.title,
         description: formData.description,
