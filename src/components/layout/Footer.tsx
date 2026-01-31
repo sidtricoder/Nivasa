@@ -13,8 +13,12 @@ const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Home className="h-5 w-5 text-primary-foreground" />
+              <div className="h-12 w-12 rounded-lg overflow-hidden">
+                <img 
+                  src="/logo.jpeg" 
+                  alt="Nivasa Logo" 
+                  className="h-full w-full object-cover scale-[1.8]"
+                />
               </div>
               <span className="text-xl font-bold text-foreground">Nivasa</span>
             </Link>

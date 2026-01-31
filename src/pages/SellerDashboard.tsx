@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -78,8 +79,19 @@ const propertyTypes = [
 const SellerDashboard: React.FC = () => {
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   
-  const [activeTab, setActiveTab] = useState('new-listing');
+  // Get tab from URL query param, default to 'new-listing'
+  const tabFromUrl = searchParams.get('tab') || 'new-listing';
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+  
+  // Update activeTab when URL changes
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['new-listing', 'my-listings', 'leads'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);

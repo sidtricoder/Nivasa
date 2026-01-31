@@ -1,5 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { signOut as firebaseSignOut } from '@/services/authService';
+import { useNavigate } from 'react-router-dom';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,12 +13,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut } from 'lucide-react';
+import { LogOut, Heart, Building2, Eye, History } from 'lucide-react';
 import { AuthDialog } from './AuthDialog';
 
 export const UserProfile = () => {
   const { currentUser, userData, loading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { favorites } = useFavorites();
 
   const handleSignOut = async () => {
     try {
@@ -73,6 +77,34 @@ export const UserProfile = () => {
             </p>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
+        {/* My Activity Section */}
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-medium">
+          My Activity
+        </DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => navigate('/favorites')}>
+          <Heart className="mr-2 h-4 w-4 text-rose-500" />
+          <span>Saved Properties</span>
+          {favorites.length > 0 && (
+            <span className="ml-auto text-xs bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full">
+              {favorites.length}
+            </span>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/seller?tab=my-listings')}>
+          <Building2 className="mr-2 h-4 w-4 text-blue-500" />
+          <span>My Listings</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/discover')}>
+          <Eye className="mr-2 h-4 w-4 text-purple-500" />
+          <span>Browse Properties</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/seller?tab=leads')}>
+          <History className="mr-2 h-4 w-4 text-amber-500" />
+          <span>My Leads</span>
+        </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />

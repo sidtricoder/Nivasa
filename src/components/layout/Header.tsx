@@ -74,8 +74,12 @@ const Header: React.FC = () => {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${isHomePage ? 'bg-white/20 border border-white/30' : 'bg-primary'}`}>
-            <Home className={`h-5 w-5 ${isHomePage ? 'text-white' : 'text-primary-foreground'}`} />
+          <div className="h-12 w-12 rounded-lg overflow-hidden">
+            <img 
+              src="/logo.jpeg" 
+              alt="Nivasa Logo" 
+              className="h-full w-full object-cover scale-[1.8]"
+            />
           </div>
           <span className={`text-xl font-bold ${textColor}`}>Nivasa</span>
         </Link>

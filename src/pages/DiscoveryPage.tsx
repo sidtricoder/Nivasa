@@ -616,6 +616,10 @@ const DiscoveryPage: React.FC = () => {
             <div className="absolute left-3 top-1/2 -translate-y-1/2">
               {isAISearching ? (
                 <Loader2 className="h-4 w-4 text-primary animate-spin" />
+              ) : searchQuery ? (
+                <div className="relative">
+                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                </div>
               ) : (
                 <div className="relative">
                   <Search className="h-4 w-4 text-muted-foreground" />
@@ -637,37 +641,52 @@ const DiscoveryPage: React.FC = () => {
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 300)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && searchQuery) {
-                  setIsSearchFocused(false); // Close recent searches
+                  setIsSearchFocused(false); // Close dropdown
                   handleAISearch(searchQuery);
                   addRecentSearch(searchQuery, getCurrentFilters());
                 }
               }}
-              className="pl-10 pr-24"
+              className="pl-10 pr-32"
               disabled={isAISearching}
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowAIBadge(false);
-                    setAIFilters(null);
-                    setIsSearchFocused(false);
-                    // Reset filters including AI location filters
-                    setSelectedPriceRange([priceRange.min, priceRange.max]);
-                    setSelectedBHK([]);
-                    setSelectedLocality('all');
-                    setSelectedPropertyTypes([]);
-                    setSelectedLifestyle([]);
-                    setAiLocality('');
-                    setAiCity('');
-                  }}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowAIBadge(false);
+                      setAIFilters(null);
+                      setIsSearchFocused(false);
+                      // Reset filters including AI location filters
+                      setSelectedPriceRange([priceRange.min, priceRange.max]);
+                      setSelectedBHK([]);
+                      setSelectedLocality('all');
+                      setSelectedPropertyTypes([]);
+                      setSelectedLifestyle([]);
+                      setAiLocality('');
+                      setAiCity('');
+                    }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 px-3 gap-1"
+                    onClick={() => {
+                      setIsSearchFocused(false);
+                      handleAISearch(searchQuery);
+                      addRecentSearch(searchQuery, getCurrentFilters());
+                    }}
+                    disabled={isAISearching}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Search
+                  </Button>
+                </>
               )}
               <VoiceSearchButton 
                 onResult={(text) => {
@@ -680,9 +699,19 @@ const DiscoveryPage: React.FC = () => {
               />
             </div>
             
-            {/* Recent Searches Dropdown */}
+            {/* AI Search Hint while typing */}
+            {isSearchFocused && searchQuery && !isAISearching && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg p-3 z-50">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span>Press <kbd className="px-1.5 py-0.5 bg-secondary rounded text-xs font-mono">Enter</kbd> or click Search for AI-powered results</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Recent Searches Dropdown - only show when not typing */}
             <RecentSearches 
-              isOpen={isSearchFocused && !isAISearching}
+              isOpen={isSearchFocused && !searchQuery && !isAISearching}
               onClose={() => setIsSearchFocused(false)}
               onSelect={(search) => {
                 setSearchQuery(search.query);
