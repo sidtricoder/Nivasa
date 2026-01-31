@@ -648,6 +648,59 @@ const SellerDashboard: React.FC = () => {
     }
   };
 
+  // Validation for each step
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1: // Basics
+        return !!(
+          formData.propertyType &&
+          formData.title.trim() &&
+          formData.description.trim() &&
+          formData.bhk &&
+          formData.bathrooms &&
+          formData.sqft &&
+          formData.floor &&
+          formData.totalFloors &&
+          formData.facing &&
+          formData.propertyAge &&
+          formData.furnishing &&
+          formData.price &&
+          formData.sellerPhone.trim()
+        );
+      
+      case 2: // Media - at least one image required (360° and floor plan are optional)
+        return imagePreviews.length > 0;
+      
+      case 3: // Location
+        return !!(
+          formData.blockNumber.trim() &&
+          formData.road.trim() &&
+          formData.society.trim() &&
+          formData.locality.trim() &&
+          formData.city.trim() &&
+          formData.state.trim() &&
+          formData.pincode.trim() &&
+          formData.coordinates.lat !== 0 &&
+          formData.coordinates.lng !== 0
+        );
+      
+      case 4: // Scores - Features are checked (pet friendly, parking)
+        // This step only has checkboxes, always valid
+        return true;
+      
+      case 5: // Details
+        return (
+          formData.highlights.some(h => h.trim()) && // At least 1 highlight
+          formData.thingsToConsider.some(t => t.trim()) && // At least 1 thing to consider
+          formData.nearbyPlaces.some(p => p.type && p.name.trim() && p.distance.trim()) // At least 1 nearby place
+          // Amenities are optional as per requirements
+        );
+      
+      default:
+        return true;
+    }
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(prev => prev + 1);
@@ -1585,7 +1638,10 @@ const SellerDashboard: React.FC = () => {
                       Previous
                     </Button>
                     {currentStep < steps.length ? (
-                      <Button onClick={nextStep}>
+                      <Button 
+                        onClick={nextStep}
+                        disabled={!validateStep(currentStep)}
+                      >
                         Next
                         <ChevronRight className="h-4 w-4 ml-2" />
                       </Button>
