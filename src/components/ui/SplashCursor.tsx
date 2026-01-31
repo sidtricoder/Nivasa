@@ -1127,7 +1127,8 @@ function SplashCursor({
         style={{
           width: contained ? '100%' : '100vw',
           height: contained ? '100%' : '100vh',
-          display: 'block'
+          display: 'block',
+          pointerEvents: 'none'
         }}
       />
     </div>
