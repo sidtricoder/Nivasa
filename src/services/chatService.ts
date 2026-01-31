@@ -144,14 +144,9 @@ export const subscribeToMessages = (
   try {
     const messagesRef = collection(db, CHATS_COLLECTION);
     
-    // Generate conversation ID (same logic as when sending)
-    const participants = [userId, otherUserId].sort();
-    const conversationId = `${participants[0]}_${participants[1]}_${propertyId}`;
+    console.log('Subscribing to ALL messages for property:', propertyId);
     
-    console.log('Subscribing to messages:', { userId, otherUserId, propertyId, conversationId });
-    
-    // Simple query: get all messages for this property, filter client-side
-    // This avoids complex index requirements
+    // Get ALL messages for this property - no user filtering
     const q = query(
       messagesRef,
       where('relatedProperty', '==', propertyId),
@@ -177,15 +172,9 @@ export const subscribeToMessages = (
           };
         });
         
-        // Filter to only messages between these two users
-        const filteredMessages = allPropertyMessages.filter(msg => 
-          (msg.from === userId && msg.to === otherUserId) ||
-          (msg.from === otherUserId && msg.to === userId)
-        );
-        
-        console.log('Filtered to', filteredMessages.length, 'messages for this conversation');
-        
-        callback(filteredMessages);
+        // Return ALL messages for this property - no filtering
+        console.log('Returning ALL', allPropertyMessages.length, 'messages for property');
+        callback(allPropertyMessages);
       },
       (error) => {
         console.error('Error subscribing to messages:', error);
@@ -210,16 +199,11 @@ export const subscribeToMessages = (
                 timestamp: data.timestamp?.toDate() || new Date(),
                 isRead: data.isRead || false,
               };
-            });
+            })
+            .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             
-            const filteredMessages = allPropertyMessages
-              .filter(msg => 
-                (msg.from === userId && msg.to === otherUserId) ||
-                (msg.from === otherUserId && msg.to === userId)
-              )
-              .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-            
-            callback(filteredMessages);
+            // Return ALL messages - no filtering
+            callback(allPropertyMessages);
           },
           (err) => {
             console.error('Fallback query also failed:', err);

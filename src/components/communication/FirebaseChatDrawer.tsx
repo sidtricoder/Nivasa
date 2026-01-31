@@ -49,111 +49,75 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
   sellerName,
   propertyTitle,
 }) => {
-  console.log('FirebaseChatDrawer rendered with props:', { 
-    isOpen, 
-    propertyId, 
-    sellerId, 
-    sellerName, 
-    propertyTitle 
-  });
-  
   const { currentUser } = useAuth();
-  console.log('Current user in FirebaseChatDrawer:', currentUser?.uid);
   const { toast } = useToast();
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeConv, setActiveConv] = useState<{
-    userId: string;
-    propertyId: string;
-    userName: string;
-    propertyTitle: string;
-  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
+  
+  // If propertyId is provided, we're in direct chat mode
+  const isDirectChat = !!(propertyId && sellerId);
 
-  // Subscribe to conversations
+  // Subscribe to ALL messages for the property when in direct chat mode
   useEffect(() => {
-    if (!currentUser || !isOpen) return;
+    if (!currentUser || !isOpen || !propertyId) return;
 
-    console.log('Setting up conversation subscription for user:', currentUser.uid);
-    const unsubscribe = subscribeToConversations(currentUser.uid, (convs) => {
-      console.log('Received conversations in component:', convs.length);
-      setConversations(convs);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser, isOpen]);
-
-  // Subscribe to messages for active conversation
-  useEffect(() => {
-    if (!currentUser || !activeConv) return;
-
-    console.log('Setting up message subscription:', activeConv);
+    console.log('Subscribing to ALL messages for property:', propertyId);
     const unsubscribe = subscribeToMessages(
       currentUser.uid,
-      activeConv.userId,
-      activeConv.propertyId,
+      sellerId || currentUser.uid, // fallback to self
+      propertyId,
       (msgs) => {
-        console.log('Received messages in component:', msgs.length);
+        console.log('Received ALL messages:', msgs.length);
         setMessages(msgs);
-        // Mark as read
-        if (msgs.length > 0) {
-          markMessagesAsRead(currentUser.uid, activeConv.userId, activeConv.propertyId);
-        }
       }
     );
 
     return () => unsubscribe();
-  }, [currentUser, activeConv]);
+  }, [currentUser, isOpen, propertyId, sellerId]);
+
+  // Subscribe to conversations (for conversation list view)
+  useEffect(() => {
+    if (!currentUser || !isOpen) return;
+
+    const unsubscribe = subscribeToConversations(
+      currentUser.uid,
+      (convs) => {
+        console.log('Received conversations:', convs.length);
+        setConversations(convs);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser, isOpen]);
 
   // Auto-scroll to bottom
   useEffect(() => {
-    if (activeConv && messages.length > 0) {
+    if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages.length, activeConv]);
+  }, [messages.length]);
 
   // Auto-focus input when chat opens
   useEffect(() => {
-    if (activeConv) {
+    if (isDirectChat && isOpen) {
       setTimeout(() => {
         messageInputRef.current?.focus();
       }, 300);
     }
-  }, [activeConv]);
-
-  // Initialize conversation from props
-  useEffect(() => {
-    console.log('Props check:', { propertyId, sellerId, sellerName, propertyTitle, currentUser: currentUser?.uid });
-    if (propertyId && sellerId && sellerName && propertyTitle && currentUser) {
-      console.log('Initializing chat with:', { propertyId, sellerId, sellerName, propertyTitle, currentUserId: currentUser.uid });
-      // Only set if user is not the seller (can't chat with themselves)
-      if (currentUser.uid !== sellerId) {
-        console.log('Setting activeConv (user is not seller)');
-        setActiveConv({
-          userId: sellerId,
-          propertyId,
-          userName: sellerName,
-          propertyTitle,
-        });
-      } else {
-        console.log('NOT setting activeConv - user is the seller (cannot chat with self)');
-      }
-    } else {
-      console.log('Missing required props for chat initialization');
-    }
-  }, [propertyId, sellerId, sellerName, propertyTitle, currentUser]);
+  }, [isDirectChat, isOpen]);
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !activeConv || !currentUser) return;
+    if (!messageInput.trim() || !currentUser || !propertyId || !sellerId) return;
 
     try {
       await sendChatMessage(
         currentUser.uid,
-        activeConv.userId,
-        activeConv.propertyId,
+        sellerId,
+        propertyId,
         messageInput.trim()
       );
       setMessageInput('');
@@ -218,14 +182,10 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
               return (
                 <button
                   key={conv.id}
-                  onClick={() =>
-                    setActiveConv({
-                      userId: otherUserId!,
-                      propertyId: conv.propertyId,
-                      userName: 'User',
-                      propertyTitle: conv.propertyTitle || 'Property',
-                    })
-                  }
+                  onClick={() => {
+                    // For now just close - navigating to property chat should happen through property page
+                    console.log('Selected conversation:', conv);
+                  }}
                   className="w-full p-4 hover:bg-accent transition-colors text-left relative group"
                 >
                   <div className="flex gap-3">
@@ -272,7 +232,7 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
     <div className="h-full flex flex-col bg-background">
       {/* Chat Header */}
       <div className="p-4 border-b bg-card flex items-center gap-3 shadow-sm">
-        <Button variant="ghost" size="icon" onClick={() => setActiveConv(null)} className="shrink-0">
+        <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
@@ -283,8 +243,8 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base truncate">{activeConv?.userName}</h3>
-          <p className="text-xs text-muted-foreground truncate">{activeConv?.propertyTitle}</p>
+          <h3 className="font-semibold text-base truncate">{sellerName || 'Chat'}</h3>
+          <p className="text-xs text-muted-foreground truncate">{propertyTitle || 'Property'}</p>
         </div>
       </div>
 
@@ -318,7 +278,7 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
                   {showAvatar && !isOwn ? (
                     <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarFallback className="text-xs bg-primary/10">
-                        {activeConv?.userName[0]}
+                        {sellerName?.[0] || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   ) : (
@@ -402,14 +362,11 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
     </div>
   );
 
-  console.log('Render - activeConv state:', activeConv);
-  console.log('Render - showing:', activeConv ? 'ChatView' : 'ConversationListView');
-
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-md p-0">
         <AnimatePresence mode="wait">
-          {activeConv ? (
+          {isDirectChat ? (
             <motion.div
               key="chat"
               initial={{ x: 300, opacity: 0 }}
