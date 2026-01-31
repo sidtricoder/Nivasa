@@ -1,12 +1,12 @@
 // Floor Plan Analysis Service
-// Uses Google Vision API to extract room information from 2D floor plan images
-// Falls back to BHK templates if no dimensions detected
+// Uses Google Gemini Vision API to extract room information from 2D floor plan images
+// Falls back to BHK templates if analysis fails
 
 import { FloorPlanData, Room, RoomType, generateRoomId } from '@/types/floorPlan';
 
-const GOOGLE_VISION_API_KEY = import.meta.env.VITE_GOOGLE_VISION_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-// BHK-based floor plan templates
+// BHK-based floor plan templates (fallback)
 const bhkTemplates: Record<number, Room[]> = {
   1: [
     { id: generateRoomId(), name: 'Living Room', type: 'living', width: 12, length: 10, position: { x: 0, y: 0 } },
@@ -68,164 +68,158 @@ const bhkTemplates: Record<number, Room[]> = {
   ],
 };
 
-// Room type keywords for detection
-const roomTypeKeywords: Record<RoomType, string[]> = {
-  bedroom: ['bedroom', 'bed room', 'master bed', 'br', 'bed', 'sleeping'],
-  bathroom: ['bathroom', 'bath room', 'toilet', 'wc', 'restroom', 'washroom', 'bath'],
-  kitchen: ['kitchen', 'cooking', 'pantry', 'modular kitchen'],
-  living: ['living', 'living room', 'drawing', 'hall', 'lounge', 'family room'],
-  dining: ['dining', 'dining room', 'eating'],
-  balcony: ['balcony', 'terrace', 'patio', 'deck', 'sit out'],
-  utility: ['utility', 'store', 'storage', 'laundry', 'service'],
-  lobby: ['lobby', 'foyer', 'entrance', 'passage', 'corridor', 'hallway'],
+// Room type mapping from Gemini response
+const roomTypeMap: Record<string, RoomType> = {
+  'bedroom': 'bedroom',
+  'master bedroom': 'bedroom',
+  'bed room': 'bedroom',
+  'guest room': 'bedroom',
+  'bathroom': 'bathroom',
+  'bath': 'bathroom',
+  'toilet': 'bathroom',
+  'washroom': 'bathroom',
+  'restroom': 'bathroom',
+  'kitchen': 'kitchen',
+  'modular kitchen': 'kitchen',
+  'living room': 'living',
+  'living': 'living',
+  'hall': 'living',
+  'drawing room': 'living',
+  'lounge': 'living',
+  'dining room': 'dining',
+  'dining': 'dining',
+  'balcony': 'balcony',
+  'terrace': 'balcony',
+  'patio': 'balcony',
+  'utility': 'utility',
+  'store': 'utility',
+  'storage': 'utility',
+  'laundry': 'utility',
+  'lobby': 'lobby',
+  'foyer': 'lobby',
+  'entrance': 'lobby',
+  'corridor': 'lobby',
+  'passage': 'lobby',
 };
 
-// Detect room type from text
-function detectRoomType(text: string): RoomType | null {
-  const lowerText = text.toLowerCase();
-  for (const [type, keywords] of Object.entries(roomTypeKeywords)) {
-    for (const keyword of keywords) {
-      if (lowerText.includes(keyword)) {
-        return type as RoomType;
-      }
+function detectRoomType(name: string): RoomType {
+  const lowerName = name.toLowerCase();
+  for (const [key, type] of Object.entries(roomTypeMap)) {
+    if (lowerName.includes(key)) {
+      return type;
     }
   }
-  return null;
+  return 'lobby'; // default
 }
 
-// Parse dimensions from text (e.g., "12' x 10'" or "12x10" or "12ft x 10ft")
-function parseDimensions(text: string): { width: number; length: number } | null {
-  // Match patterns like: 12x10, 12'x10', 12' x 10', 12ft x 10ft, 12 x 10
-  const patterns = [
-    /(\d+(?:\.\d+)?)\s*['"]?\s*[xX×]\s*(\d+(?:\.\d+)?)\s*['"]?/,
-    /(\d+(?:\.\d+)?)\s*(?:ft|feet)?\s*[xX×]\s*(\d+(?:\.\d+)?)\s*(?:ft|feet)?/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return {
-        width: parseFloat(match[1]),
-        length: parseFloat(match[2]),
-      };
-    }
-  }
-  return null;
+interface GeminiRoom {
+  name: string;
+  width: number;
+  length: number;
+  x: number;
+  y: number;
 }
 
-interface VisionTextAnnotation {
-  description: string;
-  boundingPoly?: {
-    vertices: { x: number; y: number }[];
-  };
-}
-
-interface AnalysisResult {
-  rooms: Room[];
-  detectedFromImage: boolean;
-  confidence: number;
-}
-
-// Analyze floor plan image using Google Vision API
-export async function analyzeFloorPlanImage(imageBase64: string): Promise<AnalysisResult> {
-  if (!GOOGLE_VISION_API_KEY) {
-    console.warn('Google Vision API key not configured, using template');
-    return { rooms: [], detectedFromImage: false, confidence: 0 };
+// Analyze floor plan using Gemini Vision API
+export async function analyzeFloorPlanImage(imageBase64: string): Promise<{ rooms: Room[]; success: boolean }> {
+  if (!GEMINI_API_KEY) {
+    console.warn('Gemini API key not configured');
+    return { rooms: [], success: false };
   }
 
   try {
+    // Remove data URL prefix if present
+    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+
     const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          requests: [
+          contents: [
             {
-              image: {
-                content: imageBase64.replace(/^data:image\/[a-z]+;base64,/, ''),
-              },
-              features: [
-                { type: 'TEXT_DETECTION', maxResults: 50 },
-                { type: 'LABEL_DETECTION', maxResults: 20 },
+              parts: [
+                {
+                  text: `Analyze this floor plan image and extract all rooms with their dimensions.
+
+For each room you detect, provide:
+1. Room name (e.g., "Master Bedroom", "Kitchen", "Living Room")
+2. Width in feet (estimate if not labeled)
+3. Length in feet (estimate if not labeled)
+4. Relative X position (0-100 scale, where 0 is left)
+5. Relative Y position (0-100 scale, where 0 is top)
+
+IMPORTANT: Return ONLY a JSON array in this exact format, nothing else:
+[
+  {"name": "Living Room", "width": 15, "length": 12, "x": 0, "y": 0},
+  {"name": "Master Bedroom", "width": 14, "length": 12, "x": 0, "y": 40},
+  {"name": "Kitchen", "width": 10, "length": 8, "x": 50, "y": 0}
+]
+
+If you cannot detect rooms clearly, return an empty array: []`
+                },
+                {
+                  inlineData: {
+                    mimeType: 'image/jpeg',
+                    data: base64Data,
+                  },
+                },
               ],
             },
           ],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 2048,
+          },
         }),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Vision API error: ${response.status}`);
+      const error = await response.text();
+      console.error('Gemini API error:', error);
+      return { rooms: [], success: false };
     }
 
     const data = await response.json();
-    const textAnnotations: VisionTextAnnotation[] = data.responses?.[0]?.textAnnotations || [];
-
-    if (textAnnotations.length === 0) {
-      return { rooms: [], detectedFromImage: false, confidence: 0 };
+    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    console.log('Gemini response:', textContent);
+    
+    // Extract JSON from response
+    const jsonMatch = textContent.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.warn('No JSON found in Gemini response');
+      return { rooms: [], success: false };
     }
 
-    // Skip the first annotation (full text), process individual words/phrases
-    const annotations = textAnnotations.slice(1);
-    const detectedRooms: Room[] = [];
-    const processedTexts = new Set<string>();
-
-    // Group nearby annotations to form room labels with dimensions
-    for (let i = 0; i < annotations.length; i++) {
-      const annotation = annotations[i];
-      const text = annotation.description;
-
-      if (processedTexts.has(text.toLowerCase())) continue;
-
-      const roomType = detectRoomType(text);
-      if (roomType) {
-        processedTexts.add(text.toLowerCase());
-
-        // Look for dimensions in nearby text
-        let dimensions: { width: number; length: number } | null = null;
-        
-        // Check surrounding annotations for dimensions
-        for (let j = Math.max(0, i - 3); j < Math.min(annotations.length, i + 5); j++) {
-          if (j !== i) {
-            const nearbyText = annotations[j].description;
-            dimensions = parseDimensions(nearbyText);
-            if (dimensions) break;
-          }
-        }
-
-        // Calculate position from bounding box
-        const vertices = annotation.boundingPoly?.vertices || [];
-        const avgX = vertices.reduce((sum, v) => sum + (v.x || 0), 0) / (vertices.length || 1);
-        const avgY = vertices.reduce((sum, v) => sum + (v.y || 0), 0) / (vertices.length || 1);
-
-        detectedRooms.push({
-          id: generateRoomId(),
-          name: text,
-          type: roomType,
-          width: dimensions?.width || 10,
-          length: dimensions?.length || 10,
-          position: { x: Math.floor(avgX / 30), y: Math.floor(avgY / 30) },
-        });
-      }
+    const geminiRooms: GeminiRoom[] = JSON.parse(jsonMatch[0]);
+    
+    if (!Array.isArray(geminiRooms) || geminiRooms.length === 0) {
+      return { rooms: [], success: false };
     }
 
-    // Calculate confidence based on detected rooms and dimensions
-    const roomsWithDimensions = detectedRooms.filter(r => r.width !== 10 || r.length !== 10);
-    const confidence = detectedRooms.length > 0
-      ? Math.min(0.9, (detectedRooms.length * 0.15) + (roomsWithDimensions.length * 0.1))
-      : 0;
+    // Convert to our Room format
+    const rooms: Room[] = geminiRooms.map((room, index) => ({
+      id: generateRoomId(),
+      name: room.name || `Room ${index + 1}`,
+      type: detectRoomType(room.name || ''),
+      width: Math.max(4, Math.round(room.width || 10)),
+      length: Math.max(4, Math.round(room.length || 10)),
+      position: {
+        x: Math.round((room.x || 0) / 3), // Scale down positions
+        y: Math.round((room.y || 0) / 3),
+      },
+    }));
 
-    return {
-      rooms: detectedRooms,
-      detectedFromImage: detectedRooms.length > 0,
-      confidence,
-    };
+    console.log('Detected rooms:', rooms);
+    return { rooms, success: true };
   } catch (error) {
     console.error('Floor plan analysis error:', error);
-    return { rooms: [], detectedFromImage: false, confidence: 0 };
+    return { rooms: [], success: false };
   }
 }
 
@@ -260,12 +254,14 @@ export async function processFloorPlan(
   bhk: number,
   totalSqft: number
 ): Promise<{ floorPlanData: FloorPlanData; usedTemplate: boolean }> {
-  // Try AI analysis if image provided
+  // Try Gemini Vision analysis if image provided
   if (imageBase64) {
+    console.log('Analyzing floor plan with Gemini Vision...');
     const analysis = await analyzeFloorPlanImage(imageBase64);
     
-    // Use AI results if we have good detection
-    if (analysis.detectedFromImage && analysis.rooms.length >= 2 && analysis.confidence >= 0.3) {
+    // Use Gemini results if we detected rooms
+    if (analysis.success && analysis.rooms.length >= 2) {
+      console.log('Successfully detected rooms from image!');
       return {
         floorPlanData: {
           rooms: analysis.rooms,
@@ -274,6 +270,7 @@ export async function processFloorPlan(
         usedTemplate: false,
       };
     }
+    console.log('Could not detect rooms, using template...');
   }
 
   // Fall back to BHK template

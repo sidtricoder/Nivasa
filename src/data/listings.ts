@@ -211,6 +211,7 @@ export const mockListings: Property[] = [
         { id: 'room-10', name: 'Lobby', type: 'lobby', width: 8, length: 6, position: { x: 25, y: 8 } },
       ],
       totalSqft: 1250,
+      floorPlanImage: '/TX83-GROUND-FLOOR_page-0001-768x1120.jpg',
     },
   },
   {

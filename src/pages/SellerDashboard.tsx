@@ -489,7 +489,11 @@ const SellerDashboard: React.FC = () => {
         listedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         panoramaImages: panoramaUrls.length > 0 ? panoramaUrls : undefined,
-        floorPlan: floorPlanData || undefined,
+        // Include floor plan image in the floor plan data
+        floorPlan: floorPlanData ? {
+          ...floorPlanData,
+          floorPlanImage: floorPlanImage || undefined,
+        } : undefined,
       };
 
       if (editingPropertyId) {

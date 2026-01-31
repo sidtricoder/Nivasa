@@ -9,7 +9,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import Room3D from './Room3D';
-import { FloorPlanData, Room } from '@/types/floorPlan';
+import { FloorPlanData, Room, roomColors } from '@/types/floorPlan';
 
 interface FloorPlan3DViewerProps {
   floorPlan: FloorPlanData;
@@ -17,7 +17,8 @@ interface FloorPlan3DViewerProps {
 }
 
 const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, className }) => {
-  const [viewMode, setViewMode] = useState<'3D' | '2D'>('3D');
+  // Default to 2D if image is available, otherwise 3D
+  const [viewMode, setViewMode] = useState<'3D' | '2D'>(floorPlan?.floorPlanImage ? '2D' : '3D');
   const [hoveredRoom, setHoveredRoom] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -141,7 +142,15 @@ const FloorPlan3DViewer: React.FC<FloorPlan3DViewerProps> = ({ floorPlan, classN
             className="w-full h-full"
           >
             <Suspense fallback={<LoadingFallback />}>
-              <Canvas shadows>
+              <Canvas 
+                shadows
+                camera={{ position: [20, 25, 20], fov: 50 }}
+                gl={{ 
+                  antialias: true,
+                  powerPreference: 'high-performance',
+                  failIfMajorPerformanceCaveat: false,
+                }}
+              >
                 <Scene />
               </Canvas>
             </Suspense>

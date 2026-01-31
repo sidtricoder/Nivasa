@@ -60,12 +60,22 @@ const FloorPlanUpload: React.FC<FloorPlanUploadProps> = ({
 
         try {
           // Process floor plan with AI analysis
+          console.log('=== STARTING FLOOR PLAN ANALYSIS ===');
+          console.log('BHK:', bhk, 'SQFT:', sqft);
+          console.log('Image length:', base64Image?.length || 0);
+          
           const result = await processFloorPlan(base64Image, bhk, sqft);
+          
+          console.log('=== ANALYSIS COMPLETE ===');
+          console.log('Used template:', result.usedTemplate);
+          console.log('Detected rooms:', result.floorPlanData.rooms.length);
+          console.log('Room names:', result.floorPlanData.rooms.map(r => r.name));
           
           setFloorPlanData(result.floorPlanData);
           setStatus(result.usedTemplate ? 'fallback' : 'success');
           
           // Notify parent
+          console.log('FloorPlanUpload calling onFloorPlanChange with:', result.floorPlanData);
           onFloorPlanChange({
             image: base64Image,
             floorPlanData: result.floorPlanData,
