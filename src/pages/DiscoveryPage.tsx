@@ -198,7 +198,7 @@ const AmazonStyleFilters: React.FC<AmazonStyleFiltersProps> = ({ FilterContent }
         `}
         style={{
           height: isSticky ? '70vh' : '80vh',
-          width: '320px'
+          width: '380px'
         }}
       >
         <div
@@ -1898,11 +1898,11 @@ const DiscoveryPage: React.FC = () => {
 
 
 
-        <div className="px-8 lg:px-16">
-          <div className="max-w-7xl mx-auto">
+        <div className="px-4 lg:px-6">
+          <div className="w-full">
             <div className="flex gap-6">
               {/* Desktop Sidebar */}
-              <aside className="hidden lg:block w-[320px] flex-shrink-0">
+              <aside className="hidden lg:block w-[380px] flex-shrink-0">
                 <AmazonStyleFilters FilterContent={FilterContent} />
               </aside>
 
