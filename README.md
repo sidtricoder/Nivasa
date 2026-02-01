@@ -10,7 +10,7 @@ A comprehensive peer-to-peer real estate platform for buying, selling, and renti
 - **Voice Search**: Search properties using voice commands
 - **Lifestyle Filters**: Pet-friendly, near metro, office-ready, garden view options
 - **Recent & Saved Searches**: Quick access to your search history and favorites
-- **Interactive Maps**: Integrated with OpenStreetMap for location-based property discovery
+- **Interactive Maps**: Integrated with Google Maps API for location-based property discovery
 
 ### 🏡 **Immersive Property Experience**
 - **360° Virtual Tours**: Comprehensive property viewing with high-quality images
@@ -104,12 +104,11 @@ A comprehensive peer-to-peer real estate platform for buying, selling, and renti
 - **Zustand** - Lightweight state management solution
 
 ### Maps & Location
-- **Leaflet** - Interactive maps for property locations
-- **OpenStreetMap** - Free geographic data for mapping
-- **Geocoding API** - Convert addresses to coordinates
+- **Google Maps API** - Interactive maps, geocoding, reverse geocoding, and Places Autocomplete
 
 ### AI & External Services
-- **Groq API** - Fast AI inference for property chatbot
+- **Google Gemini API** - Fast AI inference for property chatbot and smart search
+- **Hugging Face API** - AI-powered virtual staging (optional)
 - **Bank Rates API** - Real-time interest rate data
 - **News API** - Latest real estate news integration
 
@@ -154,17 +153,20 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
 # Cloudinary Configuration
 VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
-VITE_CLOUDINARY_API_KEY=your_api_key
-VITE_CLOUDINARY_API_SECRET=your_api_secret
+VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 
-# AI Services
-VITE_GROQ_API_KEY=your_groq_api_key
+# Google Gemini AI API (for AI-powered chatbot and search)
+VITE_GEMINI_API_KEY=your_gemini_api_key
 
-# Other APIs
-VITE_NEWS_API_KEY=your_news_api_key
+# Google Maps API (for geocoding and location services)
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+# Hugging Face API (optional - for virtual staging)
+VITE_HUGGINGFACE_API_KEY=your_huggingface_api_key
 ```
 
 4. **Start development server**
