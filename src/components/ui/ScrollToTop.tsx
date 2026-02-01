@@ -8,12 +8,13 @@ const ScrollToTop: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
     const location = useLocation();
 
-    // Don't show on Landing Page
-    if (location.pathname === '/') {
-        return null;
-    }
+    // Check if on Landing Page
+    const isLandingPage = location.pathname === '/';
 
     useEffect(() => {
+        // Don't add scroll listener on landing page
+        if (isLandingPage) return;
+
         const toggleVisibility = () => {
             if (window.pageYOffset > 300) {
                 setIsVisible(true);
@@ -25,7 +26,7 @@ const ScrollToTop: React.FC = () => {
         window.addEventListener('scroll', toggleVisibility);
 
         return () => window.removeEventListener('scroll', toggleVisibility);
-    }, []);
+    }, [isLandingPage]);
 
     const scrollToTop = () => {
         window.scrollTo({
@@ -33,6 +34,11 @@ const ScrollToTop: React.FC = () => {
             behavior: 'smooth',
         });
     };
+
+    // Don't render on Landing Page
+    if (isLandingPage) {
+        return null;
+    }
 
     return (
         <AnimatePresence>
@@ -58,3 +64,4 @@ const ScrollToTop: React.FC = () => {
 };
 
 export default ScrollToTop;
+
