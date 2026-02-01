@@ -128,10 +128,10 @@ const quickFilterChips = [
 
 // Amazon-style Filters Component
 interface AmazonStyleFiltersProps {
-  FilterContent: React.ComponentType;
+  children: React.ReactNode;
 }
 
-const AmazonStyleFilters: React.FC<AmazonStyleFiltersProps> = ({ FilterContent }) => {
+const AmazonStyleFilters: React.FC<AmazonStyleFiltersProps> = ({ children }) => {
   const [isSticky, setIsSticky] = useState(false);
   const filterContainerRef = useRef<HTMLDivElement>(null);
   const filterContentRef = useRef<HTMLDivElement>(null);
@@ -223,7 +223,7 @@ const AmazonStyleFilters: React.FC<AmazonStyleFiltersProps> = ({ FilterContent }
 
           {/* Filter Content - Make it taller to enable scrolling */}
           <div className="space-y-6">
-            <FilterContent />
+            {children}
           </div>
         </div>
       </div>
@@ -1028,7 +1028,7 @@ const DiscoveryPage: React.FC = () => {
     selectedPossessionStatus.length > 0,
   ].filter(Boolean).length;
 
-  const FilterContent = () => (
+  const renderFilterContent = () => (
     <div className="space-y-6">
       {/* Active Filters Section */}
       {activeFiltersCount > 0 && (
@@ -1809,7 +1809,7 @@ const DiscoveryPage: React.FC = () => {
                       <SheetTitle>Filters</SheetTitle>
                     </SheetHeader>
                     <div className="mt-6 overflow-y-auto h-[calc(100vh-120px)] overflow-x-hidden">
-                      <FilterContent />
+                      {renderFilterContent()}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -1903,7 +1903,9 @@ const DiscoveryPage: React.FC = () => {
             <div className="flex gap-6">
               {/* Desktop Sidebar */}
               <aside className="hidden lg:block w-[320px] flex-shrink-0">
-                <AmazonStyleFilters FilterContent={FilterContent} />
+                <AmazonStyleFilters>
+                  {renderFilterContent()}
+                </AmazonStyleFilters>
               </aside>
 
               {/* Results */}
