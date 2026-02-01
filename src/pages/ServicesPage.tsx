@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { 
-  Calculator, 
-  TrendingUp, 
-  Home, 
-  Sparkles, 
+import { useNavigate } from 'react-router-dom';
+import {
+  Calculator,
+  TrendingUp,
+  Home,
+  Sparkles,
   CheckCircle,
   AlertCircle,
   ArrowRight,
@@ -13,12 +14,12 @@ import {
   Building2,
   RefreshCw
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
   ResponsiveContainer,
   Cell,
   CartesianGrid,
@@ -109,9 +110,9 @@ const LuxuryCard: React.FC<{
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      style={{ 
-        rotateX, 
-        rotateY, 
+      style={{
+        rotateX,
+        rotateY,
         scale,
         transformPerspective: 1200,
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
@@ -124,17 +125,17 @@ const LuxuryCard: React.FC<{
       )}
     >
       {/* Light-catching top/left border */}
-      <div 
+      <div
         className="absolute inset-0 rounded-3xl pointer-events-none"
         style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%)',
           borderRadius: 'inherit'
         }}
       />
-      
+
       {/* Signal Blue ambient glow */}
       {hasGlow && (
-        <div 
+        <div
           className="absolute -inset-[1px] rounded-3xl -z-10"
           style={{
             boxShadow: '0 20px 40px -15px rgba(59, 123, 255, 0.18)'
@@ -154,7 +155,7 @@ const FloatingIcon: React.FC<{
   className?: string;
 }> = ({ icon: Icon, color, className }) => {
   return (
-    <motion.div 
+    <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2, ...SPRING_CONFIG }}
@@ -163,7 +164,7 @@ const FloatingIcon: React.FC<{
         'h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg z-30',
         className
       )}
-      style={{ 
+      style={{
         background: color,
         boxShadow: `0 8px 24px -4px ${color}44`
       }}
@@ -178,6 +179,8 @@ const ServicesPage: React.FC = () => {
   const [loanAmount, setLoanAmount] = useState(4000000);
   const [interestRate, setInterestRate] = useState(8.5);
   const [tenure, setTenure] = useState(20);
+
+  const navigate = useNavigate();
 
   // Investment Calculator State
   const [investmentYears, setInvestmentYears] = useState(5);
@@ -256,7 +259,7 @@ const ServicesPage: React.FC = () => {
     const maxLoan = maxEMI * (Math.pow(1 + monthlyRate, months) - 1) / (monthlyRate * Math.pow(1 + monthlyRate, months));
     const foir = ((emiCalculations.emi + existingEMI) / monthlyIncome) * 100;
     const isEligible = foir <= maxFoir;
-    
+
     return { maxLoan, foir, isEligible, maxEMI };
   }, [monthlyIncome, existingEMI, interestRate, tenure, emiCalculations.emi]);
 
@@ -269,14 +272,14 @@ const ServicesPage: React.FC = () => {
   const emiToIncomeRatio = (emiCalculations.emi / monthlyIncome) * 100;
 
   return (
-    <div 
+    <div
       className="min-h-screen relative overflow-hidden"
-      style={{ 
+      style={{
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
       }}
     >
       {/* Soft flowing gradient background */}
-      <div 
+      <div
         className="fixed inset-0 -z-10"
         style={{
           background: `
@@ -290,35 +293,35 @@ const ServicesPage: React.FC = () => {
           `
         }}
       />
-      
+
       {/* Animated gradient blobs - hidden on mobile for performance */}
       <div className="hidden md:block fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         {/* Warm peach/salmon blob - bottom left */}
-        <div 
+        <div
           className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
           }}
         />
-        
+
         {/* Lavender blob - top right */}
-        <div 
+        <div
           className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
           }}
         />
-        
+
         {/* Soft blue blob - center right */}
-        <div 
+        <div
           className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full opacity-30 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
           }}
         />
-        
+
         {/* Warm amber blob - bottom center */}
-        <div 
+        <div
           className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(250, 220, 200, 0.5) 0%, transparent 60%)'
@@ -327,7 +330,7 @@ const ServicesPage: React.FC = () => {
       </div>
 
       <Header />
-      
+
       <main className="container py-12 md:py-20">
         {/* Hero Header */}
         <motion.div
@@ -336,28 +339,28 @@ const ServicesPage: React.FC = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-16"
         >
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.15, ...SPRING_CONFIG }}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8"
-            style={{ 
+            style={{
               background: 'rgba(59, 123, 255, 0.08)',
               border: '1px solid rgba(59, 123, 255, 0.15)'
             }}
           >
             <Sparkles className="h-4 w-4" style={{ color: '#3B7BFF' }} />
-            <span 
+            <span
               className="text-sm font-semibold"
               style={{ color: '#3B7BFF', letterSpacing: '-0.01em' }}
             >
               Financial Tools
             </span>
           </motion.div>
-          
-          <h1 
+
+          <h1
             className="text-5xl md:text-7xl font-bold mb-5"
-            style={{ 
+            style={{
               color: '#2B2F36',
               letterSpacing: '-0.02em',
               fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
@@ -365,7 +368,7 @@ const ServicesPage: React.FC = () => {
           >
             Plan Your Home
           </h1>
-          <p 
+          <p
             className="text-lg md:text-xl max-w-xl mx-auto"
             style={{ color: '#6B7280' }}
           >
@@ -375,18 +378,18 @@ const ServicesPage: React.FC = () => {
 
         {/* Bento Grid - Balanced Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* EMI Calculator (7 columns) */}
           <div className="lg:col-span-7">
             <LuxuryCard hasGlow className="p-6 md:p-8">
               {/* Icon + Header Row */}
               <div className="flex items-start gap-4 mb-6">
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, ...SPRING_CONFIG }}
                   className="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-                  style={{ 
+                  style={{
                     background: '#3B7BFF',
                     boxShadow: '0 8px 24px -4px rgba(59, 123, 255, 0.4)'
                   }}
@@ -394,7 +397,7 @@ const ServicesPage: React.FC = () => {
                   <Calculator className="h-6 w-6 text-white" />
                 </motion.div>
                 <div>
-                  <h2 
+                  <h2
                     className="text-xl md:text-2xl font-bold"
                     style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                   >
@@ -412,13 +415,13 @@ const ServicesPage: React.FC = () => {
                   {/* Loan Amount */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label 
+                      <Label
                         className="text-sm font-semibold"
                         style={{ color: '#2B2F36' }}
                       >
                         Loan Amount
                       </Label>
-                      <motion.span 
+                      <motion.span
                         key={loanAmount}
                         initial={{ scale: 1.05 }}
                         animate={{ scale: 1 }}
@@ -448,7 +451,7 @@ const ServicesPage: React.FC = () => {
                       <Label className="text-sm font-semibold" style={{ color: '#2B2F36' }}>
                         Interest Rate
                       </Label>
-                      <span 
+                      <span
                         className="text-xl font-bold"
                         style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                       >
@@ -475,7 +478,7 @@ const ServicesPage: React.FC = () => {
                       <Label className="text-sm font-semibold" style={{ color: '#2B2F36' }}>
                         Loan Tenure
                       </Label>
-                      <span 
+                      <span
                         className="text-lg font-bold"
                         style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                       >
@@ -512,10 +515,9 @@ const ServicesPage: React.FC = () => {
                           <motion.div
                             key={rate}
                             whileHover={{ scale: 1.02 }}
-                            className={`p-3 rounded-lg text-center cursor-pointer transition-all ${
-                              isCurrentRate ? 'ring-2 ring-blue-500' : ''
-                            }`}
-                            style={{ 
+                            className={`p-3 rounded-lg text-center cursor-pointer transition-all ${isCurrentRate ? 'ring-2 ring-blue-500' : ''
+                              }`}
+                            style={{
                               background: isCurrentRate ? 'rgba(59, 123, 255, 0.1)' : 'rgba(0,0,0,0.02)',
                               border: '1px solid rgba(0,0,0,0.04)'
                             }}
@@ -570,11 +572,10 @@ const ServicesPage: React.FC = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setLoanAmount(amount)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                            loanAmount === amount 
-                              ? 'bg-[#3B7BFF] text-white' 
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${loanAmount === amount
+                            ? 'bg-[#3B7BFF] text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
                         >
                           ₹{(amount / 100000).toFixed(0)}L
                         </motion.button>
@@ -617,12 +618,12 @@ const ServicesPage: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       {bankRates.slice(0, 4).map((bank, idx) => (
-                        <div 
+                        <div
                           key={bank.shortName}
                           className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                           <div className="flex items-center gap-2">
-                            <div 
+                            <div
                               className="w-2 h-2 rounded-full"
                               style={{ background: bank.color }}
                             />
@@ -642,16 +643,16 @@ const ServicesPage: React.FC = () => {
                 {/* Results */}
                 <div className="space-y-4">
                   {/* Giant EMI Display */}
-                  <motion.div 
+                  <motion.div
                     layout
                     className="text-center p-8 rounded-2xl"
-                    style={{ 
+                    style={{
                       background: '#3B7BFF',
                       boxShadow: '0 12px 32px -8px rgba(59, 123, 255, 0.4)'
                     }}
                   >
                     <p className="text-sm text-white/80 mb-2 font-medium">Monthly EMI</p>
-                    <motion.p 
+                    <motion.p
                       className="text-4xl md:text-5xl font-bold text-white"
                       style={{ letterSpacing: '-0.04em' }}
                     >
@@ -660,21 +661,21 @@ const ServicesPage: React.FC = () => {
                   </motion.div>
 
                   {/* Status Badge */}
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center gap-3 p-4 rounded-xl"
-                    style={{ 
+                    style={{
                       background: emiToIncomeRatio < 30 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
                       border: `1px solid ${emiToIncomeRatio < 30 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`
                     }}
                   >
-                    <Shield 
-                      className="h-5 w-5" 
-                      style={{ color: emiToIncomeRatio < 30 ? '#10B981' : '#F59E0B' }} 
+                    <Shield
+                      className="h-5 w-5"
+                      style={{ color: emiToIncomeRatio < 30 ? '#10B981' : '#F59E0B' }}
                     />
                     <div>
-                      <p 
+                      <p
                         className="font-semibold text-sm"
                         style={{ color: emiToIncomeRatio < 30 ? '#10B981' : '#F59E0B' }}
                       >
@@ -688,7 +689,7 @@ const ServicesPage: React.FC = () => {
 
                   {/* Breakdown */}
                   <div className="grid grid-cols-2 gap-3">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ y: -2 }}
                       transition={SPRING_CONFIG}
                       className="p-4 rounded-xl"
@@ -699,7 +700,7 @@ const ServicesPage: React.FC = () => {
                         {formatCurrency(emiCalculations.totalInterest)}
                       </p>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       whileHover={{ y: -2 }}
                       transition={SPRING_CONFIG}
                       className="p-4 rounded-xl"
@@ -714,7 +715,7 @@ const ServicesPage: React.FC = () => {
 
                   {/* Progress Bar */}
                   <div className="space-y-2">
-                    <div 
+                    <div
                       className="h-3 rounded-full overflow-hidden flex"
                       style={{ background: '#E5E7EB' }}
                     >
@@ -754,139 +755,139 @@ const ServicesPage: React.FC = () => {
             <LuxuryCard className="p-5">
               {/* Icon + Header Row */}
               <div className="flex items-start gap-3 mb-5">
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.3, ...SPRING_CONFIG }}
                   className="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-                  style={{ 
+                  style={{
                     background: '#10B981',
                     boxShadow: '0 8px 20px -4px rgba(16, 185, 129, 0.4)'
                   }}
                 >
                   <TrendingUp className="h-6 w-6 text-white" />
                 </motion.div>
-                <h3 
+                <h3
                   className="text-xl font-bold pt-2"
                   style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                 >
                   Investment Returns
                 </h3>
               </div>
-                
-                <div className="space-y-5">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span style={{ color: '#6B7280' }} className="font-medium">Hold Period</span>
-                      <Badge variant="outline" className="font-bold">{investmentYears} yrs</Badge>
-                    </div>
-                    <Slider
-                      value={[investmentYears]}
-                      onValueChange={(v) => setInvestmentYears(v[0])}
-                      min={1}
-                      max={15}
-                      step={1}
-                    />
+
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span style={{ color: '#6B7280' }} className="font-medium">Hold Period</span>
+                    <Badge variant="outline" className="font-bold">{investmentYears} yrs</Badge>
                   </div>
+                  <Slider
+                    value={[investmentYears]}
+                    onValueChange={(v) => setInvestmentYears(v[0])}
+                    min={1}
+                    max={15}
+                    step={1}
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span style={{ color: '#6B7280' }} className="font-medium">Growth Rate</span>
-                      <Badge variant="outline" className="font-bold">{appreciation}%/yr</Badge>
-                    </div>
-                    <Slider
-                      value={[appreciation]}
-                      onValueChange={(v) => setAppreciation(v[0])}
-                      min={0}
-                      max={20}
-                      step={0.5}
-                    />
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span style={{ color: '#6B7280' }} className="font-medium">Growth Rate</span>
+                    <Badge variant="outline" className="font-bold">{appreciation}%/yr</Badge>
                   </div>
+                  <Slider
+                    value={[appreciation]}
+                    onValueChange={(v) => setAppreciation(v[0])}
+                    min={0}
+                    max={20}
+                    step={0.5}
+                  />
+                </div>
 
-                  <Separator style={{ background: '#E5E7EB' }} />
+                <Separator style={{ background: '#E5E7EB' }} />
 
-                  <motion.div 
-                    key={investmentCalc.futureValue}
-                    initial={{ scale: 0.98 }}
-                    animate={{ scale: 1 }}
-                    transition={SPRING_CONFIG}
-                    className="text-center p-5 rounded-xl"
-                    style={{ 
-                      background: 'rgba(16, 185, 129, 0.06)',
-                      border: '1px solid rgba(16, 185, 129, 0.15)'
-                    }}
+                <motion.div
+                  key={investmentCalc.futureValue}
+                  initial={{ scale: 0.98 }}
+                  animate={{ scale: 1 }}
+                  transition={SPRING_CONFIG}
+                  className="text-center p-5 rounded-xl"
+                  style={{
+                    background: 'rgba(16, 185, 129, 0.06)',
+                    border: '1px solid rgba(16, 185, 129, 0.15)'
+                  }}
+                >
+                  <p className="text-xs mb-1" style={{ color: '#6B7280' }}>Future Value</p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: '#10B981', letterSpacing: '-0.03em' }}
                   >
-                    <p className="text-xs mb-1" style={{ color: '#6B7280' }}>Future Value</p>
-                    <p 
-                      className="text-2xl font-bold"
-                      style={{ color: '#10B981', letterSpacing: '-0.03em' }}
-                    >
-                      {formatCurrency(investmentCalc.futureValue)}
-                    </p>
-                    <p className="text-sm mt-1 font-medium" style={{ color: '#10B981' }}>
-                      +{formatCurrency(investmentCalc.capitalGain)} ({investmentCalc.roi.toFixed(0)}% ROI)
-                    </p>
-                  </motion.div>
+                    {formatCurrency(investmentCalc.futureValue)}
+                  </p>
+                  <p className="text-sm mt-1 font-medium" style={{ color: '#10B981' }}>
+                    +{formatCurrency(investmentCalc.capitalGain)} ({investmentCalc.roi.toFixed(0)}% ROI)
+                  </p>
+                </motion.div>
 
-                  {/* Growth Bars */}
-                  <div className="h-14 flex items-end gap-1">
-                    {Array.from({ length: Math.min(investmentYears, 10) }).map((_, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${((i + 1) / Math.min(investmentYears, 10)) * 100}%` }}
-                        transition={{ delay: i * 0.05, ...SPRING_CONFIG }}
-                        className="flex-1 rounded-t"
-                        style={{ background: '#10B981' }}
-                      />
-                    ))}
-                  </div>
-                  {/* Investment Insights */}
-                  <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                    <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
-                      Investment Scenarios
-                    </p>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center text-xs">
-                        <span style={{ color: '#6B7280' }}>Conservative (6%)</span>
-                        <span className="font-bold" style={{ color: '#2B2F36' }}>
-                          {formatCurrency(propertyPrice * Math.pow(1.06, investmentYears))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span style={{ color: '#6B7280' }}>Balanced (10%)</span>
-                        <span className="font-bold" style={{ color: '#3B7BFF' }}>
-                          {formatCurrency(propertyPrice * Math.pow(1.10, investmentYears))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span style={{ color: '#6B7280' }}>Aggressive (15%)</span>
-                        <span className="font-bold" style={{ color: '#10B981' }}>
-                          {formatCurrency(propertyPrice * Math.pow(1.15, investmentYears))}
-                        </span>
-                      </div>
+                {/* Growth Bars */}
+                <div className="h-14 flex items-end gap-1">
+                  {Array.from({ length: Math.min(investmentYears, 10) }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${((i + 1) / Math.min(investmentYears, 10)) * 100}%` }}
+                      transition={{ delay: i * 0.05, ...SPRING_CONFIG }}
+                      className="flex-1 rounded-t"
+                      style={{ background: '#10B981' }}
+                    />
+                  ))}
+                </div>
+                {/* Investment Insights */}
+                <div className="mt-5 pt-5" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                  <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                    Investment Scenarios
+                  </p>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span style={{ color: '#6B7280' }}>Conservative (6%)</span>
+                      <span className="font-bold" style={{ color: '#2B2F36' }}>
+                        {formatCurrency(propertyPrice * Math.pow(1.06, investmentYears))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span style={{ color: '#6B7280' }}>Balanced (10%)</span>
+                      <span className="font-bold" style={{ color: '#3B7BFF' }}>
+                        {formatCurrency(propertyPrice * Math.pow(1.10, investmentYears))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span style={{ color: '#6B7280' }}>Aggressive (15%)</span>
+                      <span className="font-bold" style={{ color: '#10B981' }}>
+                        {formatCurrency(propertyPrice * Math.pow(1.15, investmentYears))}
+                      </span>
                     </div>
                   </div>
                 </div>
-              </LuxuryCard>
+              </div>
+            </LuxuryCard>
 
             {/* Loan Eligibility */}
             <LuxuryCard className="p-5">
               {/* Icon + Header Row */}
               <div className="flex items-start gap-3 mb-5">
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.4, ...SPRING_CONFIG }}
                   className="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
-                  style={{ 
+                  style={{
                     background: '#6366F1',
                     boxShadow: '0 8px 20px -4px rgba(99, 102, 241, 0.4)'
                   }}
                 >
                   <Home className="h-6 w-6 text-white" />
                 </motion.div>
-                <h3 
+                <h3
                   className="text-xl font-bold pt-2"
                   style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                 >
@@ -894,126 +895,126 @@ const ServicesPage: React.FC = () => {
                 </h3>
               </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium" style={{ color: '#6B7280' }}>
-                      Monthly Income (₹)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={monthlyIncome}
-                      onChange={(e) => setMonthlyIncome(Number(e.target.value))}
-                      className="bg-white/80"
-                      style={{ border: '1px solid rgba(0,0,0,0.08)' }}
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium" style={{ color: '#6B7280' }}>
+                    Monthly Income (₹)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={monthlyIncome}
+                    onChange={(e) => setMonthlyIncome(Number(e.target.value))}
+                    className="bg-white/80"
+                    style={{ border: '1px solid rgba(0,0,0,0.08)' }}
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium" style={{ color: '#6B7280' }}>
-                      Existing EMIs (₹)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={existingEMI}
-                      onChange={(e) => setExistingEMI(Number(e.target.value))}
-                      className="bg-white/80"
-                      style={{ border: '1px solid rgba(0,0,0,0.08)' }}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium" style={{ color: '#6B7280' }}>
+                    Existing EMIs (₹)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={existingEMI}
+                    onChange={(e) => setExistingEMI(Number(e.target.value))}
+                    className="bg-white/80"
+                    style={{ border: '1px solid rgba(0,0,0,0.08)' }}
+                  />
+                </div>
 
-                  <Separator style={{ background: '#E5E7EB' }} />
+                <Separator style={{ background: '#E5E7EB' }} />
 
-                  {/* Eligibility Status */}
-                  <motion.div 
-                    className="relative p-5 rounded-xl flex items-center gap-4 overflow-hidden"
-                    style={{
-                      background: eligibilityCalc.isEligible 
-                        ? 'rgba(16, 185, 129, 0.06)' 
-                        : 'rgba(239, 68, 68, 0.06)',
-                      border: `1px solid ${eligibilityCalc.isEligible 
-                        ? 'rgba(16, 185, 129, 0.2)' 
-                        : 'rgba(239, 68, 68, 0.2)'}`
-                    }}
-                  >
-                    {/* Shimmer on eligible */}
-                    {eligibilityCalc.isEligible && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{ x: ['-200%', '200%'] }}
-                        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 4 }}
-                      />
-                    )}
-                    
+                {/* Eligibility Status */}
+                <motion.div
+                  className="relative p-5 rounded-xl flex items-center gap-4 overflow-hidden"
+                  style={{
+                    background: eligibilityCalc.isEligible
+                      ? 'rgba(16, 185, 129, 0.06)'
+                      : 'rgba(239, 68, 68, 0.06)',
+                    border: `1px solid ${eligibilityCalc.isEligible
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)'}`
+                  }}
+                >
+                  {/* Shimmer on eligible */}
+                  {eligibilityCalc.isEligible && (
                     <motion.div
-                      animate={eligibilityCalc.isEligible ? { scale: [1, 1.1, 1] } : {}}
-                      transition={{ duration: 0.4 }}
-                    >
-                      {eligibilityCalc.isEligible ? (
-                        <CheckCircle className="h-7 w-7" style={{ color: '#10B981' }} />
-                      ) : (
-                        <AlertCircle className="h-7 w-7" style={{ color: '#EF4444' }} />
-                      )}
-                    </motion.div>
-                    <div>
-                      <p 
-                        className="font-bold"
-                        style={{ 
-                          color: eligibilityCalc.isEligible ? '#10B981' : '#EF4444',
-                          letterSpacing: '-0.01em'
-                        }}
-                      >
-                        {eligibilityCalc.isEligible ? 'Likely Eligible!' : 'High Risk'}
-                      </p>
-                      <p className="text-sm" style={{ color: '#6B7280' }}>
-                        FOIR: {eligibilityCalc.foir.toFixed(1)}%
-                      </p>
-                    </div>
-                  </motion.div>
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{ x: ['-200%', '200%'] }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 4 }}
+                    />
+                  )}
 
-                  <motion.div 
-                    whileHover={{ y: -2 }}
-                    transition={SPRING_CONFIG}
-                    className="p-4 rounded-xl"
-                    style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)' }}
+                  <motion.div
+                    animate={eligibilityCalc.isEligible ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.4 }}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="h-3.5 w-3.5" style={{ color: '#9CA3AF' }} />
-                      <p className="text-xs font-medium" style={{ color: '#6B7280' }}>Max Eligible Loan</p>
-                    </div>
-                    <p 
-                      className="text-xl font-bold"
-                      style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
-                    >
-                      {formatCurrency(eligibilityCalc.maxLoan)}
-                    </p>
+                    {eligibilityCalc.isEligible ? (
+                      <CheckCircle className="h-7 w-7" style={{ color: '#10B981' }} />
+                    ) : (
+                      <AlertCircle className="h-7 w-7" style={{ color: '#EF4444' }} />
+                    )}
                   </motion.div>
-
-                  {/* Documents Required */}
-                  <div className="mt-2 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                     <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
-                      Required Documents
+                  <div>
+                    <p
+                      className="font-bold"
+                      style={{
+                        color: eligibilityCalc.isEligible ? '#10B981' : '#EF4444',
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      {eligibilityCalc.isEligible ? 'Likely Eligible!' : 'High Risk'}
                     </p>
-                    <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: '#6B7280' }}>
-                       <div className="flex items-center gap-1.5">
-                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                         ID Proof (Aadhar)
-                       </div>
-                       <div className="flex items-center gap-1.5">
-                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                         Salary Slips
-                       </div>
-                        <div className="flex items-center gap-1.5">
-                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                         Bank Statements
-                       </div>
-                       <div className="flex items-center gap-1.5">
-                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                         Form 16 / ITR
-                       </div>
+                    <p className="text-sm" style={{ color: '#6B7280' }}>
+                      FOIR: {eligibilityCalc.foir.toFixed(1)}%
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ y: -2 }}
+                  transition={SPRING_CONFIG}
+                  className="p-4 rounded-xl"
+                  style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)' }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="h-3.5 w-3.5" style={{ color: '#9CA3AF' }} />
+                    <p className="text-xs font-medium" style={{ color: '#6B7280' }}>Max Eligible Loan</p>
+                  </div>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
+                  >
+                    {formatCurrency(eligibilityCalc.maxLoan)}
+                  </p>
+                </motion.div>
+
+                {/* Documents Required */}
+                <div className="mt-2 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                  <p className="text-sm font-semibold mb-3" style={{ color: '#2B2F36' }}>
+                    Required Documents
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: '#6B7280' }}>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      ID Proof (Aadhar)
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Salary Slips
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Bank Statements
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Form 16 / ITR
                     </div>
                   </div>
                 </div>
-              </LuxuryCard>
+              </div>
+            </LuxuryCard>
           </div>
         </div>
 
@@ -1028,12 +1029,12 @@ const ServicesPage: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
               <div className="flex items-start gap-4">
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.5, ...SPRING_CONFIG }}
                   className="h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
-                  style={{ 
+                  style={{
                     background: 'linear-gradient(135deg, #3B7BFF 0%, #8B5CF6 100%)',
                     boxShadow: '0 8px 24px -4px rgba(59, 123, 255, 0.4)'
                   }}
@@ -1041,7 +1042,7 @@ const ServicesPage: React.FC = () => {
                   <Building2 className="h-7 w-7 text-white" />
                 </motion.div>
                 <div>
-                  <h3 
+                  <h3
                     className="text-2xl font-bold"
                     style={{ color: '#2B2F36', letterSpacing: '-0.02em' }}
                   >
@@ -1060,7 +1061,7 @@ const ServicesPage: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 }}
                   className="flex items-center gap-3 px-5 py-3 rounded-xl"
-                  style={{ 
+                  style={{
                     background: 'linear-gradient(135deg, rgba(59, 123, 255, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)',
                     border: '1px solid rgba(59, 123, 255, 0.15)'
                   }}
@@ -1089,8 +1090,8 @@ const ServicesPage: React.FC = () => {
                   onClick={() => setSelectedBankType(filter.key as 'all' | 'public' | 'private')}
                   className={cn(
                     "rounded-lg font-medium transition-all",
-                    selectedBankType === filter.key 
-                      ? "bg-[#3B7BFF] text-white shadow-lg shadow-blue-500/25" 
+                    selectedBankType === filter.key
+                      ? "bg-[#3B7BFF] text-white shadow-lg shadow-blue-500/25"
                       : "hover:bg-gray-100"
                   )}
                 >
@@ -1126,21 +1127,21 @@ const ServicesPage: React.FC = () => {
                     margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
                     barCategoryGap="20%"
                   >
-                    <CartesianGrid 
-                      strokeDasharray="3 3" 
+                    <CartesianGrid
+                      strokeDasharray="3 3"
                       horizontal={true}
                       vertical={false}
                       stroke="rgba(0,0,0,0.06)"
                     />
-                    <XAxis 
-                      type="number" 
+                    <XAxis
+                      type="number"
                       domain={[7, 14]}
                       tickFormatter={(value) => `${value}%`}
                       tick={{ fill: '#6B7280', fontSize: 12 }}
                       axisLine={{ stroke: 'rgba(0,0,0,0.1)' }}
                     />
-                    <YAxis 
-                      type="category" 
+                    <YAxis
+                      type="category"
                       dataKey="name"
                       tick={{ fill: '#2B2F36', fontSize: 13, fontWeight: 600 }}
                       axisLine={false}
@@ -1181,27 +1182,27 @@ const ServicesPage: React.FC = () => {
                         return null;
                       }}
                     />
-                    <Bar 
-                      dataKey="minRate" 
+                    <Bar
+                      dataKey="minRate"
                       name="Min Rate"
                       radius={[0, 6, 6, 0]}
                     >
                       {filteredBankRates.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
+                        <Cell
+                          key={`cell-${index}`}
                           fill={entry.color}
                           style={{ filter: 'brightness(1.1)' }}
                         />
                       ))}
                     </Bar>
-                    <Bar 
-                      dataKey="spread" 
+                    <Bar
+                      dataKey="spread"
                       name="Rate Range"
                       stackId="a"
                       radius={[0, 6, 6, 0]}
                       fill="rgba(0,0,0,0.1)"
                     />
-                    <Legend 
+                    <Legend
                       verticalAlign="top"
                       align="right"
                       wrapperStyle={{ paddingBottom: '10px' }}
@@ -1216,7 +1217,7 @@ const ServicesPage: React.FC = () => {
 
             {/* Bottom Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-              <motion.div 
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="p-4 rounded-xl text-center"
                 style={{ background: 'rgba(16, 185, 129, 0.08)' }}
@@ -1229,7 +1230,7 @@ const ServicesPage: React.FC = () => {
                   {bankRates.length > 0 ? bankRates.find(b => b.minRate === Math.min(...bankRates.map(x => x.minRate)))?.shortName : ''}
                 </p>
               </motion.div>
-              <motion.div 
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="p-4 rounded-xl text-center"
                 style={{ background: 'rgba(59, 123, 255, 0.08)' }}
@@ -1240,7 +1241,7 @@ const ServicesPage: React.FC = () => {
                 </p>
                 <p className="text-xs mt-1" style={{ color: '#6B7280' }}>Across all banks</p>
               </motion.div>
-              <motion.div 
+              <motion.div
                 whileHover={{ y: -2 }}
                 className="p-4 rounded-xl text-center"
                 style={{ background: 'rgba(245, 158, 11, 0.08)' }}
@@ -1268,17 +1269,18 @@ const ServicesPage: React.FC = () => {
                 <p className="text-sm mb-1" style={{ color: '#6B7280' }}>
                   Ready to find your dream home?
                 </p>
-                <p 
+                <p
                   className="font-bold text-lg"
                   style={{ color: '#2B2F36', letterSpacing: '-0.01em' }}
                 >
                   Browse properties tailored to your budget
                 </p>
               </div>
-              <Button 
+              <Button
                 size="lg"
+                onClick={() => navigate('/discover')}
                 className="px-8 text-white font-semibold"
-                style={{ 
+                style={{
                   background: '#3B7BFF',
                   boxShadow: '0 4px 14px rgba(59, 123, 255, 0.3)'
                 }}
