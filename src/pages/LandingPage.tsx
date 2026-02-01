@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -126,6 +126,8 @@ const LandingPage: React.FC = () => {
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>(mockListings.slice(0, 3));
   const [isMobile, setIsMobile] = useState(false);
 
+  const navigate = useNavigate();
+
   // Detect mobile screen size for responsive BounceCards
   useEffect(() => {
     const checkMobile = () => {
@@ -157,7 +159,7 @@ const LandingPage: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Navigate to discover page with search query
-    window.location.href = `/discover?search=${encodeURIComponent(searchQuery)}`;
+    navigate(`/discover?search=${encodeURIComponent(searchQuery)}`);
   };
 
   return (
@@ -224,9 +226,8 @@ const LandingPage: React.FC = () => {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ willChange: 'transform' }}
         >
           <source src="/vid 1.mp4" type="video/mp4" />
         </video>
@@ -775,15 +776,13 @@ const LandingPage: React.FC = () => {
 
       {/* CTA Section with Video Background */}
       <section className="relative py-32 lg:py-44 overflow-hidden">
-        {/* Video Background */}
         <video
           autoPlay
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ willChange: 'transform' }}
         >
           <source src="/vid 2.mp4" type="video/mp4" />
         </video>

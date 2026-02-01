@@ -46,7 +46,7 @@ const AllChatsPage: React.FC = () => {
   const [chatGroups, setChatGroups] = useState<EnrichedPropertyChatGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedProperty, setExpandedProperty] = useState<string | null>(null);
-  
+
   // Active chat state
   const [activeChat, setActiveChat] = useState<{
     propertyId: string;
@@ -135,12 +135,12 @@ const AllChatsPage: React.FC = () => {
           (msg.from === activeChat.otherUserId && msg.to === currentUser.uid)
         );
         console.log('Seller chat - filtered to', filteredMessages.length, 'messages with user', activeChat.otherUserId);
-        
+
         // Mark messages from other user as read
         if (filteredMessages.length > 0) {
           markMessagesAsRead(currentUser.uid, activeChat.otherUserId, activeChat.propertyId);
         }
-        
+
         setActiveChatMessages(filteredMessages);
       }
     );
@@ -241,7 +241,7 @@ const AllChatsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-muted/30">
         <Header />
         <div className="container py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -252,7 +252,57 @@ const AllChatsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Soft flowing gradient background - flowing bottom to top */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: `
+            linear-gradient(0deg, 
+              rgba(210, 200, 220, 0.5) 0%,
+              rgba(220, 225, 240, 0.7) 25%,
+              rgba(245, 243, 240, 1) 50%,
+              rgba(240, 238, 233, 0.9) 75%,
+              rgba(230, 210, 220, 0.6) 100%
+            )
+          `
+        }}
+      />
+
+      {/* Animated gradient blobs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Lavender blob - bottom center */}
+        <div
+          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[700px] h-[600px] rounded-full opacity-40 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
+          }}
+        />
+
+        {/* Warm peach blob - top right */}
+        <div
+          className="absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full opacity-35 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
+          }}
+        />
+
+        {/* Soft blue blob - top left */}
+        <div
+          className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
+          }}
+        />
+
+        {/* Pink accent blob - right side */}
+        <div
+          className="absolute top-1/2 -right-20 w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(230, 200, 220, 0.5) 0%, transparent 60%)'
+          }}
+        />
+      </div>
       <Header />
 
       <div className="container py-8 max-w-4xl">
@@ -371,7 +421,7 @@ const AllChatsPage: React.FC = () => {
                                   {conversation.lastMessage && (
                                     <p className="text-sm text-muted-foreground truncate">
                                       {conversation.lastMessage.from ===
-                                      currentUser?.uid
+                                        currentUser?.uid
                                         ? 'You: '
                                         : ''}
                                       {conversation.lastMessage.text}
@@ -467,11 +517,10 @@ const AllChatsPage: React.FC = () => {
 
                         <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                           <div
-                            className={`max-w-[85%] sm:max-w-md rounded-2xl px-4 py-2.5 shadow-sm ${
-                              isOwn
-                                ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                                : 'bg-card border rounded-tl-sm'
-                            }`}
+                            className={`max-w-[85%] sm:max-w-md rounded-2xl px-4 py-2.5 shadow-sm ${isOwn
+                              ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                              : 'bg-card border rounded-tl-sm'
+                              }`}
                           >
                             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                               {msg.text}
