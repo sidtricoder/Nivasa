@@ -53,25 +53,29 @@ const Header: React.FC = () => {
     setIsDiscoverHovered(false);
   };
 
-  const navLinks = [
+  const allNavLinks = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/news', label: 'News', icon: Newspaper },
-    { to: '/favorites', label: 'Favorites', icon: Heart },
-    { to: '/seller', label: 'Post Property', icon: Building2 },
+    { to: '/favorites', label: 'Favorites', icon: Heart, requiresAuth: true },
+    { to: '/seller', label: 'Post Property', icon: Building2, requiresAuth: true },
   ];
 
+  const navLinks = allNavLinks.filter(link => !link.requiresAuth || currentUser);
+
   // Mobile menu items
-  const mobileMenuItems = [
+  const allMobileMenuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/', icon: Home },
     { label: 'Discover', ariaLabel: 'Discover properties', link: '/discover', icon: Search },
     { label: 'News', ariaLabel: 'Real estate news', link: '/news', icon: Newspaper },
-    { label: 'Favorites', ariaLabel: 'View favorites', link: '/favorites', icon: Heart },
-    { label: 'Post Property', ariaLabel: 'List your property', link: '/seller', icon: Building2 },
-    { label: 'Chats', ariaLabel: 'View messages', link: '/chats', icon: MessageCircle },
+    { label: 'Favorites', ariaLabel: 'View favorites', link: '/favorites', icon: Heart, requiresAuth: true },
+    { label: 'Post Property', ariaLabel: 'List your property', link: '/seller', icon: Building2, requiresAuth: true },
+    { label: 'Chats', ariaLabel: 'View messages', link: '/chats', icon: MessageCircle, requiresAuth: true },
     { label: 'About', ariaLabel: 'About us', link: '/about', icon: Info },
     { label: 'Contact', ariaLabel: 'Contact us', link: '/contact', icon: Mail },
     { label: 'Services', ariaLabel: 'Our services', link: '/services', icon: LayoutDashboard },
   ];
+
+  const mobileMenuItems = allMobileMenuItems.filter(item => !item.requiresAuth || currentUser);
 
   const isActive = (path: string) => location.pathname === path;
   
@@ -408,8 +412,8 @@ const Header: React.FC = () => {
             </Button>
           )}
 
-          {/* Inbox / Messages */}
-          <InboxButton className={`${textColor} ${hoverBg}`} />
+          {/* Inbox / Messages - Only show when logged in */}
+          {currentUser && <InboxButton className={`${textColor} ${hoverBg}`} />}
 
           {/* User Profile / Auth */}
           <UserProfile />
