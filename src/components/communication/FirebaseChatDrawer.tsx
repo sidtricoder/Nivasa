@@ -10,6 +10,7 @@ import {
   Smile,
   Paperclip,
 } from 'lucide-react';
+import { AppointmentScheduler } from '@/components/communication/AppointmentScheduler';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messageInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
   // If propertyId is provided, we're in direct chat mode
   const isDirectChat = !!(propertyId && sellerId);
@@ -154,6 +155,37 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
     } catch (error: any) {
       toast({
         title: 'Failed to send message',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleScheduleAppointment = async (date: Date, time: string) => {
+    if (!currentUser || !propertyId || !sellerId) return;
+
+    const formattedDate = format(date, 'EEEE, MMMM do, yyyy');
+    const propertyName = propertyTitle || 'this property';
+    const messageText = `📅 Appointment Request\n\nI would like to schedule a viewing for ${propertyName}.\n\nDate: ${formattedDate}\nTime: ${time}\n\nPlease confirm if this works for you.`;
+
+    try {
+      await sendChatMessage(
+        currentUser.uid,
+        sellerId,
+        propertyId,
+        messageText
+      );
+      toast({
+        title: 'Request Sent',
+        description: 'Appointment request sent successfully.',
+      });
+      // Re-focus the input after sending
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 50);
+    } catch (error: any) {
+      toast({
+        title: 'Failed to send request',
         description: error.message,
         variant: 'destructive',
       });
@@ -356,6 +388,9 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
       {/* Message Input */}
       <div className="p-4 border-t bg-card">
         <div className="flex items-end gap-2">
+          {propertyId && sellerId && (
+            <AppointmentScheduler onSchedule={handleScheduleAppointment} />
+          )}
           <div className="flex-1 relative">
             <Textarea
               ref={messageInputRef}
