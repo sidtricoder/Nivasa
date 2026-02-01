@@ -190,6 +190,7 @@ export const PropertyUploadForm = () => {
       setUploadComplete(true);
       
       toast({
+        variant: 'success',
         title: 'Success! 🎉',
         description: `Property posted successfully!`,
       });

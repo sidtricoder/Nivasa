@@ -13,6 +13,7 @@ import {
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -313,7 +314,7 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
                   <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
                     <div
                       className={cn(
-                        'max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm',
+                        'max-w-[85%] sm:max-w-md rounded-2xl px-4 py-2.5 shadow-sm',
                         isOwn
                           ? 'bg-primary text-primary-foreground rounded-tr-sm'
                           : 'bg-card border rounded-tl-sm',
@@ -321,7 +322,7 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
                         !isLastInGroup && !isOwn && 'rounded-bl-2xl'
                       )}
                     >
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                         {msg.text}
                       </p>
                     </div>
@@ -356,7 +357,7 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
       <div className="p-4 border-t bg-card">
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
-            <Input
+            <Textarea
               ref={messageInputRef}
               placeholder="Type your message..."
               value={messageInput}
@@ -367,8 +368,18 @@ const FirebaseChatDrawer: React.FC<FirebaseChatDrawerProps> = ({
                   handleSendMessage();
                 }
               }}
-              className="pr-10 resize-none bg-background min-h-[44px]"
+              className="pr-10 resize-none bg-background min-h-[44px] max-h-[120px]"
+              rows={1}
               autoFocus
+              style={{
+                height: 'auto',
+                minHeight: '44px',
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+              }}
             />
           </div>
           <Button

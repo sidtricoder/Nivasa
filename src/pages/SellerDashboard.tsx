@@ -548,6 +548,7 @@ const SellerDashboard: React.FC = () => {
         // Update existing property
         await updateProperty(editingPropertyId, propertyData);
         toast({
+          variant: 'success',
           title: 'Success!',
           description: 'Property updated successfully',
         });
@@ -555,6 +556,7 @@ const SellerDashboard: React.FC = () => {
         // Add new property
         await addProperty(propertyData);
         toast({
+          variant: 'success',
           title: 'Success!',
           description: 'Property posted successfully',
         });
@@ -1041,6 +1043,37 @@ const SellerDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* Image Preview Grid */}
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                {imagePreviews.map((preview, i) => {
+                  const isUrl = imageUrls.includes(preview);
+                  return (
+                    <div
+                      key={`preview-${i}`}
+                      className="aspect-[4/3] rounded-lg bg-muted flex items-center justify-center relative group overflow-hidden"
+                    >
+                      <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Button 
+                          variant="secondary" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => isUrl ? removeImageUrl(i) : removeImage(i)}
+                          type="button"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {i === 0 && (
+                        <Badge className="absolute top-2 left-2 text-xs">Cover</Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <Separator />
 
             {/* 360° Panorama Images */}
@@ -1072,6 +1105,7 @@ const SellerDashboard: React.FC = () => {
                       });
                       setPanoramaUrls(prev => [...prev, ...uploadedUrls]);
                       toast({
+                        variant: 'success',
                         title: 'Success!',
                         description: `${uploadedUrls.length} 360° image(s) uploaded`,
                       });
@@ -1167,40 +1201,6 @@ const SellerDashboard: React.FC = () => {
                   <span>{uploadProgress}%</span>
                 </div>
                 <Progress value={uploadProgress} />
-              </div>
-            )}
-
-            {/* Image Preview Grid */}
-            {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                {imagePreviews.map((preview, i) => {
-                  const isUrl = imageUrls.includes(preview);
-                  return (
-                    <div
-                      key={`preview-${i}`}
-                      className="aspect-[4/3] rounded-lg bg-muted flex items-center justify-center relative group overflow-hidden"
-                    >
-                      <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button 
-                          variant="secondary" 
-                          size="icon" 
-                          className="h-8 w-8"
-                          onClick={() => isUrl ? removeImageUrl(i) : removeImage(i)}
-                          type="button"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {i === 0 && (
-                        <Badge className="absolute top-2 left-2 text-xs">Cover</Badge>
-                      )}
-                      {isUrl && (
-                        <Badge variant="secondary" className="absolute bottom-2 right-2 text-xs">URL</Badge>
-                      )}
-                    </div>
-                  );
-                })}
               </div>
             )}
 
