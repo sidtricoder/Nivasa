@@ -118,7 +118,7 @@ const LuxuryCard: React.FC<{
       }}
       className={cn(
         'relative rounded-3xl',
-        'bg-white/95 backdrop-blur-[20px]',
+        'bg-white md:bg-white/95 md:backdrop-blur-[20px]',
         'border border-white/20',
         className
       )}
@@ -291,8 +291,8 @@ const ServicesPage: React.FC = () => {
         }}
       />
       
-      {/* Animated gradient blobs */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      {/* Animated gradient blobs - hidden on mobile for performance */}
+      <div className="hidden md:block fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         {/* Warm peach/salmon blob - bottom left */}
         <div 
           className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"

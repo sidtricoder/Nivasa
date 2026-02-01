@@ -1125,7 +1125,7 @@ function SplashCursor({
         ref={canvasRef}
         id="fluid"
         style={{
-          width: contained ? '100%' : '100vw',
+          width: '100%',
           height: contained ? '100%' : '100vh',
           display: 'block',
           pointerEvents: 'none'

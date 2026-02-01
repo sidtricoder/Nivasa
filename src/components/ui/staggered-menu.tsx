@@ -167,6 +167,15 @@ const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
             }}
           >
             <div className="flex flex-col h-full p-8 text-white">
+              {/* Close Button at top right of menu */}
+              <button
+                onClick={toggleMenu}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="h-6 w-6" />
+              </button>
+
               {logoUrl && (
                 <div className="mb-12">
                   <img src={logoUrl} alt="Logo" className="h-12" />

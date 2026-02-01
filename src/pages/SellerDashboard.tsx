@@ -168,16 +168,13 @@ const SellerDashboard: React.FC = () => {
 
   const progress = (currentStep / steps.length) * 100;
 
-  // Load user's listings on mount
+  // Load user's listings and leads on mount (for stats display)
   useEffect(() => {
-    if (currentUser && activeTab === 'my-listings') {
+    if (currentUser) {
       loadUserListings();
-    }
-    if (currentUser && activeTab === 'leads') {
-      loadUserListings(); // Load listings to show property names
       loadLeads();
     }
-  }, [currentUser, activeTab]);
+  }, [currentUser]);
 
   const loadUserListings = async () => {
     if (!currentUser) return;
@@ -514,13 +511,15 @@ const SellerDashboard: React.FC = () => {
         safetyScore: 0,
         connectivityScore: 0,
         lifestyleScore: 0,
-        highlights: formData.highlights,
-        thingsToConsider: formData.thingsToConsider,
-        nearbyPlaces: formData.nearbyPlaces.map(place => ({
-          type: place.type as any,
-          name: place.name,
-          distance: place.distance,
-        })),
+        highlights: formData.highlights.filter(h => h.trim()),
+        thingsToConsider: formData.thingsToConsider.filter(t => t.trim()),
+        nearbyPlaces: formData.nearbyPlaces
+          .filter(place => place.name.trim() && place.distance.trim())
+          .map(place => ({
+            type: place.type as any,
+            name: place.name.trim(),
+            distance: place.distance.trim(),
+          })),
         isPetFriendly: formData.isPetFriendly,
         hasParking: formData.hasParking,
         isNewListing: true,
@@ -923,7 +922,7 @@ const SellerDashboard: React.FC = () => {
               <RadioGroup
                 value={formData.furnishing}
                 onValueChange={(value) => handleInputChange('furnishing', value)}
-                className="flex gap-4"
+                className="flex flex-wrap gap-3"
               >
                 {['unfurnished', 'semi-furnished', 'fully-furnished'].map(status => (
                   <div key={status} className="flex items-center space-x-2">
@@ -1045,7 +1044,7 @@ const SellerDashboard: React.FC = () => {
 
             {/* Image Preview Grid */}
             {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {imagePreviews.map((preview, i) => {
                   const isUrl = imageUrls.includes(preview);
                   return (
@@ -1475,7 +1474,7 @@ const SellerDashboard: React.FC = () => {
               <div className="space-y-3">
                 {formData.nearbyPlaces.map((place, index) => (
                   <Card key={index} className="p-4">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="space-y-2">
                         <Label className="text-xs">Type</Label>
                         <Select
@@ -1609,67 +1608,179 @@ const SellerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Header />
       <CompareModal />
 
-      <main className="container py-8">
+      {/* Premium Hero Section */}
+      <div className="relative overflow-hidden border-b bg-gradient-to-br from-primary/5 via-blue-500/10 to-violet-500/5">
+        {/* Animated Background Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-gradient-to-br from-primary/20 to-blue-400/20 blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-gradient-to-tr from-violet-500/15 to-primary/15 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-blue-400/10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        <div className="container relative py-8 sm:py-12">
+          <div className="max-w-4xl mx-auto">
+            {/* Main Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-xl shadow-primary/30"
+              >
+                <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+              </motion.div>
+              <div>
+                <motion.h1 
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-2xl sm:text-4xl font-bold text-foreground"
+                >
+                  Seller Dashboard
+                </motion.h1>
+                <motion.p 
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-sm sm:text-lg text-muted-foreground mt-1"
+                >
+                  List your property and connect with genuine buyers
+                </motion.p>
+              </div>
+            </div>
+
+            {/* Quick Stats Cards */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="grid grid-cols-3 gap-3 sm:gap-4"
+            >
+              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/50 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    {loadingListings ? (
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 animate-spin" />
+                    ) : (
+                      <Home className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-lg sm:text-2xl font-bold text-foreground">
+                      {loadingListings ? '...' : userListings.length}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Active Listings</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/50 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    {loadingLeads ? (
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 animate-spin" />
+                    ) : (
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-lg sm:text-2xl font-bold text-foreground">
+                      {loadingLeads ? '...' : leads.length}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Total Leads</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/50 shadow-sm">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                    {loadingListings ? (
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600 animate-spin" />
+                    ) : (
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-lg sm:text-2xl font-bold text-foreground">
+                      {loadingListings ? '...' : userListings.reduce((sum, l) => sum + ((l as any).views || 0), 0)}
+                    </p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Total Views</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      <main className="container py-6 sm:py-10">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Seller Dashboard</h1>
-          <p className="text-muted-foreground mb-8">
-            List your property and connect with buyers directly
-          </p>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-8">
-              <TabsTrigger value="new-listing" className="gap-2">
-                <Plus className="h-4 w-4" />
+            <TabsList className="mb-6 sm:mb-8 w-full sm:w-auto flex-wrap h-auto gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl border border-white/50 shadow-lg">
+              <TabsTrigger value="new-listing" className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none rounded-xl py-2.5 sm:py-3 px-4 sm:px-5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 transition-all duration-300">
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 New Listing
               </TabsTrigger>
-              <TabsTrigger value="my-listings" className="gap-2">
-                <Home className="h-4 w-4" />
+              <TabsTrigger value="my-listings" className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none rounded-xl py-2.5 sm:py-3 px-4 sm:px-5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 transition-all duration-300">
+                <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 My Listings
               </TabsTrigger>
-              <TabsTrigger value="leads" className="gap-2">
-                <Users className="h-4 w-4" />
+              <TabsTrigger value="leads" className="gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none rounded-xl py-2.5 sm:py-3 px-4 sm:px-5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-primary/25 transition-all duration-300">
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Leads
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="new-listing">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{editingPropertyId ? 'Edit Property' : 'List Your Property'}</CardTitle>
-                  <CardDescription>
-                    {editingPropertyId ? 'Update your property details' : 'Complete all steps to publish your listing'}
-                  </CardDescription>
+              <Card className="border-0 shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                {/* Gradient Header Stripe */}
+                <div className="h-1.5 bg-gradient-to-r from-primary via-blue-500 to-violet-500" />
+                <CardHeader className="pb-4 pt-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/20 flex items-center justify-center">
+                      {editingPropertyId ? <Edit className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-primary" />}
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl sm:text-2xl">{editingPropertyId ? 'Edit Property' : 'List Your Property'}</CardTitle>
+                      <CardDescription className="mt-0.5">
+                        {editingPropertyId ? 'Update your property details' : 'Complete all steps to publish your listing'}
+                      </CardDescription>
+                    </div>
+                  </div>
                   
-                  {/* Progress */}
-                  <div className="pt-4">
-                    <Progress value={progress} className="h-2" />
-                    <div className="flex justify-between mt-4">
-                      {steps.map((step) => (
+                  {/* Enhanced Progress */}
+                  <div className="pt-6">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-blue-500/20 to-violet-500/20 rounded-full blur-sm" />
+                      <Progress value={progress} className="h-2.5 bg-secondary relative" />
+                    </div>
+                    <div className="flex justify-between mt-5 gap-1 relative">
+                      {steps.map((step, index) => (
                         <div
                           key={step.id}
-                          className={`flex flex-col items-center cursor-pointer ${
+                          className={`flex flex-col items-center cursor-pointer flex-1 group transition-all duration-200 ${
                             step.id <= currentStep ? 'text-primary' : 'text-muted-foreground'
                           }`}
                           onClick={() => setCurrentStep(step.id)}
                         >
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                          <div className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full border-2 transition-all duration-300 group-hover:scale-110 ${
                             step.id < currentStep
-                              ? 'bg-primary border-primary text-primary-foreground'
+                              ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/30'
                               : step.id === currentStep
-                              ? 'border-primary text-primary'
-                              : 'border-muted'
+                              ? 'border-primary text-primary bg-primary/5 shadow-md shadow-primary/20'
+                              : 'border-muted bg-background group-hover:border-muted-foreground/50'
                           }`}>
                             {step.id < currentStep ? (
-                              <Check className="h-5 w-5" />
+                              <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                             ) : (
-                              <step.icon className="h-5 w-5" />
+                              <step.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                             )}
                           </div>
-                          <span className="text-xs mt-1 hidden sm:block">{step.title}</span>
+                          <span className="text-[10px] sm:text-xs mt-1.5 font-medium hidden sm:block">{step.title}</span>
                         </div>
                       ))}
                     </div>
@@ -1681,29 +1792,34 @@ const SellerDashboard: React.FC = () => {
                     {renderStepContent()}
                   </AnimatePresence>
 
-                  <Separator className="my-6" />
+                  <Separator className="my-8" />
 
-                  {/* Navigation */}
-                  <div className="flex justify-between">
+                  {/* Premium Navigation */}
+                  <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
+                      size="lg"
+                      className="gap-2 rounded-xl border-2 hover:bg-secondary/80"
                       onClick={prevStep}
                       disabled={currentStep === 1}
                     >
-                      <ChevronLeft className="h-4 w-4 mr-2" />
+                      <ChevronLeft className="h-4 w-4" />
                       Previous
                     </Button>
                     {currentStep < steps.length ? (
                       <Button 
+                        size="lg"
+                        className="gap-2 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-lg shadow-primary/25"
                         onClick={nextStep}
                         disabled={!validateStep(currentStep)}
                       >
-                        Next
-                        <ChevronRight className="h-4 w-4 ml-2" />
+                        Next Step
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     ) : (
                       <Button 
-                        className="gap-2" 
+                        size="lg"
+                        className="gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-emerald-500/25" 
                         onClick={handleSubmitProperty}
                         disabled={loading}
                       >
@@ -1727,45 +1843,53 @@ const SellerDashboard: React.FC = () => {
 
             <TabsContent value="my-listings">
               {loadingListings ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 animate-pulse" />
+                    <Loader2 className="h-8 w-8 animate-spin text-primary absolute inset-0 m-auto" />
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4">Loading your listings...</p>
                 </div>
               ) : userListings.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No listings yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start by creating your first property listing
+                <Card className="p-8 sm:p-12 text-center border-dashed border-2 bg-gradient-to-br from-background to-secondary/30">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 mx-auto mb-5 flex items-center justify-center">
+                    <Home className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">No listings yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                    Start building your portfolio by creating your first property listing
                   </p>
-                  <Button onClick={() => setActiveTab('new-listing')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Listing
+                  <Button size="lg" className="gap-2 shadow-lg shadow-primary/25" onClick={() => setActiveTab('new-listing')}>
+                    <Plus className="h-5 w-5" />
+                    Create First Listing
                   </Button>
                 </Card>
               ) : (
                 <div className="space-y-4">
                   {userListings.map((listing) => (
-                    <Card key={listing.id} className="p-4">
-                      <div className="flex gap-4">
-                        <img
-                          src={listing.images[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop'}
-                          alt={listing.title}
-                          className="w-32 h-24 object-cover rounded-lg"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold">{listing.title}</h3>
-                              <p className="text-sm text-muted-foreground">{listing.location.locality}, {listing.location.city}</p>
+                    <Card key={listing.id} className="p-4 hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-white/90 backdrop-blur-sm group">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative overflow-hidden rounded-xl">
+                          <img
+                            src={listing.images[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop'}
+                            alt={listing.title}
+                            className="w-full sm:w-36 h-44 sm:h-28 object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <h3 className="font-semibold truncate">{listing.title}</h3>
+                              <p className="text-sm text-muted-foreground truncate">{listing.location.locality}, {listing.location.city}</p>
                               <p className="text-lg font-bold text-primary mt-1">
                                 {formatPrice(listing.price)}
                               </p>
                             </div>
-                            <Badge variant="default">
+                            <Badge variant="default" className="self-start shrink-0">
                               Active
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground flex-wrap">
                             <span>{listing.specs.bhk} BHK</span>
                             <span>•</span>
                             <span>{listing.specs.sqft} sqft</span>
@@ -1776,7 +1900,7 @@ const SellerDashboard: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 sm:flex-col justify-end">
                           <Button 
                             variant="outline" 
                             size="icon"
@@ -1800,25 +1924,37 @@ const SellerDashboard: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="leads">
-              <Card>
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle>Interested Buyers</CardTitle>
-                  <CardDescription>
-                    People who have shown interest in your properties
-                  </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Interested Buyers</CardTitle>
+                      <CardDescription>
+                        People who have shown interest in your properties
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loadingLeads ? (
-                    <div className="text-center py-12">
-                      <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto mb-4" />
-                      <p className="text-muted-foreground">Loading leads...</p>
+                    <div className="flex flex-col items-center justify-center py-16">
+                      <div className="relative">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 animate-pulse" />
+                        <Loader2 className="h-8 w-8 animate-spin text-primary absolute inset-0 m-auto" />
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-4">Loading your leads...</p>
                     </div>
                   ) : leads.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No leads yet</h3>
-                      <p className="text-muted-foreground">
-                        Leads will appear here when buyers express interest in your properties
+                    <div className="text-center py-12 px-4">
+                      <div className="h-16 w-16 rounded-full bg-primary/10 mx-auto mb-5 flex items-center justify-center">
+                        <Users className="h-8 w-8 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">No leads yet</h3>
+                      <p className="text-muted-foreground max-w-sm mx-auto">
+                        Leads will appear here when buyers express interest in your properties. Make sure your listings are complete and eye-catching!
                       </p>
                     </div>
                   ) : (
@@ -1851,17 +1987,17 @@ const SellerDashboard: React.FC = () => {
                               {propertyLeads.map((lead) => (
                                 <div
                                   key={lead.id}
-                                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-secondary/50 rounded-lg"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <Avatar className="h-10 w-10 shrink-0">
                                       <AvatarFallback>
                                         {lead.userName.charAt(0).toUpperCase()}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <div>
-                                      <p className="font-medium">{lead.userName}</p>
-                                      <p className="text-sm text-muted-foreground">
+                                    <div className="min-w-0">
+                                      <p className="font-medium truncate">{lead.userName}</p>
+                                      <p className="text-sm text-muted-foreground truncate">
                                         {lead.userEmail}
                                       </p>
                                       {lead.userPhone && (
@@ -1871,7 +2007,7 @@ const SellerDashboard: React.FC = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center justify-between sm:justify-end gap-3 ml-0 sm:ml-auto">
                                     <Button
                                       size="sm"
                                       variant="outline"
@@ -1885,7 +2021,7 @@ const SellerDashboard: React.FC = () => {
                                       }}
                                     >
                                       <MessageCircle className="h-4 w-4" />
-                                      Message
+                                      <span className="hidden xs:inline">Message</span>
                                     </Button>
                                     <div className="text-right">
                                       <Badge variant="secondary" className="mb-1">

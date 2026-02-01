@@ -124,6 +124,17 @@ const CountUp: React.FC<{ end: number; suffix?: string; prefix?: string; duratio
 const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>(mockListings.slice(0, 3));
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size for responsive BounceCards
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Load properties from Firestore for the "Selling Fast" section
   useEffect(() => {
@@ -359,10 +370,16 @@ const LandingPage: React.FC = () => {
                 "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=600&fit=crop",
                 "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400&h=600&fit=crop"
               ]}
-              containerWidth={1100}
-              containerHeight={450}
-              enableHover={true}
-              transformStyles={[
+              containerWidth={isMobile ? 320 : 1100}
+              containerHeight={isMobile ? 280 : 450}
+              enableHover={!isMobile}
+              transformStyles={isMobile ? [
+                'rotate(10deg) translate(-90px)',
+                'rotate(5deg) translate(-45px)',
+                'rotate(-2deg)',
+                'rotate(-7deg) translate(45px)',
+                'rotate(4deg) translate(90px)'
+              ] : [
                 'rotate(14deg) translate(-420px)',
                 'rotate(7deg) translate(-210px)',
                 'rotate(-2deg)',
