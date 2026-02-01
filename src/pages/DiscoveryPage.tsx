@@ -41,7 +41,7 @@ import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/property/PropertyCard';
 import MinimalPropertyCard from '@/components/property/MinimalPropertyCard';
 import CompareModal from '@/components/property/CompareModal';
-import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
+import { RecentSearches, SavedSearches } from '@/components/search';
 import { useSearchStore } from '@/stores/searchStore';
 import {
   Pagination,
@@ -329,7 +329,7 @@ const DiscoveryPage: React.FC = () => {
   const [aiState, setAiState] = useState<string>('');
 
   // Search store for recent/saved searches
-  const { addRecentSearch, setVoiceTranscript, voiceTranscript } = useSearchStore();
+  const { addRecentSearch } = useSearchStore();
 
   // Flipkart-style price input handlers
   const [minPriceInput, setMinPriceInput] = useState<string>('');
@@ -708,13 +708,7 @@ const DiscoveryPage: React.FC = () => {
     }
   }, [firebaseProperties, priceRange]);
 
-  // Handle voice search result
-  useEffect(() => {
-    if (voiceTranscript) {
-      setSearchQuery(voiceTranscript);
-      setVoiceTranscript('');
-    }
-  }, [voiceTranscript, setVoiceTranscript]);
+
 
   // Handle city URL parameter from navigation
   useEffect(() => {
@@ -1748,15 +1742,7 @@ const DiscoveryPage: React.FC = () => {
                       </Button>
                     </>
                   )}
-                  <VoiceSearchButton
-                    onResult={(text) => {
-                      setSearchQuery(text);
-                      setIsSearchFocused(false); // Close recent searches
-                      handleAISearch(text);
-                      addRecentSearch(text, getCurrentFilters());
-                    }}
-                    size="sm"
-                  />
+
                 </div>
 
                 {/* AI Search Hint while typing */}
