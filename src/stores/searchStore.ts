@@ -45,11 +45,7 @@ interface SearchState {
   preferredBhk: number[];
   updatePreferences: () => void;
 
-  // Voice search
-  isListening: boolean;
-  setIsListening: (listening: boolean) => void;
-  voiceTranscript: string;
-  setVoiceTranscript: (transcript: string) => void;
+
 }
 
 export const useSearchStore = create<SearchState>()(
@@ -136,11 +132,7 @@ export const useSearchStore = create<SearchState>()(
         // the user most frequently views
       },
 
-      // Voice search
-      isListening: false,
-      setIsListening: (listening) => set({ isListening: listening }),
-      voiceTranscript: '',
-      setVoiceTranscript: (transcript) => set({ voiceTranscript: transcript }),
+
     }),
     {
       name: 'roomgi-search',
