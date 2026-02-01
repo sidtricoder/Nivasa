@@ -7,9 +7,9 @@ const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-secondary/50 border-t border-border overflow-hidden">
+    <footer className="relative bg-background border-t border-border overflow-hidden">
       {/* Background cityscape image */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: 'url(/cityscape.svg)',
@@ -19,16 +19,16 @@ const Footer: React.FC = () => {
           opacity: 0.6
         }}
       />
-      
+
       <div className="container py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
               <div className="h-12 w-12 rounded-lg overflow-hidden">
-                <img 
-                  src="/logo.jpeg" 
-                  alt="Nivasa Logo" 
+                <img
+                  src="/logo.jpeg"
+                  alt="Nivasa Logo"
                   className="h-full w-full object-cover scale-[1.8]"
                 />
               </div>
@@ -85,8 +85,8 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-foreground">Resources</h4>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  to="/news" 
+                <Link
+                  to="/news"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
@@ -94,8 +94,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/services" 
+                <Link
+                  to="/services"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
@@ -103,8 +103,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/emi-calculator" 
+                <Link
+                  to="/emi-calculator"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
@@ -112,8 +112,8 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/contact" 
+                <Link
+                  to="/contact"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 >
@@ -128,18 +128,33 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold text-foreground">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <span className="text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=IIIT+Bangalore,+26/C,+Electronic+City+Phase+1,+Bangalore+560100"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
                   IIIT Bangalore, 26/C,<br />Electronic City Phase 1,<br />Bangalore 560100
-                </span>
+                </a>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">+91 98765 43210</span>
+                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <a
+                  href="tel:+919876543210"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  +91 98765 43210
+                </a>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">hello@nivasa.com</span>
+                <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <a
+                  href="mailto:hello@nivasa.com"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  hello@nivasa.com
+                </a>
               </li>
             </ul>
           </div>

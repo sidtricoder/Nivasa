@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  Home, 
-  Shield, 
-  DollarSign, 
-  CheckCircle, 
+import {
+  Search,
+  Home,
+  Shield,
+  DollarSign,
+  CheckCircle,
   ArrowRight,
   PawPrint,
   Train,
@@ -71,11 +71,11 @@ const howItWorks = [
 ];
 
 // CountUp Component for animated counting
-const CountUp: React.FC<{ end: number; suffix?: string; prefix?: string; duration?: number }> = ({ 
-  end, 
-  suffix = '', 
-  prefix = '', 
-  duration = 1200 
+const CountUp: React.FC<{ end: number; suffix?: string; prefix?: string; duration?: number }> = ({
+  end,
+  suffix = '',
+  prefix = '',
+  duration = 1200
 }) => {
   const [count, setCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -105,7 +105,7 @@ const CountUp: React.FC<{ end: number; suffix?: string; prefix?: string; duratio
     const animate = (currentTime: number) => {
       if (!startTime) startTime = currentTime;
       const progress = Math.min((currentTime - startTime) / duration, 1);
-      
+
       // Easing function for smooth animation
       const easeOutQuad = 1 - (1 - progress) * (1 - progress);
       setCount(Math.floor(easeOutQuad * end));
@@ -161,7 +161,58 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Soft flowing gradient background - flowing bottom to top */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: `
+            linear-gradient(0deg, 
+              rgba(210, 200, 220, 0.5) 0%,
+              rgba(220, 225, 240, 0.7) 25%,
+              rgba(245, 243, 240, 1) 50%,
+              rgba(240, 238, 233, 0.9) 75%,
+              rgba(230, 210, 220, 0.6) 100%
+            )
+          `
+        }}
+      />
+
+      {/* Animated gradient blobs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Lavender blob - bottom center */}
+        <div
+          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[700px] h-[600px] rounded-full opacity-40 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
+          }}
+        />
+
+        {/* Warm peach blob - top right */}
+        <div
+          className="absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full opacity-35 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
+          }}
+        />
+
+        {/* Soft blue blob - top left */}
+        <div
+          className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
+          }}
+        />
+
+        {/* Pink accent blob - right side */}
+        <div
+          className="absolute top-1/2 -right-20 w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(230, 200, 220, 0.5) 0%, transparent 60%)'
+          }}
+        />
+      </div>
+
       <Header />
       <CompareModal />
 
@@ -179,10 +230,10 @@ const LandingPage: React.FC = () => {
         >
           <source src="/vid 1.mp4" type="video/mp4" />
         </video>
-        
+
         {/* Dark Overlay - Slightly darker */}
         <div className="absolute inset-0 bg-black/50" />
-        
+
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
           <motion.div
@@ -194,15 +245,15 @@ const LandingPage: React.FC = () => {
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-light italic leading-tight">
               Your Dream Home, Direct From Owner-Zero Brokerage, 100% Trust
             </h1>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               <Link to="/discover">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="lg"
                   className="px-8 py-6 text-base font-medium border border-white text-white bg-transparent rounded-none hover:bg-white hover:text-black transition-all duration-300"
                 >
@@ -253,8 +304,8 @@ const LandingPage: React.FC = () => {
             className="flex justify-center mt-12"
           >
             <Link to="/discover">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
                 className="px-8 py-6 text-base font-medium border border-foreground rounded-none hover:bg-foreground hover:text-background transition-all duration-300"
               >
@@ -268,13 +319,13 @@ const LandingPage: React.FC = () => {
       {/* Stats Section with Background Image */}
       <section className="relative py-24 lg:py-32 overflow-hidden">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/Whisk_c33eab9a8ec0f7aa3044aa8957f6e418dr.jpeg')" }}
         />
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/60" />
-        
+
         {/* Content */}
         <div className="container relative z-10">
           <motion.div
@@ -289,7 +340,7 @@ const LandingPage: React.FC = () => {
             <p className="text-lg md:text-xl text-white/80 mb-16">
               With a commitment to transparency and trust, we connect homebuyers directly with verified property owners across India's most sought-after locations.
             </p>
-            
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
               <motion.div
@@ -304,7 +355,7 @@ const LandingPage: React.FC = () => {
                 </p>
                 <p className="text-sm uppercase tracking-widest text-white/70">HAPPY HOMEOWNERS</p>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -317,7 +368,7 @@ const LandingPage: React.FC = () => {
                 </p>
                 <p className="text-sm uppercase tracking-widest text-white/70">BROKERAGE FEES</p>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -405,7 +456,7 @@ const LandingPage: React.FC = () => {
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="text-center mb-20 lg:mb-28"
           >
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -424,7 +475,7 @@ const LandingPage: React.FC = () => {
 
           {/* True Asymmetric Bento Grid */}
           <div className="space-y-6 lg:space-y-8">
-            
+
             {/* Row 1: Hero Card - Smart Discovery (Full Width) */}
             <motion.div
               initial={{ opacity: 0, y: 60 }}
@@ -434,7 +485,7 @@ const LandingPage: React.FC = () => {
               className="group perspective-1000"
             >
               <motion.div
-                whileHover={{ 
+                whileHover={{
                   rotateX: 1,
                   rotateY: 2,
                   scale: 1.01,
@@ -445,11 +496,11 @@ const LandingPage: React.FC = () => {
                 <div className="glass-card ambient-shadow rounded-3xl p-8 lg:p-10 xl:p-12 transition-all duration-500 group-hover:ambient-shadow-hover relative overflow-visible">
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-transparent to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 transition-all duration-700 rounded-3xl" />
-                  
+
                   <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                     {/* Content */}
                     <div className="order-2 lg:order-1">
-                      <motion.div 
+                      <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
@@ -486,10 +537,10 @@ const LandingPage: React.FC = () => {
                         </motion.span>
                       </div>
                     </div>
-                    
+
                     {/* Image - bleeds outside card */}
                     <div className="order-1 lg:order-2 relative min-h-[280px] lg:min-h-[320px] flex items-center justify-center">
-                      <motion.div 
+                      <motion.div
                         className="relative"
                         whileHover={{ y: -8, scale: 1.02 }}
                         transition={{ duration: 0.4 }}
@@ -514,18 +565,18 @@ const LandingPage: React.FC = () => {
                         >
                           Value: Good
                         </motion.div>
-                        
+
                         {/* Main image */}
-                        <motion.img 
-                          src="/img1.png" 
+                        <motion.img
+                          src="/img1.png"
                           alt="Smart Discovery"
                           className="w-full max-w-md h-auto object-contain"
-                          style={{ 
+                          style={{
                             filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.2))',
                             transform: 'translateZ(40px)'
                           }}
                         />
-                        
+
                         {/* Pulse on map */}
                         <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full animate-pulse-soft shadow-lg" />
                       </motion.div>
@@ -537,7 +588,7 @@ const LandingPage: React.FC = () => {
 
             {/* Row 2: Three Cards - Asymmetric sizes */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              
+
               {/* Card 2: Immersive Viewing - Slides from left */}
               <motion.div
                 initial={{ opacity: 0, x: -60 }}
@@ -552,9 +603,9 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="h-full glass-card ambient-shadow rounded-3xl p-8 lg:p-10 transition-all duration-500 group-hover:ambient-shadow-hover relative overflow-visible">
                     <div className="absolute inset-0 bg-gradient-to-br from-rose-500/0 to-pink-500/0 group-hover:from-rose-500/5 group-hover:to-pink-500/5 transition-all duration-500 rounded-3xl" />
-                    
+
                     <div className="relative z-10">
-                      <motion.div 
+                      <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
@@ -569,18 +620,18 @@ const LandingPage: React.FC = () => {
                       <p className="text-muted-foreground leading-relaxed text-[15px] mb-6">
                         Experience properties through high-quality photos, floor plans, and 3D virtual tours.
                       </p>
-                      
+
                       {/* Image with bleed effect */}
                       <div className="relative -mb-10 lg:-mb-12 -mx-4">
                         <motion.div
                           whileHover={{ y: -5, rotate: 2 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <img 
-                            src="/img2.png" 
+                          <img
+                            src="/img2.png"
                             alt="Immersive Viewing"
                             className="w-full h-auto object-contain"
-                            style={{ 
+                            style={{
                               filter: 'drop-shadow(0 25px 30px rgba(0,0,0,0.15))',
                               transform: 'translateY(20px)'
                             }}
@@ -606,9 +657,9 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="h-full glass-card ambient-shadow rounded-3xl p-8 lg:p-10 transition-all duration-500 group-hover:ambient-shadow-hover relative overflow-visible">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-500/0 group-hover:from-emerald-500/5 group-hover:to-teal-500/5 transition-all duration-500 rounded-3xl" />
-                    
+
                     <div className="relative z-10">
-                      <motion.div 
+                      <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
@@ -623,7 +674,7 @@ const LandingPage: React.FC = () => {
                       <p className="text-muted-foreground leading-relaxed text-[15px] mb-6">
                         Connect directly with verified property owners. No middlemen, no hidden fees.
                       </p>
-                      
+
                       {/* Verified badge with shimmer */}
                       <motion.div
                         initial={{ opacity: 0, scale: 0.5 }}
@@ -635,15 +686,15 @@ const LandingPage: React.FC = () => {
                         <Shield className="h-3.5 w-3.5" />
                         Verified Owner
                       </motion.div>
-                      
+
                       {/* Image */}
                       <div className="relative -mb-10 lg:-mb-12">
                         <motion.div
                           whileHover={{ y: -5 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <img 
-                            src="/img3.png" 
+                          <img
+                            src="/img3.png"
                             alt="Trusted Connection"
                             className="w-full h-auto object-contain scale-105"
                             style={{ filter: 'drop-shadow(0 20px 25px rgba(0,0,0,0.12))' }}
@@ -669,9 +720,9 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="h-full glass-card ambient-shadow rounded-3xl p-8 lg:p-10 transition-all duration-500 group-hover:ambient-shadow-hover relative overflow-visible">
                     <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 to-purple-500/0 group-hover:from-violet-500/5 group-hover:to-purple-500/5 transition-all duration-500 rounded-3xl" />
-                    
+
                     <div className="relative z-10">
-                      <motion.div 
+                      <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         whileInView={{ scale: 1, rotate: 0 }}
                         viewport={{ once: true }}
@@ -686,7 +737,7 @@ const LandingPage: React.FC = () => {
                       <p className="text-muted-foreground leading-relaxed text-[15px] mb-6">
                         Complete your transaction with verified documents and secure processes.
                       </p>
-                      
+
                       {/* Animated checkmark */}
                       <motion.div
                         initial={{ opacity: 0, scale: 0.3 }}
@@ -698,15 +749,15 @@ const LandingPage: React.FC = () => {
                         <CheckCircle className="h-5 w-5 text-violet-500 animate-pulse-soft" />
                         <span className="text-sm text-muted-foreground font-medium">100% Secure Process</span>
                       </motion.div>
-                      
+
                       {/* Image */}
                       <div className="relative -mb-10 lg:-mb-12">
                         <motion.div
                           whileHover={{ y: -5, rotate: -1 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <img 
-                            src="/img4.png" 
+                          <img
+                            src="/img4.png"
                             alt="Seamless Closing"
                             className="w-full h-auto object-contain"
                             style={{ filter: 'drop-shadow(0 20px 25px rgba(0,0,0,0.12))' }}
@@ -736,10 +787,10 @@ const LandingPage: React.FC = () => {
         >
           <source src="/vid 2.mp4" type="video/mp4" />
         </video>
-        
+
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/50" />
-        
+
         {/* Content */}
         <div className="container relative z-10">
           <motion.div
@@ -752,13 +803,13 @@ const LandingPage: React.FC = () => {
               Ready to Find Your Haven?
             </h2>
             <p className="text-lg md:text-xl text-white/80 max-w-xl mx-auto mb-10">
-              Join thousands of happy homeowners who found their perfect property 
+              Join thousands of happy homeowners who found their perfect property
               through direct connections.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/discover">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   variant="outline"
                   className="gap-2 px-8 py-6 text-base font-medium border border-white text-white bg-transparent rounded-none hover:bg-white hover:text-black transition-all duration-300"
                 >
@@ -767,9 +818,9 @@ const LandingPage: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/seller">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
+                <Button
+                  size="lg"
+                  variant="outline"
                   className="gap-2 px-8 py-6 text-base font-medium border border-white text-white bg-transparent rounded-none hover:bg-white hover:text-black transition-all duration-300"
                 >
                   <Home className="h-5 w-5" />
