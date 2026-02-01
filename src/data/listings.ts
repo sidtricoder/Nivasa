@@ -1,6 +1,6 @@
 import { FloorPlanData } from '@/types/floorPlan';
 
-// Supabase-ready schema for property listings
+// Firebase Firestore schema for property listings
 export interface Property {
   id: string;
   title: string;

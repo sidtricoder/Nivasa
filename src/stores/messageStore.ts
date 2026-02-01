@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-// Types for messaging - will sync with Supabase when tables are created
+// Types for messaging - syncs with Firebase Firestore
 export interface Message {
   id: string;
   conversation_id: string;

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { supabase } from '@/lib/supabase';
 
 export interface SearchFilters {
   query: string;
@@ -98,9 +97,6 @@ export const useSearchStore = create<SearchState>()(
         set({
           savedSearches: [newSavedSearch, ...savedSearches],
         });
-
-        // Also save to Supabase if user is logged in
-        // This is a placeholder for future Supabase integration
       },
       deleteSavedSearch: (id) => {
         set((state) => ({
