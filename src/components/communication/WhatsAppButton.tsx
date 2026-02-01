@@ -57,12 +57,12 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
     return (
       <motion.button
         onClick={handleClick}
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
           'flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg',
           'bg-[#25D366] hover:bg-[#20BD5A] text-white font-medium',
-          'transition-colors duration-200 shadow-md hover:shadow-lg min-h-[48px]',
+          'transition-all duration-200 shadow-md hover:shadow-xl min-h-[48px]',
           className
         )}
       >
