@@ -735,8 +735,8 @@ export const mockListings: Property[] = [
 // Helper functions for filtering
 export const getUniqueLocalities = () => [...new Set(mockListings.map(p => p.location.locality))];
 export const getUniqueCities = () => [...new Set(mockListings.map(p => p.location.city))];
-export const getPriceRange = () => ({
-  min: Math.min(...mockListings.map(p => p.price)),
-  max: Math.max(...mockListings.map(p => p.price)),
+export const getPriceRange = (properties: Property[] = mockListings) => ({
+  min: properties.length > 0 ? Math.min(...properties.map(p => p.price)) : 1000000,
+  max: properties.length > 0 ? Math.max(...properties.map(p => p.price)) : 100000000,
 });
 export const getBHKOptions = () => [...new Set(mockListings.map(p => p.specs.bhk))].sort((a, b) => a - b);

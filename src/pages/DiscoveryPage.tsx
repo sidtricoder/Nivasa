@@ -223,14 +223,17 @@ const AmazonStyleFilters: React.FC<AmazonStyleFiltersProps> = ({ FilterContent }
 
 const DiscoveryPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const priceRange = getPriceRange();
 
   // Firebase state
   const [firebaseProperties, setFirebaseProperties] = useState<Property[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Use only Firebase properties (no mock data to avoid duplicates)
   const allProperties = useMemo(() => firebaseProperties, [firebaseProperties]);
+
+  // Calculate price range from actual Firebase data
+  const priceRange = useMemo(() => getPriceRange(firebaseProperties), [firebaseProperties]);
 
   const dynamicPriceRange = useMemo(() => {
     if (allProperties.length === 0) return priceRange;
@@ -655,22 +658,38 @@ const DiscoveryPage: React.FC = () => {
     }
   };
 
+  // Fetch properties from Firebase
+  const fetchProperties = async () => {
+    setLoadingProperties(true);
+    setFetchError(null);
+    try {
+      console.log('Fetching properties from Firebase...');
+      const { properties } = await getAllProperties(1000); // Increased limit
+      console.log(`Fetched ${properties.length} properties from Firebase:`, properties);
+      setFirebaseProperties(properties);
+      if (properties.length === 0) {
+        setFetchError('No properties found in database');
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      setFetchError(error instanceof Error ? error.message : 'Failed to fetch properties');
+    } finally {
+      setLoadingProperties(false);
+    }
+  };
+
   // Fetch properties from Firebase on mount
   useEffect(() => {
-    const fetchProperties = async () => {
-      setLoadingProperties(true);
-      try {
-        const { properties } = await getAllProperties(100);
-        setFirebaseProperties(properties);
-      } catch (error) {
-        console.error('Error fetching properties:', error);
-      } finally {
-        setLoadingProperties(false);
-      }
-    };
-
     fetchProperties();
   }, []);
+
+  // Update price range when Firebase properties load
+  useEffect(() => {
+    if (firebaseProperties.length > 0 && selectedPriceRange[0] === 1000000) {
+      // Initialize with dynamic range only on first load
+      setSelectedPriceRange([priceRange.min, priceRange.max]);
+    }
+  }, [firebaseProperties, priceRange]);
 
   // Handle voice search result
   useEffect(() => {
@@ -1515,6 +1534,50 @@ const DiscoveryPage: React.FC = () => {
         {/* Content on top of wave */}
         <div className="relative z-10 px-8 lg:px-16 pt-6 pb-3">
           <div className="max-w-7xl mx-auto">
+            {/* Debug Info Bar */}
+            {(loadingProperties || fetchError || (!loadingProperties && firebaseProperties.length === 0)) && (
+              <div className="mb-4">
+                <div className={`p-3 rounded-lg text-sm ${
+                  fetchError ? 'bg-red-500/20 border border-red-300' : 
+                  loadingProperties ? 'bg-blue-500/20 border border-blue-300' : 
+                  'bg-yellow-500/20 border border-yellow-300'
+                }`}>
+                  {loadingProperties && (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Loading properties from Firebase...</span>
+                    </div>
+                  )}
+                  {fetchError && !loadingProperties && (
+                    <div className="flex items-center justify-between">
+                      <span>⚠️ {fetchError}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchProperties}
+                        className="text-white hover:bg-white/10"
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  )}
+                  {!loadingProperties && !fetchError && firebaseProperties.length === 0 && (
+                    <div className="flex items-center justify-between">
+                      <span>ℹ️ No properties in database. Add some properties to get started.</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchProperties}
+                        className="text-white hover:bg-white/10"
+                      >
+                        Refresh
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Search & Controls - Single Line */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6 min-w-0">
               {/* Search Input with Glassmorphism */}
@@ -1816,7 +1879,14 @@ const DiscoveryPage: React.FC = () => {
                       >
                         {filteredListings.length}
                       </motion.span>
-                      <span className="text-muted-foreground">properties found</span>
+                      <span className="text-muted-foreground">
+                        properties found
+                        {firebaseProperties.length !== filteredListings.length && (
+                          <span className="text-xs ml-1">
+                            (of {firebaseProperties.length} total)
+                          </span>
+                        )}
+                      </span>
                     </div>
                     {loadingProperties && (
                       <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10">
