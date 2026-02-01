@@ -83,11 +83,11 @@ const SellerDashboard: React.FC = () => {
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  
+
   // Get tab from URL query param, default to 'new-listing'
   const tabFromUrl = searchParams.get('tab') || 'new-listing';
   const [activeTab, setActiveTab] = useState(tabFromUrl);
-  
+
   // Update activeTab when URL changes
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -104,31 +104,31 @@ const SellerDashboard: React.FC = () => {
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
   const [leads, setLeads] = useState<PropertyLead[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
-  
+
   // Chat drawer state for messaging leads
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatBuyerId, setChatBuyerId] = useState<string>('');
   const [chatBuyerName, setChatBuyerName] = useState<string>('');
   const [chatPropertyId, setChatPropertyId] = useState<string>('');
   const [chatPropertyTitle, setChatPropertyTitle] = useState<string>('');
-  
+
   // Image files state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState('');
-  
+
   // 360° Panorama images state
   const [panoramaUrls, setPanoramaUrls] = useState<string[]>([]);
   const [panoramaUrlInput, setPanoramaUrlInput] = useState('');
-  
+
   // Floor plan state
   const [floorPlanImage, setFloorPlanImage] = useState<string | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
-  
+
   // Ref for file input
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -178,17 +178,17 @@ const SellerDashboard: React.FC = () => {
 
   const loadUserListings = async () => {
     if (!currentUser) return;
-    
+
     setLoadingListings(true);
     try {
       // First try to get by seller ID
       let listings = await getPropertiesBySeller(currentUser.uid);
-      
+
       // If no listings found by ID, try by email (for seeded properties)
       if (listings.length === 0 && currentUser.email) {
         listings = await getPropertiesBySellerEmail(currentUser.email);
       }
-      
+
       setUserListings(listings);
     } catch (error: any) {
       toast({
@@ -203,7 +203,7 @@ const SellerDashboard: React.FC = () => {
 
   const loadLeads = async () => {
     if (!currentUser) return;
-    
+
     setLoadingLeads(true);
     try {
       const fetchedLeads = await getLeadsBySeller(currentUser.uid);
@@ -233,16 +233,16 @@ const SellerDashboard: React.FC = () => {
   // Handle image selection
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    
+
     const files = Array.from(e.target.files);
     console.log('Selected files:', files.map(f => ({ name: f.name, type: f.type, size: f.size })));
-    
+
     const validFiles: File[] = [];
     const previews: string[] = [];
-    
+
     // Allow more image types
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif', 'image/tiff', 'image/bmp'];
-    
+
     for (const file of files) {
       // Check if it's an image (starts with 'image/')
       if (!file.type.startsWith('image/')) {
@@ -253,7 +253,7 @@ const SellerDashboard: React.FC = () => {
         });
         continue;
       }
-      
+
       // Check file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
         toast({
@@ -263,7 +263,7 @@ const SellerDashboard: React.FC = () => {
         });
         continue;
       }
-      
+
       try {
         const compressed = await compressImage(file, 1920, 0.85);
         console.log('Compressed file:', compressed.name, compressed.size);
@@ -280,11 +280,11 @@ const SellerDashboard: React.FC = () => {
         });
       }
     }
-    
+
     console.log('Valid files:', validFiles.length, 'Previews:', previews.length);
     setSelectedFiles(prev => [...prev, ...validFiles]);
     setImagePreviews(prev => [...prev, ...previews]);
-    
+
     // Clear the input so the same file can be selected again
     e.target.value = '';
   };
@@ -370,7 +370,7 @@ const SellerDashboard: React.FC = () => {
     ];
 
     const missingFields = requiredFields.filter(f => !f.field).map(f => f.name);
-    
+
     if (missingFields.length > 0) {
       toast({
         title: 'Missing required fields',
@@ -535,7 +535,7 @@ const SellerDashboard: React.FC = () => {
           },
         }),
       };
-      
+
       // Debug: Log what floor plan data is being saved
       console.log('=== SAVING PROPERTY ===');
       console.log('Floor Plan Data:', propertyData.floorPlan);
@@ -719,10 +719,10 @@ const SellerDashboard: React.FC = () => {
           formData.price &&
           formData.sellerPhone.trim()
         );
-      
+
       case 2: // Media - at least one image required (360° and floor plan are optional)
         return imagePreviews.length > 0;
-      
+
       case 3: // Location
         return !!(
           formData.blockNumber.trim() &&
@@ -735,11 +735,11 @@ const SellerDashboard: React.FC = () => {
           formData.coordinates.lat !== 0 &&
           formData.coordinates.lng !== 0
         );
-      
+
       case 4: // Scores - Features are checked (pet friendly, parking)
         // This step only has checkboxes, always valid
         return true;
-      
+
       case 5: // Details
         return (
           formData.highlights.some(h => h.trim()) && // At least 1 highlight
@@ -747,7 +747,7 @@ const SellerDashboard: React.FC = () => {
           formData.nearbyPlaces.some(p => p.type && p.name.trim() && p.distance.trim()) // At least 1 nearby place
           // Amenities are optional as per requirements
         );
-      
+
       default:
         return true;
     }
@@ -986,9 +986,9 @@ const SellerDashboard: React.FC = () => {
               <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-medium mb-1">Drag & drop photos here</h4>
               <p className="text-sm text-muted-foreground mb-4">or click to browse</p>
-              <Button 
-                variant="outline" 
-                type="button" 
+              <Button
+                variant="outline"
+                type="button"
                 onClick={() => {
                   console.log('Add Photos button clicked');
                   console.log('File input ref:', fileInputRef.current);
@@ -1031,8 +1031,8 @@ const SellerDashboard: React.FC = () => {
                     }
                   }}
                 />
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={addImageUrl}
                   disabled={!urlInput.trim()}
                 >
@@ -1054,9 +1054,9 @@ const SellerDashboard: React.FC = () => {
                     >
                       <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button 
-                          variant="secondary" 
-                          size="icon" 
+                        <Button
+                          variant="secondary"
+                          size="icon"
                           className="h-8 w-8"
                           onClick={() => isUrl ? removeImageUrl(i) : removeImage(i)}
                           type="button"
@@ -1081,7 +1081,7 @@ const SellerDashboard: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 Upload 360° panorama images taken with Google Street View app or a 360° camera for an immersive virtual tour.
               </p>
-              
+
               {/* File Upload for 360° */}
               <div className="flex gap-2">
                 <Input
@@ -1094,7 +1094,7 @@ const SellerDashboard: React.FC = () => {
                     if (!e.target.files) return;
                     const files = Array.from(e.target.files);
                     if (files.length === 0) return;
-                    
+
                     setUploading(true);
                     try {
                       // Use a temporary ID for panorama uploads
@@ -1123,7 +1123,7 @@ const SellerDashboard: React.FC = () => {
                   }}
                 />
               </div>
-              
+
               {/* Or add URL */}
               <div className="flex gap-2">
                 <Input
@@ -1140,8 +1140,8 @@ const SellerDashboard: React.FC = () => {
                     }
                   }}
                 />
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   variant="outline"
                   onClick={() => {
                     if (panoramaUrlInput.trim()) {
@@ -1155,7 +1155,7 @@ const SellerDashboard: React.FC = () => {
                   Add URL
                 </Button>
               </div>
-              
+
               {/* 360° URL Preview List */}
               {panoramaUrls.length > 0 && (
                 <div className="space-y-2">
@@ -1204,8 +1204,8 @@ const SellerDashboard: React.FC = () => {
             )}
 
             <p className="text-xs text-muted-foreground">
-              {imagePreviews.length > 0 
-                ? `${imagePreviews.length} image(s) selected` 
+              {imagePreviews.length > 0
+                ? `${imagePreviews.length} image(s) selected`
                 : 'Tip: Properties with 5+ high-quality photos get 3x more inquiries'}
             </p>
           </motion.div>
@@ -1332,7 +1332,7 @@ const SellerDashboard: React.FC = () => {
                 <Checkbox
                   id="isPetFriendly"
                   checked={formData.isPetFriendly}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData(prev => ({ ...prev, isPetFriendly: checked as boolean }))
                   }
                 />
@@ -1344,7 +1344,7 @@ const SellerDashboard: React.FC = () => {
                 <Checkbox
                   id="hasParking"
                   checked={formData.hasParking}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData(prev => ({ ...prev, hasParking: checked as boolean }))
                   }
                 />
@@ -1608,24 +1608,68 @@ const SellerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Soft flowing gradient background - flowing bottom to top */}
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: `
+            linear-gradient(0deg, 
+              rgba(210, 200, 220, 0.5) 0%,
+              rgba(220, 225, 240, 0.7) 25%,
+              rgba(245, 243, 240, 1) 50%,
+              rgba(240, 238, 233, 0.9) 75%,
+              rgba(230, 210, 220, 0.6) 100%
+            )
+          `
+        }}
+      />
+
+      {/* Animated gradient blobs */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Lavender blob - bottom center */}
+        <div
+          className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[700px] h-[600px] rounded-full opacity-40 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
+          }}
+        />
+
+        {/* Warm peach blob - top right */}
+        <div
+          className="absolute -top-40 -right-20 w-[500px] h-[500px] rounded-full opacity-35 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
+          }}
+        />
+
+        {/* Soft blue blob - top left */}
+        <div
+          className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full opacity-30 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(180, 200, 240, 0.5) 0%, transparent 60%)'
+          }}
+        />
+
+        {/* Pink accent blob - right side */}
+        <div
+          className="absolute top-1/2 -right-20 w-[400px] h-[400px] rounded-full opacity-25 blur-3xl"
+          style={{
+            background: 'radial-gradient(circle, rgba(230, 200, 220, 0.5) 0%, transparent 60%)'
+          }}
+        />
+      </div>
+
       <Header />
       <CompareModal />
 
       {/* Premium Hero Section */}
-      <div className="relative overflow-hidden border-b bg-gradient-to-br from-primary/5 via-blue-500/10 to-violet-500/5">
-        {/* Animated Background Orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-gradient-to-br from-primary/20 to-blue-400/20 blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-gradient-to-tr from-violet-500/15 to-primary/15 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-blue-400/10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-        
+      <div className="relative overflow-hidden">
         <div className="container relative py-8 sm:py-12">
           <div className="max-w-4xl mx-auto">
             {/* Main Header */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", duration: 0.5 }}
@@ -1634,7 +1678,7 @@ const SellerDashboard: React.FC = () => {
                 <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
               </motion.div>
               <div>
-                <motion.h1 
+                <motion.h1
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
@@ -1642,7 +1686,7 @@ const SellerDashboard: React.FC = () => {
                 >
                   Seller Dashboard
                 </motion.h1>
-                <motion.p 
+                <motion.p
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -1654,7 +1698,7 @@ const SellerDashboard: React.FC = () => {
             </div>
 
             {/* Quick Stats Cards */}
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -1751,7 +1795,7 @@ const SellerDashboard: React.FC = () => {
                       </CardDescription>
                     </div>
                   </div>
-                  
+
                   {/* Enhanced Progress */}
                   <div className="pt-6">
                     <div className="relative">
@@ -1762,18 +1806,16 @@ const SellerDashboard: React.FC = () => {
                       {steps.map((step, index) => (
                         <div
                           key={step.id}
-                          className={`flex flex-col items-center cursor-pointer flex-1 group transition-all duration-200 ${
-                            step.id <= currentStep ? 'text-primary' : 'text-muted-foreground'
-                          }`}
+                          className={`flex flex-col items-center cursor-pointer flex-1 group transition-all duration-200 ${step.id <= currentStep ? 'text-primary' : 'text-muted-foreground'
+                            }`}
                           onClick={() => setCurrentStep(step.id)}
                         >
-                          <div className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full border-2 transition-all duration-300 group-hover:scale-110 ${
-                            step.id < currentStep
-                              ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/30'
-                              : step.id === currentStep
+                          <div className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full border-2 transition-all duration-300 group-hover:scale-110 ${step.id < currentStep
+                            ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/30'
+                            : step.id === currentStep
                               ? 'border-primary text-primary bg-primary/5 shadow-md shadow-primary/20'
                               : 'border-muted bg-background group-hover:border-muted-foreground/50'
-                          }`}>
+                            }`}>
                             {step.id < currentStep ? (
                               <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                             ) : (
@@ -1807,7 +1849,7 @@ const SellerDashboard: React.FC = () => {
                       Previous
                     </Button>
                     {currentStep < steps.length ? (
-                      <Button 
+                      <Button
                         size="lg"
                         className="gap-2 rounded-xl bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 shadow-lg shadow-primary/25"
                         onClick={nextStep}
@@ -1817,9 +1859,9 @@ const SellerDashboard: React.FC = () => {
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     ) : (
-                      <Button 
+                      <Button
                         size="lg"
-                        className="gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-emerald-500/25" 
+                        className="gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-emerald-500/25"
                         onClick={handleSubmitProperty}
                         disabled={loading}
                       >
@@ -1901,15 +1943,15 @@ const SellerDashboard: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex gap-2 sm:flex-col justify-end">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="icon"
                             onClick={() => handleEditProperty(listing)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="icon"
                             onClick={() => handleDeleteProperty(listing.id)}
                           >
@@ -2028,8 +2070,8 @@ const SellerDashboard: React.FC = () => {
                                         {lead.status}
                                       </Badge>
                                       <p className="text-xs text-muted-foreground">
-                                        {lead.createdAt?.toDate ? 
-                                          new Date(lead.createdAt.toDate()).toLocaleDateString() : 
+                                        {lead.createdAt?.toDate ?
+                                          new Date(lead.createdAt.toDate()).toLocaleDateString() :
                                           'Recently'}
                                       </p>
                                     </div>
