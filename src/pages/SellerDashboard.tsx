@@ -64,6 +64,7 @@ import MapPicker from '@/components/property/MapPicker';
 import FirebaseChatDrawer from '@/components/communication/FirebaseChatDrawer';
 import FloorPlanUpload from '@/components/seller/FloorPlanUpload';
 import { FloorPlanData } from '@/types/floorPlan';
+import { generateViewCounts } from '@/components/analytics/PropertyViewsTracker';
 
 const steps = [
   { id: 1, title: 'Basics', icon: Home, description: 'Property details' },
@@ -2015,7 +2016,7 @@ const SellerDashboard: React.FC = () => {
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Eye className="h-4 w-4" />
-                              {(listing as any).views || 0} views
+                              {generateViewCounts(listing.id).totalViews.toLocaleString()} views
                             </span>
                           </div>
                         </div>
