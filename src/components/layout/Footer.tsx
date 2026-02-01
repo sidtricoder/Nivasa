@@ -7,8 +7,20 @@ const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-secondary/50 border-t border-border">
-      <div className="container py-12">
+    <footer className="relative bg-secondary/50 border-t border-border overflow-hidden">
+      {/* Background cityscape image */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'url(/cityscape.svg)',
+          backgroundPosition: 'bottom center',
+          backgroundRepeat: 'repeat-x',
+          backgroundSize: 'auto 200px',
+          opacity: 0.6
+        }}
+      />
+      
+      <div className="container py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
