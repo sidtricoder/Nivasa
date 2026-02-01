@@ -1829,7 +1829,7 @@ const DiscoveryPage: React.FC = () => {
                 </Select>
 
                 {/* View Toggle */}
-                <div className="flex items-center border rounded-md flex-shrink-0">
+                <div className="flex items-center border rounded-md flex-shrink-0 bg-white">
                   <Button
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="icon"
