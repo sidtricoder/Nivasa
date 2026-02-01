@@ -1534,50 +1534,6 @@ const DiscoveryPage: React.FC = () => {
         {/* Content on top of wave */}
         <div className="relative z-10 px-8 lg:px-16 pt-6 pb-3">
           <div className="max-w-7xl mx-auto">
-            {/* Debug Info Bar */}
-            {(loadingProperties || fetchError || (!loadingProperties && firebaseProperties.length === 0)) && (
-              <div className="mb-4">
-                <div className={`p-3 rounded-lg text-sm ${
-                  fetchError ? 'bg-red-500/20 border border-red-300' : 
-                  loadingProperties ? 'bg-blue-500/20 border border-blue-300' : 
-                  'bg-yellow-500/20 border border-yellow-300'
-                }`}>
-                  {loadingProperties && (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Loading properties from Firebase...</span>
-                    </div>
-                  )}
-                  {fetchError && !loadingProperties && (
-                    <div className="flex items-center justify-between">
-                      <span>⚠️ {fetchError}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={fetchProperties}
-                        className="text-white hover:bg-white/10"
-                      >
-                        Retry
-                      </Button>
-                    </div>
-                  )}
-                  {!loadingProperties && !fetchError && firebaseProperties.length === 0 && (
-                    <div className="flex items-center justify-between">
-                      <span>ℹ️ No properties in database. Add some properties to get started.</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={fetchProperties}
-                        className="text-white hover:bg-white/10"
-                      >
-                        Refresh
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Search & Controls - Single Line */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6 min-w-0">
               {/* Search Input with Glassmorphism */}
@@ -1864,7 +1820,7 @@ const DiscoveryPage: React.FC = () => {
               {/* Results */}
               <main className="flex-1">
                 {/* Premium Results Header */}
-                <motion.div
+                {/* <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="flex items-center justify-between mb-6 pb-4 border-b border-border/50"
@@ -1908,7 +1864,7 @@ const DiscoveryPage: React.FC = () => {
                       <span>{Math.round((displayedProperties / filteredListings.length) * 100)}% viewed</span>
                     </div>
                   )}
-                </motion.div>
+                </motion.div> */}
 
                 {/* Property Grid/List */}
                 <AnimatePresence mode="wait">
