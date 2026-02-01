@@ -11,10 +11,10 @@ interface PropertyViewsTrackerProps {
 }
 
 // Generate consistent but random-ish view count based on property ID
-const generateViewCounts = (propertyId: string) => {
+export const generateViewCounts = (propertyId: string) => {
   // Create a hash from property ID to get consistent numbers
   const hash = propertyId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
+
   return {
     totalViews: 150 + (hash % 500),
     todayViews: 5 + (hash % 30),
@@ -80,7 +80,7 @@ const PropertyViewsTracker: React.FC<PropertyViewsTrackerProps> = ({
             views
           </span>
         </div>
-        
+
         <div className="flex items-center gap-1.5">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
