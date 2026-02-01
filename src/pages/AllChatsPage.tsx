@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, User, Building2, Clock, Loader2, Send, ArrowLeft, X } from 'lucide-react';
+import { MessageCircle, User, Building2, Clock, Loader2, Send, ArrowLeft, X, Check, CheckCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { AppointmentScheduler } from '@/components/communication/AppointmentScheduler';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -161,6 +162,35 @@ const AllChatsPage: React.FC = () => {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [activeChat]);
+
+  const handleScheduleAppointment = async (date: Date, time: string) => {
+    if (!currentUser || !activeChat || sendingMessage) return;
+
+    const formattedDate = format(date, 'EEEE, MMMM do, yyyy');
+    const messageText = `📅 Appointment Request\n\nI would like to schedule a viewing for ${activeChat.propertyTitle}.\n\nDate: ${formattedDate}\nTime: ${time}\n\nPlease confirm if this works for you.`;
+
+    setSendingMessage(true);
+    try {
+      await sendChatMessage(
+        currentUser.uid,
+        activeChat.otherUserId,
+        activeChat.propertyId,
+        messageText
+      );
+      toast({
+        title: 'Appointment request sent',
+        description: 'The seller has been notified of your request.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to send request',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !currentUser || !activeChat || sendingMessage) return;
@@ -526,9 +556,18 @@ const AllChatsPage: React.FC = () => {
                               {msg.text}
                             </p>
                           </div>
-                          <span className="text-[10px] text-muted-foreground mt-1 px-1">
-                            {format(msg.timestamp, 'h:mm a')}
-                          </span>
+                          <div className={`flex items-center gap-1 mt-1 justify-end`}>
+                            <span className="text-[10px] text-muted-foreground">
+                              {format(msg.timestamp, 'h:mm a')}
+                            </span>
+                            {isOwn && (
+                              msg.isRead ? (
+                                <CheckCheck className="h-3 w-3 text-blue-500" />
+                              ) : (
+                                <Check className="h-3 w-3 text-muted-foreground" />
+                              )
+                            )}
+                          </div>
                         </div>
                       </motion.div>
                     );
@@ -541,6 +580,7 @@ const AllChatsPage: React.FC = () => {
             {/* Message Input */}
             <div className="p-4 border-t bg-card">
               <div className="flex items-end gap-2">
+                <AppointmentScheduler onSchedule={handleScheduleAppointment} />
                 <Textarea
                   ref={inputRef}
                   value={messageInput}
