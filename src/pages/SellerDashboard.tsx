@@ -496,12 +496,15 @@ const SellerDashboard: React.FC = () => {
         isNewListing: true,
         listedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        panoramaImages: panoramaUrls.length > 0 ? panoramaUrls : undefined,
-        // Include floor plan image in the floor plan data
-        floorPlan: floorPlanData ? {
-          ...floorPlanData,
-          floorPlanImage: floorPlanImage || undefined,
-        } : undefined,
+        // Only include panoramaImages if there are any (Firestore doesn't accept undefined)
+        ...(panoramaUrls.length > 0 && { panoramaImages: panoramaUrls }),
+        // Only include floor plan if data exists (Firestore doesn't accept undefined)
+        ...(floorPlanData && {
+          floorPlan: {
+            ...floorPlanData,
+            ...(floorPlanImage && { floorPlanImage }),
+          },
+        }),
       };
       
       // Debug: Log what floor plan data is being saved
