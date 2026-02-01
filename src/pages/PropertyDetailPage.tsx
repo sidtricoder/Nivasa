@@ -787,7 +787,7 @@ const PropertyDetailPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <Button 
-                    className="gap-2 h-full min-h-[48px]"
+                    className="gap-2 h-full min-h-[48px] hover:scale-105 hover:shadow-lg transition-all duration-200"
                     onClick={() => {
                       if (!currentUser) {
                         toast({
@@ -817,7 +817,7 @@ const PropertyDetailPage: React.FC = () => {
                 {/* I am Interested Button */}
                 <Button
                   variant={hasExpressedInterest ? "outline" : "default"}
-                  className="w-full gap-2"
+                  className="w-full gap-2 hover:scale-105 hover:shadow-lg transition-all duration-200"
                   onClick={handleExpressInterest}
                   disabled={expressingInterest || hasExpressedInterest}
                 >
@@ -842,11 +842,14 @@ const PropertyDetailPage: React.FC = () => {
                 <div className="relative">
                   <Button
                     variant="outline"
-                    className="w-full gap-2"
+                    className="w-full gap-2 bg-white border-gray-300 text-gray-800 relative overflow-hidden group transition-all duration-300 hover:text-white hover:border-gray-900"
                     onClick={() => setShowPhone(!showPhone)}
                   >
-                    <Phone className="h-4 w-4" />
-                    {showPhone ? property.seller.phone : 'Show Phone Number'}
+                    <span className="absolute inset-0 bg-gray-900 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      {showPhone ? property.seller.phone : 'Show Phone Number'}
+                    </span>
                   </Button>
                 </div>
 
@@ -857,9 +860,12 @@ const PropertyDetailPage: React.FC = () => {
                   <Label className="text-sm font-medium mb-2 block">Schedule a Visit</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start gap-2">
-                        <Calendar className="h-4 w-4" />
-                        {appointmentDate ? format(appointmentDate, 'PPP') : 'Pick a date'}
+                      <Button variant="outline" className="w-full justify-start gap-2 bg-white border-gray-300 text-gray-800 relative overflow-hidden group transition-all duration-300 hover:text-white hover:border-gray-900">
+                        <span className="absolute inset-0 bg-gray-900 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                        <span className="relative z-10 flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          {appointmentDate ? format(appointmentDate, 'PPP') : 'Pick a date'}
+                        </span>
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">

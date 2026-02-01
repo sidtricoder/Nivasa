@@ -81,7 +81,7 @@ const SavedSearches: React.FC<SavedSearchesProps> = ({
       {/* Save Current Search Button */}
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 bg-white hover:bg-gray-50">
             <BookmarkPlus className="h-4 w-4" />
             <span className="hidden sm:inline">Save Search</span>
           </Button>
@@ -126,7 +126,7 @@ const SavedSearches: React.FC<SavedSearchesProps> = ({
       {/* View Saved Searches Button */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2 relative">
+          <Button variant="ghost" size="sm" className="gap-2 relative bg-white hover:bg-gray-50">
             <Bookmark className="h-4 w-4" />
             <span className="hidden sm:inline">Saved</span>
             {savedSearches.length > 0 && (

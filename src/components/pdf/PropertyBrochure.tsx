@@ -344,9 +344,12 @@ const PropertyBrochure: React.FC<PropertyBrochureProps> = ({
     <div className={cn('', className)}>
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="gap-2 w-full">
-            <FileText className="h-4 w-4" />
-            Download Brochure
+          <Button variant="outline" className="gap-2 w-full bg-white border-gray-300 text-gray-800 relative overflow-hidden group transition-all duration-300 hover:text-white hover:border-gray-900">
+            <span className="absolute inset-0 bg-gray-900 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+            <span className="relative z-10 flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Download Brochure
+            </span>
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">

@@ -85,7 +85,7 @@ const Header: React.FC = () => {
   // Dynamic classes based on page
   const headerBg = isHomePage ? 'bg-transparent' : 'bg-background/95 backdrop-blur border-b border-border';
   const textColor = isHomePage ? 'text-white' : 'text-foreground';
-  const hoverBg = isHomePage ? 'hover:bg-white/40 hover:text-white' : 'hover:bg-secondary';
+  const hoverBg = isHomePage ? 'hover:bg-white/20 hover:text-white' : 'hover:bg-primary/10 hover:text-primary transition-colors duration-200';
 
   return (
     <motion.header 
