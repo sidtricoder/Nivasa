@@ -62,7 +62,7 @@ export const UserProfile = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:scale-105 transition-transform">
-          <Avatar className="h-10 w-10 border-2 border-primary/10 shadow-sm">
+          <Avatar className="h-10 w-10 border-2 border-foreground/80 shadow-md">
             <AvatarImage src={userData?.photoURL || ''} alt={displayName} />
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {initials}
