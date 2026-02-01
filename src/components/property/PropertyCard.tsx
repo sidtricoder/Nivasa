@@ -47,18 +47,22 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="h-full"
     >
-      <Card className="group overflow-hidden h-full border-0 shadow-none rounded-none">
+      <Card className="group overflow-hidden h-full border-0 shadow-lg hover:shadow-2xl rounded-2xl transition-all duration-300 bg-white/90 backdrop-blur-sm hover:bg-white">
+
         {/* Image Container */}
         <div className={`relative overflow-hidden ${variant === 'compact' ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
           <Link to={`/property/${property.id}`}>
             <img
               src={property.images[0]}
               alt={property.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110 group-hover:brightness-105"
             />
+            {/* Subtle overlay gradient on hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </Link>
 
           {/* Badges */}
@@ -80,19 +84,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
               variant="secondary"
               size="icon"
               className={cn(
-                "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background",
+                "h-9 w-9 rounded-full bg-white/90 backdrop-blur-md hover:bg-white transition-all duration-300 hover:scale-110 shadow-md hover:shadow-lg",
                 isFavorite(property.id) && "text-destructive"
               )}
               onClick={handleFavoriteClick}
             >
-              <Heart className={cn("h-4 w-4", isFavorite(property.id) && "fill-current")} />
+              <Heart className={cn("h-4 w-4 transition-all", isFavorite(property.id) && "fill-current scale-110")} />
             </Button>
             {canAddToCompare && (
               <Button
                 variant="secondary"
                 size="icon"
                 className={cn(
-                  "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background",
+                  "h-9 w-9 rounded-full bg-white/90 backdrop-blur-md hover:bg-white transition-all duration-300 hover:scale-110 shadow-md hover:shadow-lg",
                   isInCompare(property.id) && "text-primary bg-primary/10"
                 )}
                 onClick={(e) => {
