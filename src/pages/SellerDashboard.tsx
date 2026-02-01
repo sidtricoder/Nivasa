@@ -64,6 +64,16 @@ import FirebaseChatDrawer from '@/components/communication/FirebaseChatDrawer';
 import FloorPlanUpload from '@/components/seller/FloorPlanUpload';
 import { FloorPlanData } from '@/types/floorPlan';
 import { generateViewCounts } from '@/components/analytics/PropertyViewsTracker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const steps = [
   { id: 1, title: 'Basics', icon: Home, description: 'Property details' },
@@ -126,6 +136,9 @@ const SellerDashboard: React.FC = () => {
   // Floor plan state
   const [floorPlanImage, setFloorPlanImage] = useState<string | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
+
+  // State for delete confirmation
+  const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
 
   // Ref for file input
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -682,11 +695,15 @@ const SellerDashboard: React.FC = () => {
     setActiveTab('new-listing');
   };
 
-  const handleDeleteProperty = async (propertyId: string) => {
-    if (!confirm('Are you sure you want to delete this property?')) return;
+  const handleDeleteClick = (propertyId: string) => {
+    setPropertyToDelete(propertyId);
+  };
+
+  const confirmDelete = async () => {
+    if (!propertyToDelete) return;
 
     try {
-      await deleteProperty(propertyId);
+      await deleteProperty(propertyToDelete);
       toast({
         title: 'Success',
         description: 'Property deleted successfully',
@@ -698,6 +715,8 @@ const SellerDashboard: React.FC = () => {
         description: error.message || 'Failed to delete property',
         variant: 'destructive',
       });
+    } finally {
+      setPropertyToDelete(null);
     }
   };
 
@@ -778,7 +797,7 @@ const SellerDashboard: React.FC = () => {
           >
             {/* Property Type */}
             <div className="space-y-3">
-              <Label className="text-base font-medium">Property Type</Label>
+              <Label className="text-base font-medium">Property Type *</Label>
               <RadioGroup
                 value={formData.propertyType}
                 onValueChange={(value) => handleInputChange('propertyType', value)}
@@ -801,7 +820,7 @@ const SellerDashboard: React.FC = () => {
 
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title">Property Title</Label>
+              <Label htmlFor="title">Property Title *</Label>
               <Input
                 id="title"
                 placeholder="e.g., Luxurious 3BHK with City View"
@@ -812,7 +831,7 @@ const SellerDashboard: React.FC = () => {
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
                 placeholder="Describe your property in detail..."
@@ -825,7 +844,7 @@ const SellerDashboard: React.FC = () => {
             {/* BHK & Bathrooms */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>BHK Configuration</Label>
+                <Label>BHK Configuration *</Label>
                 <Select value={formData.bhk} onValueChange={(v) => handleInputChange('bhk', v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select BHK" />
@@ -838,7 +857,7 @@ const SellerDashboard: React.FC = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Bathrooms</Label>
+                <Label>Bathrooms *</Label>
                 <Select value={formData.bathrooms} onValueChange={(v) => handleInputChange('bathrooms', v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
@@ -855,7 +874,7 @@ const SellerDashboard: React.FC = () => {
             {/* Area & Floor */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sqft">Super Built-up Area (sqft)</Label>
+                <Label htmlFor="sqft">Super Built-up Area (sqft) *</Label>
                 <Input
                   id="sqft"
                   type="number"
@@ -865,7 +884,7 @@ const SellerDashboard: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="floor">Floor</Label>
+                <Label htmlFor="floor">Floor *</Label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
@@ -887,7 +906,7 @@ const SellerDashboard: React.FC = () => {
             {/* Facing & Age */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Facing</Label>
+                <Label>Facing *</Label>
                 <Select value={formData.facing} onValueChange={(v) => handleInputChange('facing', v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
@@ -900,7 +919,7 @@ const SellerDashboard: React.FC = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Property Age</Label>
+                <Label>Property Age *</Label>
                 <Select value={formData.propertyAge} onValueChange={(v) => handleInputChange('propertyAge', v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
@@ -919,7 +938,7 @@ const SellerDashboard: React.FC = () => {
 
             {/* Furnishing */}
             <div className="space-y-2">
-              <Label>Furnishing Status</Label>
+              <Label>Furnishing Status *</Label>
               <RadioGroup
                 value={formData.furnishing}
                 onValueChange={(value) => handleInputChange('furnishing', value)}
@@ -939,7 +958,7 @@ const SellerDashboard: React.FC = () => {
             {/* Price with Estimator */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Asking Price (₹)</Label>
+                <Label htmlFor="price">Asking Price (₹) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -952,7 +971,7 @@ const SellerDashboard: React.FC = () => {
 
             {/* Seller Phone Number */}
             <div className="space-y-2">
-              <Label htmlFor="sellerPhone">Your Phone Number</Label>
+              <Label htmlFor="sellerPhone">Your Phone Number *</Label>
               <Input
                 id="sellerPhone"
                 type="tel"
@@ -976,7 +995,7 @@ const SellerDashboard: React.FC = () => {
             className="space-y-6"
           >
             <div className="space-y-3">
-              <Label className="text-base font-medium">Property Photos</Label>
+              <Label className="text-base font-medium">Property Photos *</Label>
               <p className="text-sm text-muted-foreground">
                 Upload high-quality photos. First image will be the cover photo.
               </p>
@@ -1954,7 +1973,7 @@ const SellerDashboard: React.FC = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleDeleteProperty(listing.id)}
+                            onClick={() => handleDeleteClick(listing.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -2101,6 +2120,28 @@ const SellerDashboard: React.FC = () => {
         sellerName={chatBuyerName}
         propertyTitle={chatPropertyTitle}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!propertyToDelete} onOpenChange={(open) => !open && setPropertyToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your property listing
+              and verified buyers will no longer be able to view it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Property
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>
