@@ -263,9 +263,15 @@ const PropertyDetailPage: React.FC = () => {
         propertyTitle={property.title}
       />
 
-      <main className="container py-6">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+      <main className="container py-4 sm:py-6 w-full max-w-full">
+        {/* Mobile Back Button - Visible only on small screens */}
+        <Link to="/discover" className="sm:hidden flex items-center gap-1 text-sm text-muted-foreground mb-3 hover:text-primary">
+          <ChevronLeft className="h-4 w-4" />
+          Back to Properties
+        </Link>
+
+        {/* Breadcrumb - Hidden on very small screens */}
+        <nav className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Link to="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="h-4 w-4" />
           <Link to="/discover" className="hover:text-primary">Properties</Link>
@@ -274,8 +280,8 @@ const PropertyDetailPage: React.FC = () => {
         </nav>
 
         {/* Image Gallery */}
-        <section className="mb-8">
-          <div className="relative rounded-xl overflow-hidden">
+        <section className="mb-8 w-full max-w-full">
+          <div className="relative rounded-xl overflow-hidden w-full">
             {/* Main Image */}
             <div
               className="aspect-[16/9] md:aspect-[21/9] cursor-pointer"
@@ -307,13 +313,13 @@ const PropertyDetailPage: React.FC = () => {
             </Button>
 
             {/* Thumbnails */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 max-w-[90%] overflow-x-auto pb-1">
               {property.images.map((img, index) => (
                 <button
                   key={index}
                   onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
                   className={cn(
-                    "w-16 h-12 rounded-md overflow-hidden border-2 transition-all",
+                    "w-10 h-8 sm:w-16 sm:h-12 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all",
                     index === currentImageIndex
                       ? "border-primary"
                       : "border-transparent opacity-70 hover:opacity-100"
@@ -324,32 +330,30 @@ const PropertyDetailPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Action Buttons */}
-            <div className="absolute top-4 right-4 flex gap-2">
+            {/* Action Buttons - Smaller on mobile */}
+            <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex flex-wrap gap-1 sm:gap-2 max-w-[50%] justify-end">
               <Button
                 variant="secondary"
-                size="sm"
-                className={cn("gap-2", isFavorite(property.id) && "text-destructive")}
+                size="icon"
+                className={cn("h-8 w-8 sm:h-9 sm:w-9", isFavorite(property.id) && "text-destructive")}
                 onClick={() => toggleFavorite(property.id)}
               >
                 <Heart className={cn("h-4 w-4", isFavorite(property.id) && "fill-current")} />
-                Save
               </Button>
               {canAddToCompare && (
                 <Button
                   variant="secondary"
-                  size="sm"
-                  className={cn("gap-2", isInCompare(property.id) && "text-primary")}
+                  size="icon"
+                  className={cn("h-8 w-8 sm:h-9 sm:w-9", isInCompare(property.id) && "text-primary")}
                   onClick={() => toggleCompare(property.id)}
                 >
                   <Scale className="h-4 w-4" />
-                  Compare
                 </Button>
               )}
               <Button 
                 variant="secondary" 
-                size="sm" 
-                className="gap-2"
+                size="icon"
+                className="h-8 w-8 sm:h-9 sm:w-9"
                 onClick={async () => {
                   const shareData = {
                     title: property.title,
@@ -381,12 +385,11 @@ const PropertyDetailPage: React.FC = () => {
                 }}
               >
                 <Share2 className="h-4 w-4" />
-                Share
               </Button>
             </div>
 
-            {/* Badges */}
-            <div className="absolute top-4 left-4 flex gap-2">
+            {/* Badges - Smaller on mobile */}
+            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col sm:flex-row gap-1 sm:gap-2">
               {property.isNewListing && (
                 <Badge className="bg-primary text-primary-foreground">New Listing</Badge>
               )}
@@ -401,22 +404,22 @@ const PropertyDetailPage: React.FC = () => {
         </section>
 
         {/* Main Content */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full overflow-hidden">
           {/* Left Column - Property Details */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8 w-full overflow-hidden">
             {/* Title & Price */}
             <div>
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4 mb-4">
+                <div className="min-w-0 flex-1">
                   <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                     {property.title}
                   </h1>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{property.location.address}, {property.location.locality}</span>
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <span className="break-words">{property.location.address}, {property.location.locality}</span>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="sm:text-right flex-shrink-0">
                   <p className="text-3xl font-bold text-primary">
                     {formatPrice(property.price)}
                   </p>
@@ -428,7 +431,7 @@ const PropertyDetailPage: React.FC = () => {
               </div>
 
               {/* Key Specs */}
-              <div className="flex flex-wrap gap-4 p-4 bg-secondary/50 rounded-lg">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap gap-3 sm:gap-4 p-4 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Bed className="h-5 w-5 text-primary" />
                   <div>
@@ -436,7 +439,7 @@ const PropertyDetailPage: React.FC = () => {
                     <p className="text-xs text-muted-foreground">Bedrooms</p>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="h-10" />
+                <Separator orientation="vertical" className="h-10 hidden md:block" />
                 <div className="flex items-center gap-2">
                   <Bath className="h-5 w-5 text-primary" />
                   <div>
@@ -444,7 +447,7 @@ const PropertyDetailPage: React.FC = () => {
                     <p className="text-xs text-muted-foreground">Bathrooms</p>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="h-10" />
+                <Separator orientation="vertical" className="h-10 hidden md:block" />
                 <div className="flex items-center gap-2">
                   <Square className="h-5 w-5 text-primary" />
                   <div>
@@ -452,7 +455,7 @@ const PropertyDetailPage: React.FC = () => {
                     <p className="text-xs text-muted-foreground">Super Built-up</p>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="h-10" />
+                <Separator orientation="vertical" className="h-10 hidden md:block" />
                 <div className="flex items-center gap-2">
                   <Building className="h-5 w-5 text-primary" />
                   <div>
@@ -460,7 +463,7 @@ const PropertyDetailPage: React.FC = () => {
                     <p className="text-xs text-muted-foreground">Floor</p>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="h-10" />
+                <Separator orientation="vertical" className="h-10 hidden md:block" />
                 <div className="flex items-center gap-2">
                   <Compass className="h-5 w-5 text-primary" />
                   <div>
@@ -484,7 +487,7 @@ const PropertyDetailPage: React.FC = () => {
             <Card>
               <Tabs defaultValue="photos">
                 <CardHeader>
-                  <TabsList className="w-full justify-start">
+                  <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-hide text-xs sm:text-sm">
                     <TabsTrigger value="photos">Photos</TabsTrigger>
                     <TabsTrigger value="virtual-staging" className="gap-1">
                       <Sparkles className="h-3 w-3" />
@@ -613,21 +616,21 @@ const PropertyDetailPage: React.FC = () => {
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed">{property.description}</p>
 
-                <div className="grid md:grid-cols-2 gap-6 mt-6">
+                <div className="grid md:grid-cols-2 gap-6 mt-6 w-full overflow-hidden">
                   <div>
                     <h4 className="font-medium mb-3">Property Details</h4>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Property Age</span>
-                        <span>{property.specs.propertyAge} years</span>
+                      <div className="flex justify-between gap-2 min-w-0">
+                        <span className="text-muted-foreground flex-shrink-0">Property Age</span>
+                        <span className="truncate text-right">{property.specs.propertyAge} years</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Furnishing</span>
-                        <span className="capitalize">{property.specs.furnishing.replace('-', ' ')}</span>
+                      <div className="flex justify-between gap-2 min-w-0">
+                        <span className="text-muted-foreground flex-shrink-0">Furnishing</span>
+                        <span className="capitalize truncate text-right">{property.specs.furnishing.replace('-', ' ')}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Property Type</span>
-                        <span className="capitalize">{property.specs.propertyType}</span>
+                      <div className="flex justify-between gap-2 min-w-0">
+                        <span className="text-muted-foreground flex-shrink-0">Property Type</span>
+                        <span className="capitalize truncate text-right">{property.specs.propertyType}</span>
                       </div>
                     </div>
                   </div>
@@ -667,9 +670,9 @@ const PropertyDetailPage: React.FC = () => {
             {/* Amenities */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
                   Amenities
-                  <Badge variant="secondary">{property.amenities.length} amenities</Badge>
+                  <Badge variant="secondary" className="flex-shrink-0">{property.amenities.length} amenities</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
