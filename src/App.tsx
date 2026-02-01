@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ChatDrawer } from "@/components/communication";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 
 // Lazy load all pages for code splitting - reduces initial bundle size
 const LandingPage = React.lazy(() => import("./pages/LandingPage"));
@@ -30,7 +31,7 @@ const PageLoader = () => (
   <div className="min-h-screen bg-background animate-pulse">
     {/* Navbar skeleton */}
     <div className="h-16 border-b bg-muted/30" />
-    
+
     {/* Hero section skeleton */}
     <div className="container mx-auto px-4 py-12 space-y-4">
       <div className="h-10 w-2/3 mx-auto bg-muted rounded" />
@@ -61,6 +62,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <ChatDrawer />
+            <ScrollToTop />
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
