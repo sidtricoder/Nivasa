@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  Building2, 
-  Users, 
-  Shield, 
+import {
+  Building2,
+  Users,
+  Shield,
   Award,
   Target,
   Heart,
@@ -94,9 +94,9 @@ const AboutPage: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       {/* Splash Cursor Effect */}
       <SplashCursor />
-      
+
       {/* Soft flowing gradient background */}
-      <div 
+      <div
         className="fixed inset-0 -z-10"
         style={{
           background: `
@@ -110,16 +110,16 @@ const AboutPage: React.FC = () => {
           `
         }}
       />
-      
+
       {/* Animated gradient blobs */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div 
+        <div
           className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(200, 190, 230, 0.6) 0%, rgba(180, 170, 220, 0.3) 50%, transparent 70%)'
           }}
         />
-        <div 
+        <div
           className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full opacity-40 blur-3xl"
           style={{
             background: 'radial-gradient(circle, rgba(255, 200, 180, 0.6) 0%, rgba(255, 180, 160, 0.3) 50%, transparent 70%)'
@@ -147,7 +147,7 @@ const AboutPage: React.FC = () => {
               <Sparkles className="h-4 w-4" />
               Transforming Real Estate Since 2020
             </motion.div>
-            
+
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#2B2F36] mb-8 leading-tight">
               Building Dreams,
               <br />
@@ -155,16 +155,16 @@ const AboutPage: React.FC = () => {
                 One Home at a Time
               </span>
             </h1>
-            
+
             <p className="text-xl text-[#6B7280] max-w-2xl mx-auto leading-relaxed mb-10">
-              We're on a mission to make finding your perfect home as simple and 
-              joyful as it should be. Zero brokerage, complete transparency, 
+              We're on a mission to make finding your perfect home as simple and
+              joyful as it should be. Zero brokerage, complete transparency,
               and technology that works for you.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/discover">
-                <Button 
+                <Button
                   size="lg"
                   className="bg-[#3B7BFF] hover:bg-[#2563EB] text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
                 >
@@ -173,7 +173,7 @@ const AboutPage: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/contact">
-                <Button 
+                <Button
                   variant="outline"
                   size="lg"
                   className="px-8 py-6 text-lg rounded-xl border-2 hover:bg-white/50"
@@ -207,11 +207,11 @@ const AboutPage: React.FC = () => {
               >
                 <div className="glow-card variant-blue h-full min-h-[160px]">
                   <div className="flex flex-col items-center justify-end h-full">
-                    <stat.icon className="h-8 w-8 text-[#40c9ff] mb-3" />
-                    <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+                    <stat.icon className="h-8 w-8 text-[#3B7BFF] mb-3" />
+                    <div className="text-3xl md:text-4xl font-bold text-[#2B2F36] mb-1">
                       {stat.value}
                     </div>
-                    <p className="text-sm text-white/70 font-medium card-highlight">{stat.label}</p>
+                    <p className="text-sm text-[#6B7280] font-medium card-highlight">{stat.label}</p>
                   </div>
                 </div>
               </motion.div>
@@ -234,21 +234,21 @@ const AboutPage: React.FC = () => {
                 Our Story
               </span>
               <h2 className="text-4xl md:text-5xl font-bold text-[#2B2F36] mb-6 leading-tight">
-                From a Simple Idea to 
+                From a Simple Idea to
                 <span className="text-[#3B7BFF]"> India's Most Trusted</span> Property Platform
               </h2>
               <div className="space-y-4 text-[#6B7280] text-lg leading-relaxed">
                 <p>
-                  It all started with a frustrating house hunting experience. Endless broker calls, 
+                  It all started with a frustrating house hunting experience. Endless broker calls,
                   hidden charges, and properties that looked nothing like the photos.
                 </p>
                 <p>
-                  We knew there had to be a better way. So we built Nivasa — a platform where 
-                  transparency isn't just a promise, it's a principle. Where every listing is verified, 
+                  We knew there had to be a better way. So we built Nivasa — a platform where
+                  transparency isn't just a promise, it's a principle. Where every listing is verified,
                   every photo is real, and every price is final.
                 </p>
                 <p>
-                  Today, we've helped over 25,000 families find their perfect homes, and we're 
+                  Today, we've helped over 25,000 families find their perfect homes, and we're
                   just getting started.
                 </p>
               </div>
@@ -262,7 +262,7 @@ const AboutPage: React.FC = () => {
               className="relative"
             >
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                <img 
+                <img
                   src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop"
                   alt="Modern home"
                   className="w-full h-[400px] object-cover"
@@ -275,7 +275,7 @@ const AboutPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Floating card */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -331,9 +331,9 @@ const AboutPage: React.FC = () => {
               >
                 <div className="glow-card variant-purple h-full min-h-[280px]">
                   <div className="flex flex-col h-full">
-                    <value.icon className="h-10 w-10 text-[#EC4899] mb-4" />
+                    <value.icon className="h-10 w-10 text-[#8B5CF6] mb-4" />
                     <h3 className="card-heading text-xl mb-3">{value.title}</h3>
-                    <p className="text-white/80 leading-relaxed flex-grow">{value.description}</p>
+                    <p className="text-[#6B7280] leading-relaxed flex-grow">{value.description}</p>
                   </div>
                 </div>
               </motion.div>
@@ -362,7 +362,7 @@ const AboutPage: React.FC = () => {
           <div className="relative">
             {/* Timeline line */}
             <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#3B7BFF] via-[#8B5CF6] to-[#EC4899]" />
-            
+
             <div className="space-y-12">
               {milestones.map((milestone, index) => (
                 <motion.div
@@ -375,16 +375,16 @@ const AboutPage: React.FC = () => {
                 >
                   <div className={`flex-1 ${index % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
                     <div className="glow-card variant-green inline-block min-w-[280px]">
-                      <span className="text-[#34D399] font-bold text-lg block mb-2">{milestone.year}</span>
+                      <span className="text-[#10B981] font-bold text-lg block mb-2">{milestone.year}</span>
                       <h3 className="card-heading text-xl mt-1">{milestone.title}</h3>
-                      <p className="text-white/70 mt-2">{milestone.description}</p>
+                      <p className="text-[#6B7280] mt-2">{milestone.description}</p>
                     </div>
                   </div>
-                  
+
                   <div className="hidden md:flex h-12 w-12 rounded-full bg-white border-4 border-[#3B7BFF] items-center justify-center z-10 shadow-lg">
                     <CheckCircle className="h-6 w-6 text-[#3B7BFF]" />
                   </div>
-                  
+
                   <div className="flex-1 hidden md:block" />
                 </motion.div>
               ))}
@@ -425,15 +425,15 @@ const AboutPage: React.FC = () => {
               >
                 <div className="glow-card variant-orange min-h-[400px]">
                   <div className="relative h-48 -m-3 mb-4 overflow-hidden rounded-lg">
-                    <img 
-                      src={member.image} 
+                    <img
+                      src={member.image}
                       alt={member.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                   <h3 className="card-heading text-lg">{member.name}</h3>
-                  <p className="text-[#FBBF24] font-medium text-sm mb-2 card-highlight">{member.role}</p>
-                  <p className="text-white/70 text-sm">{member.bio}</p>
+                  <p className="text-[#F59E0B] font-medium text-sm mb-2 card-highlight">{member.role}</p>
+                  <p className="text-[#6B7280] text-sm">{member.bio}</p>
                 </div>
               </motion.div>
             ))}
@@ -452,7 +452,7 @@ const AboutPage: React.FC = () => {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-[#3B7BFF] via-[#8B5CF6] to-[#EC4899]" />
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200')] bg-cover bg-center opacity-10" />
-            
+
             <div className="relative py-16 px-8 md:py-20 md:px-16 text-center">
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
                 Ready to Find Your Dream Home?
@@ -462,7 +462,7 @@ const AboutPage: React.FC = () => {
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link to="/discover">
-                  <Button 
+                  <Button
                     size="lg"
                     className="bg-white text-[#3B7BFF] hover:bg-white/90 px-8 py-6 text-lg rounded-xl shadow-lg"
                   >
@@ -471,7 +471,7 @@ const AboutPage: React.FC = () => {
                   </Button>
                 </Link>
                 <Link to="/contact">
-                  <Button 
+                  <Button
                     size="lg"
                     className="bg-white/20 backdrop-blur border-2 border-white text-white hover:bg-white hover:text-[#3B7BFF] px-8 py-6 text-lg rounded-xl transition-all"
                   >

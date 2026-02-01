@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -126,6 +126,9 @@ const SellerDashboard: React.FC = () => {
   const [floorPlanImage, setFloorPlanImage] = useState<string | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
   
+  // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -235,15 +238,30 @@ const SellerDashboard: React.FC = () => {
     if (!e.target.files) return;
     
     const files = Array.from(e.target.files);
+    console.log('Selected files:', files.map(f => ({ name: f.name, type: f.type, size: f.size })));
+    
     const validFiles: File[] = [];
     const previews: string[] = [];
     
+    // Allow more image types
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif', 'image/tiff', 'image/bmp'];
+    
     for (const file of files) {
-      const validation = validateFile(file, 10);
-      if (!validation.valid) {
+      // Check if it's an image (starts with 'image/')
+      if (!file.type.startsWith('image/')) {
         toast({
           title: 'Invalid file',
-          description: validation.error,
+          description: `${file.name} is not an image file`,
+          variant: 'destructive',
+        });
+        continue;
+      }
+      
+      // Check file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: `${file.name} exceeds 10MB limit`,
           variant: 'destructive',
         });
         continue;
@@ -251,15 +269,27 @@ const SellerDashboard: React.FC = () => {
       
       try {
         const compressed = await compressImage(file, 1920, 0.85);
+        console.log('Compressed file:', compressed.name, compressed.size);
         validFiles.push(compressed);
-        previews.push(URL.createObjectURL(compressed));
+        const previewUrl = URL.createObjectURL(compressed);
+        console.log('Preview URL created:', previewUrl);
+        previews.push(previewUrl);
       } catch (error) {
         console.error('Error processing image:', error);
+        toast({
+          title: 'Error processing image',
+          description: `Could not process ${file.name}`,
+          variant: 'destructive',
+        });
       }
     }
     
-    setSelectedFiles([...selectedFiles, ...validFiles]);
-    setImagePreviews([...imagePreviews, ...previews]);
+    console.log('Valid files:', validFiles.length, 'Previews:', previews.length);
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    setImagePreviews(prev => [...prev, ...previews]);
+    
+    // Clear the input so the same file can be selected again
+    e.target.value = '';
   };
 
   const removeImage = (index: number) => {
@@ -642,7 +672,10 @@ const SellerDashboard: React.FC = () => {
       panoramaImages: property.panoramaImages || [],
     });
     setPanoramaUrls(property.panoramaImages || []);
-    setImagePreviews(property.images);
+    // Set both imageUrls AND imagePreviews so existing images are preserved on submit
+    setImageUrls(property.images || []);
+    setImagePreviews(property.images || []);
+    setSelectedFiles([]); // Clear any previously selected files
     setEditingPropertyId(property.id);
     setActiveTab('new-listing');
   };
@@ -955,13 +988,18 @@ const SellerDashboard: React.FC = () => {
               <Button 
                 variant="outline" 
                 type="button" 
-                onClick={() => document.getElementById('property-images')?.click()}
+                onClick={() => {
+                  console.log('Add Photos button clicked');
+                  console.log('File input ref:', fileInputRef.current);
+                  fileInputRef.current?.click();
+                }}
                 disabled={uploading}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Photos
               </Button>
               <input
+                ref={fileInputRef}
                 id="property-images"
                 type="file"
                 multiple
@@ -1139,7 +1177,7 @@ const SellerDashboard: React.FC = () => {
                   const isUrl = imageUrls.includes(preview);
                   return (
                     <div
-                      key={i}
+                      key={`preview-${i}`}
                       className="aspect-[4/3] rounded-lg bg-muted flex items-center justify-center relative group overflow-hidden"
                     >
                       <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />

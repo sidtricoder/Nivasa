@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Property } from '@/data/listings';
-import { sendPropertyChatMessage, quickSuggestions, ChatMessage } from '@/services/propertyChatService';
+import { sendPropertyChatMessage, quickSuggestions, ChatMessage, ChatResponse } from '@/services/propertyChatService';
 import { saveAIPropertyChat, getAIPropertyChat, AIChatMessage } from '@/services/firestoreService';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,6 +28,7 @@ const PropertyChatbot: React.FC<PropertyChatbotProps> = ({ property }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -115,7 +116,8 @@ const PropertyChatbot: React.FC<PropertyChatbotProps> = ({ property }) => {
     const userMessage = message.trim();
     setInputValue('');
     setShowSuggestions(false);
-    
+    setFollowUpSuggestions([]); // Clear previous suggestions
+
     // Add user message
     const newMessages = [...messages, { role: 'user' as const, content: userMessage }];
     setMessages(newMessages);
@@ -124,12 +126,14 @@ const PropertyChatbot: React.FC<PropertyChatbotProps> = ({ property }) => {
     try {
       // Get AI response
       const response = await sendPropertyChatMessage(property, userMessage, messages);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: response.message }]);
+      setFollowUpSuggestions(response.followUpSuggestions);
     } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "I'm having trouble responding right now. Please try again." 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I'm having trouble responding right now. Please try again."
       }]);
+      setFollowUpSuggestions([]);
     } finally {
       setIsLoading(false);
     }
@@ -279,6 +283,26 @@ const PropertyChatbot: React.FC<PropertyChatbotProps> = ({ property }) => {
                         <div className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
                     </div>
+                  </motion.div>
+                )}
+
+                {/* Follow-up Suggestions */}
+                {!isLoading && followUpSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-wrap gap-2 mt-3"
+                  >
+                    {followUpSuggestions.map((suggestion, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors py-1.5 px-3 text-xs"
+                        onClick={() => handleQuickSuggestion(suggestion)}
+                      >
+                        {suggestion}
+                      </Badge>
+                    ))}
                   </motion.div>
                 )}
 

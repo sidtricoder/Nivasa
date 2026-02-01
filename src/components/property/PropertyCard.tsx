@@ -52,7 +52,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
     >
       <Card className="group overflow-hidden h-full border-0 shadow-none rounded-none">
         {/* Image Container */}
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className={`relative overflow-hidden ${variant === 'compact' ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
           <Link to={`/property/${property.id}`}>
             <img
               src={property.images[0]}
@@ -60,7 +60,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, variant = 'defaul
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </Link>
-          
+
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             {property.isNewListing && (
