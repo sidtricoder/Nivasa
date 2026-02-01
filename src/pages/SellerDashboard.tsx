@@ -23,6 +23,7 @@ import {
   Loader2,
   X,
   AlertTriangle,
+  GripVertical,
   MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -136,6 +137,10 @@ const SellerDashboard: React.FC = () => {
   // Floor plan state
   const [floorPlanImage, setFloorPlanImage] = useState<string | null>(null);
   const [floorPlanData, setFloorPlanData] = useState<FloorPlanData | null>(null);
+
+  // Drag-and-drop state for image reordering
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // State for delete confirmation
   const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
@@ -347,6 +352,54 @@ const SellerDashboard: React.FC = () => {
     const urlIndex = imagePreviews.slice(0, index + 1).filter(url => imageUrls.includes(url)).length - 1;
     setImageUrls(urls => urls.filter((_, i) => i !== urlIndex));
     setImagePreviews(previews => previews.filter((_, i) => i !== index));
+  };
+
+  // Drag-and-drop handlers for image reordering
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    // Reorder imagePreviews
+    const newPreviews = [...imagePreviews];
+    const [draggedItem] = newPreviews.splice(draggedIndex, 1);
+    newPreviews.splice(dropIndex, 0, draggedItem);
+    setImagePreviews(newPreviews);
+
+    // Also reorder imageUrls if the dragged item is a URL
+    const draggedPreview = imagePreviews[draggedIndex];
+    if (imageUrls.includes(draggedPreview)) {
+      const urlDragIndex = imageUrls.indexOf(draggedPreview);
+      const dropPreview = imagePreviews[dropIndex];
+      const urlDropIndex = imageUrls.includes(dropPreview) ? imageUrls.indexOf(dropPreview) : urlDragIndex;
+      
+      const newUrls = [...imageUrls];
+      const [draggedUrl] = newUrls.splice(urlDragIndex, 1);
+      newUrls.splice(urlDropIndex, 0, draggedUrl);
+      setImageUrls(newUrls);
+    }
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   // Submit property listing
@@ -1064,32 +1117,56 @@ const SellerDashboard: React.FC = () => {
 
             {/* Image Preview Grid */}
             {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {imagePreviews.map((preview, i) => {
-                  const isUrl = imageUrls.includes(preview);
-                  return (
-                    <div
-                      key={`preview-${i}`}
-                      className="aspect-[4/3] rounded-lg bg-muted flex items-center justify-center relative group overflow-hidden"
-                    >
-                      <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => isUrl ? removeImageUrl(i) : removeImage(i)}
-                          type="button"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <GripVertical className="h-3 w-3" />
+                  Drag images to reorder. First image will be the cover photo.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {imagePreviews.map((preview, i) => {
+                    const isUrl = imageUrls.includes(preview);
+                    const isDragging = draggedIndex === i;
+                    const isDragOver = dragOverIndex === i;
+                    return (
+                      <div
+                        key={`preview-${i}`}
+                        draggable
+                        onDragStart={() => handleDragStart(i)}
+                        onDragOver={(e) => handleDragOver(e, i)}
+                        onDrop={(e) => handleDrop(e, i)}
+                        onDragEnd={handleDragEnd}
+                        className={`aspect-[4/3] rounded-lg bg-muted flex items-center justify-center relative group overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-200 ${
+                          isDragging ? 'opacity-50 scale-95' : ''
+                        } ${isDragOver ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                      >
+                        <img src={preview} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                        {/* Drag handle indicator */}
+                        <div className="absolute top-2 right-2 bg-background/80 rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => isUrl ? removeImageUrl(i) : removeImage(i)}
+                            type="button"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {i === 0 && (
+                          <Badge className="absolute top-2 left-2 text-xs">Cover</Badge>
+                        )}
+                        {isDragOver && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <span className="text-xs font-medium text-primary">Drop here</span>
+                          </div>
+                        )}
                       </div>
-                      {i === 0 && (
-                        <Badge className="absolute top-2 left-2 text-xs">Cover</Badge>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
 
