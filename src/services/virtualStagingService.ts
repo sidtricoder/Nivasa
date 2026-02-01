@@ -339,7 +339,10 @@ export const getRoomType = (id: RoomType): RoomTypeInfo | undefined => {
 };
 
 // Check if AI API is configured (Hugging Face FREE)
-export const isReplicateConfigured = (): boolean => {
+export const isHuggingFaceConfigured = (): boolean => {
   return !!HUGGINGFACE_API_KEY;
 };
+
+// Legacy alias for backwards compatibility
+export const isReplicateConfigured = isHuggingFaceConfigured;
 
