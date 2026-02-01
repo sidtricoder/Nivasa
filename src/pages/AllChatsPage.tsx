@@ -429,7 +429,7 @@ const AllChatsPage: React.FC = () => {
                               }
                             >
                               <div className="flex items-start gap-3">
-                                <Avatar>
+                                <Avatar className="border border-foreground/50 bg-background shadow-sm">
                                   <AvatarFallback>
                                     <User className="h-4 w-4" />
                                   </AvatarFallback>
@@ -504,7 +504,7 @@ const AllChatsPage: React.FC = () => {
                 <X className="h-5 w-5" />
               </Button>
 
-              <Avatar className="h-10 w-10 border-2 border-background shrink-0">
+              <Avatar className="h-10 w-10 border-2 border-foreground/80 shadow-sm shrink-0">
                 <AvatarFallback className="bg-primary/10">
                   <User className="h-5 w-5 text-primary" />
                 </AvatarFallback>
