@@ -1017,8 +1017,8 @@ const DiscoveryPage: React.FC = () => {
     selectedCities.length > 0,
     selectedPropertyTypes.length > 0,
     selectedLifestyle.length > 0,
-    selectedPriceRange[0] !== priceRange.min || selectedPriceRange[1] !== priceRange.max,
-    selectedAreaRange[0] !== 500 || selectedAreaRange[1] !== 5000,
+    selectedPriceRange[0] !== dynamicPriceRange.min || selectedPriceRange[1] !== dynamicPriceRange.max,
+    selectedAreaRange[0] !== dynamicAreaRange.min || selectedAreaRange[1] !== dynamicAreaRange.max,
     selectedWalkScoreRange[0] !== 0 || selectedWalkScoreRange[1] !== 100,
     verifiedOnly,
     selectedFurnishing.length > 0,
@@ -1029,6 +1029,73 @@ const DiscoveryPage: React.FC = () => {
 
   const FilterContent = () => (
     <div className="space-y-6">
+      {/* Active Filters Section */}
+      {activeFiltersCount > 0 && (
+        <div className="mb-2 pb-4 border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold text-sm">Filtered by</h4>
+            <button
+              onClick={clearFilters}
+              className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {/* Price Range */}
+            {(selectedPriceRange[0] !== dynamicPriceRange.min || selectedPriceRange[1] !== dynamicPriceRange.max) && (
+              <Badge variant="secondary" className="h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 gap-1 rounded-md transition-all">
+                {formatPrice(selectedPriceRange[0])} - {formatPrice(selectedPriceRange[1])}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedPriceRange([dynamicPriceRange.min, dynamicPriceRange.max])} />
+              </Badge>
+            )}
+
+            {/* Area Range */}
+            {(selectedAreaRange[0] !== dynamicAreaRange.min || selectedAreaRange[1] !== dynamicAreaRange.max) && (
+              <Badge variant="secondary" className="h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 gap-1 rounded-md transition-all">
+                {selectedAreaRange[0]} - {selectedAreaRange[1]} sqft
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedAreaRange([dynamicAreaRange.min, dynamicAreaRange.max])} />
+              </Badge>
+            )}
+
+            {/* Walk Score Range */}
+            {(selectedWalkScoreRange[0] !== 0 || selectedWalkScoreRange[1] !== 100) && (
+              <Badge variant="secondary" className="h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 gap-1 rounded-md transition-all">
+                Walk Score: {selectedWalkScoreRange[0]}-{selectedWalkScoreRange[1]}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedWalkScoreRange([0, 100])} />
+              </Badge>
+            )}
+
+            {/* Verified Only */}
+            {verifiedOnly && (
+              <Badge variant="secondary" className="h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 gap-1 rounded-md transition-all">
+                Verified Only
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setVerifiedOnly(false)} />
+              </Badge>
+            )}
+
+            {/* Arrays */}
+            {[
+              { items: selectedBHK, setter: setSelectedBHK, suffix: ' BHK' },
+              { items: selectedCities, setter: setSelectedCities, suffix: '' },
+              { items: selectedPropertyTypes, setter: setSelectedPropertyTypes, suffix: '', capitalize: true },
+              { items: selectedLifestyle, setter: setSelectedLifestyle, suffix: '', format: (s: any) => s.replace('-', ' '), capitalize: true },
+              { items: selectedFurnishing, setter: setSelectedFurnishing, suffix: '', capitalize: true },
+              { items: selectedFacing, setter: setSelectedFacing, suffix: '', capitalize: true },
+              { items: selectedFloorPreference, setter: setSelectedFloorPreference, suffix: '', capitalize: true },
+              { items: selectedPossessionStatus, setter: setSelectedPossessionStatus, suffix: '', capitalize: true },
+            ].map((category) => (
+              category.items.map(item => (
+                <Badge key={`${category.suffix}-${item}`} variant="secondary" className={`h-7 px-2 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 gap-1 rounded-md transition-all ${category.capitalize ? 'capitalize' : ''}`}>
+                  {category.format ? category.format(item) : item}{category.suffix}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => category.setter((prev: any[]) => prev.filter((i: any) => i !== item))} />
+                </Badge>
+              ))
+            ))}
+          </div>
+        </div>
+      )}
       {/* Price Range - Flipkart Style */}
       <div className="space-y-4">
         <Label className="text-sm font-medium">Price Range</Label>
@@ -1474,15 +1541,7 @@ const DiscoveryPage: React.FC = () => {
         </CollapsibleContent>
       </Collapsible>
 
-      {activeFiltersCount > 0 && (
-        <>
-          <Separator />
-          <Button variant="outline" className="w-full" onClick={clearFilters}>
-            <X className="h-4 w-4 mr-2" />
-            Clear All Filters
-          </Button>
-        </>
-      )}
+
     </div>
   );
 
@@ -1836,51 +1895,7 @@ const DiscoveryPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Active Filters */}
-        {activeFiltersCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="flex flex-wrap gap-2 mb-4"
-          >
-            {selectedBHK.map(bhk => (
-              <Badge key={bhk} variant="secondary" className="gap-1">
-                {bhk} BHK
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSelectedBHK(prev => prev.filter(b => b !== bhk))}
-                />
-              </Badge>
-            ))}
-            {selectedCities.map(city => (
-              <Badge key={city} variant="secondary" className="gap-1">
-                {city}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSelectedCities(prev => prev.filter(c => c !== city))}
-                />
-              </Badge>
-            ))}
-            {selectedPropertyTypes.map(type => (
-              <Badge key={type} variant="secondary" className="gap-1 capitalize">
-                {type}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSelectedPropertyTypes(prev => prev.filter(t => t !== type))}
-                />
-              </Badge>
-            ))}
-            {selectedLifestyle.map(filter => (
-              <Badge key={filter} variant="secondary" className="gap-1 capitalize">
-                {filter.replace('-', ' ')}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSelectedLifestyle(prev => prev.filter(l => l !== filter))}
-                />
-              </Badge>
-            ))}
-          </motion.div>
-        )}
+
 
         <div className="px-8 lg:px-16">
           <div className="max-w-7xl mx-auto">
