@@ -16,10 +16,13 @@ import {
   Calculator,
   Info,
   Mail,
-  Sparkles
+  Sparkles,
+  MessageCircle,
+  LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import StaggeredMenu from '@/components/ui/staggered-menu';
 
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +58,19 @@ const Header: React.FC = () => {
     { to: '/news', label: 'News', icon: Newspaper },
     { to: '/favorites', label: 'Favorites', icon: Heart },
     { to: '/seller', label: 'Post Property', icon: Building2 },
+  ];
+
+  // Mobile menu items
+  const mobileMenuItems = [
+    { label: 'Home', ariaLabel: 'Go to home page', link: '/', icon: Home },
+    { label: 'Discover', ariaLabel: 'Discover properties', link: '/discover', icon: Search },
+    { label: 'News', ariaLabel: 'Real estate news', link: '/news', icon: Newspaper },
+    { label: 'Favorites', ariaLabel: 'View favorites', link: '/favorites', icon: Heart },
+    { label: 'Post Property', ariaLabel: 'List your property', link: '/seller', icon: Building2 },
+    { label: 'Chats', ariaLabel: 'View messages', link: '/chats', icon: MessageCircle },
+    { label: 'About', ariaLabel: 'About us', link: '/about', icon: Info },
+    { label: 'Contact', ariaLabel: 'Contact us', link: '/contact', icon: Mail },
+    { label: 'Services', ariaLabel: 'Our services', link: '/services', icon: LayoutDashboard },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -397,54 +413,27 @@ const Header: React.FC = () => {
 
           {/* User Profile / Auth */}
           <UserProfile />
+
+          {/* Mobile Menu Button - Only visible on mobile */}
+          <div className="md:hidden" id="mobile-menu-trigger" />
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      <nav className="md:hidden border-t border-border">
-        <div className="container flex items-center justify-around py-2">
-          <Link to="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex-col gap-1 h-auto py-2 ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
-            >
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Home</span>
-            </Button>
-          </Link>
-          <Link to="/discover">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex-col gap-1 h-auto py-2 ${isActive('/discover') ? 'text-primary' : 'text-muted-foreground'}`}
-            >
-              <Search className="h-5 w-5" />
-              <span className="text-xs">Discover</span>
-            </Button>
-          </Link>
-          <Link to="/news">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex-col gap-1 h-auto py-2 ${isActive('/news') ? 'text-primary' : 'text-muted-foreground'}`}
-            >
-              <Newspaper className="h-5 w-5" />
-              <span className="text-xs">News</span>
-            </Button>
-          </Link>
-          <Link to="/seller">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex-col gap-1 h-auto py-2 ${isActive('/seller') ? 'text-primary' : 'text-muted-foreground'}`}
-            >
-              <Building2 className="h-5 w-5" />
-              <span className="text-xs">Post</span>
-            </Button>
-          </Link>
-        </div>
-      </nav>
+      {/* Mobile Staggered Menu */}
+      <div className="md:hidden">
+        <StaggeredMenu
+          position="right"
+          items={mobileMenuItems}
+          displayItemNumbering={true}
+          menuButtonColor="#6366f1"
+          openMenuButtonColor="#ffffff"
+          changeMenuColorOnOpen={true}
+          colors={['#6366f1', '#8b5cf6']}
+          logoUrl="/logo.jpeg"
+          accentColor="#6366f1"
+          buttonContainer="mobile-menu-trigger"
+        />
+      </div>
     </motion.header>
   );
 };
