@@ -42,6 +42,15 @@ import PropertyCard from '@/components/property/PropertyCard';
 import CompareModal from '@/components/property/CompareModal';
 import { VoiceSearchButton, RecentSearches, SavedSearches } from '@/components/search';
 import { useSearchStore } from '@/stores/searchStore';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { mockListings, getPriceRange, Property } from '@/data/listings';
 import { toast } from 'sonner';
 import { PropertyCardSkeleton } from '@/components/ui/skeletons';
@@ -291,6 +300,14 @@ const DiscoveryPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showAIBadge, setShowAIBadge] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedPriceRange, selectedBHK, selectedCities, selectedPropertyTypes, selectedLifestyle]);
 
   // Custom slider dragging states
   const [isAreaDragging, setIsAreaDragging] = useState<'min' | 'max' | null>(null);
@@ -299,7 +316,6 @@ const DiscoveryPage: React.FC = () => {
   // AI Search state
   const [isAISearching, setIsAISearching] = useState(false);
   const [aiFilters, setAIFilters] = useState<AIExtractedFilters | null>(null);
-  const [showAIBadge, setShowAIBadge] = useState(false);
 
   // Landmark-based search state
   const [landmarkCoords, setLandmarkCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -1470,6 +1486,12 @@ const DiscoveryPage: React.FC = () => {
     </div>
   );
 
+  const totalPages = Math.ceil(filteredListings.length / ITEMS_PER_PAGE);
+  const currentProperties = filteredListings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Soft flowing gradient background - flowing bottom to top */}
@@ -1980,10 +2002,12 @@ const DiscoveryPage: React.FC = () => {
                         ))}
                       </div>
 
-                      <Button variant="outline" onClick={clearFilters} className="gap-2">
-                        <X className="h-4 w-4" />
-                        Clear All Filters
-                      </Button>
+                      {activeFiltersCount > 0 && (
+                        <Button variant="outline" onClick={clearFilters} className="gap-2">
+                          <X className="h-4 w-4" />
+                          Clear All Filters
+                        </Button>
+                      )}
                     </motion.div>
                   ) : (
                     <>
@@ -1998,80 +2022,79 @@ const DiscoveryPage: React.FC = () => {
                             : 'space-y-4'
                         }
                       >
-                        {filteredListings.slice(0, displayedProperties).map((property, index) => (
-                          <motion.div
-                            key={property.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              delay: Math.min(index * 0.05, 0.3), // Cap delay at 0.3s
-                              duration: 0.4,
-                              ease: [0.22, 1, 0.36, 1]
-                            }}
-                          >
-                            <PropertyCard property={property} variant={viewMode === 'list' ? 'compact' : 'default'} />
-                          </motion.div>
+                        {currentProperties.map((property) => (
+                          <div key={property.id} className="w-full">
+                            {viewMode === 'grid' ? (
+                              <PropertyCard property={property} />
+                            ) : (
+                              <MinimalPropertyCard property={property} />
+                            )}
+                          </div>
                         ))}
                       </motion.div>
 
-                      {/* Load More Section */}
-                      {displayedProperties < filteredListings.length && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-12 mb-8 text-center"
-                        >
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-center gap-4">
-                              <div className="h-px bg-border flex-1" />
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <span className="text-sm">
-                                  Showing {displayedProperties} of {filteredListings.length} properties
-                                </span>
-                              </div>
-                              <div className="h-px bg-border flex-1" />
-                            </div>
+                      {/* Pagination Control */}
+                      {totalPages > 1 && (
+                        <div className="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                          <Pagination>
+                            <PaginationContent>
+                              <PaginationItem>
+                                <PaginationPrevious
+                                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-primary/10 hover:text-primary'}
+                                />
+                              </PaginationItem>
 
-                            <Button
-                              variant="outline"
-                              size="lg"
-                              onClick={() => {
-                                const remaining = filteredListings.length - displayedProperties;
-                                const toLoad = Math.min(LOAD_MORE_COUNT, remaining);
-                                setDisplayedProperties(prev => prev + toLoad);
-                              }}
-                              className="min-w-[200px]"
-                            >
-                              Load {Math.min(LOAD_MORE_COUNT, filteredListings.length - displayedProperties)} More Properties
-                            </Button>
+                              {/* Page Numbers Logic */}
+                              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                // Logic to show limited pages with ellipsis
+                                // Always show first, last, and pages around current
+                                if (
+                                  page === 1 ||
+                                  page === totalPages ||
+                                  (page >= currentPage - 1 && page <= currentPage + 1)
+                                ) {
+                                  return (
+                                    <PaginationItem key={page}>
+                                      <PaginationLink
+                                        isActive={currentPage === page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={
+                                          currentPage === page
+                                            ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md scale-105 transition-all'
+                                            : 'cursor-pointer hover:bg-primary/10 hover:text-primary transition-all'
+                                        }
+                                      >
+                                        {page}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  );
+                                }
 
-                            <p className="text-xs text-muted-foreground">
-                              Or keep scrolling to load automatically
-                            </p>
-                          </div>
-                        </motion.div>
+                                // Show ellipsis if there's a gap
+                                if (
+                                  (page === currentPage - 2 && currentPage > 3) ||
+                                  (page === currentPage + 2 && currentPage < totalPages - 2)
+                                ) {
+                                  return <PaginationItem key={page}><PaginationEllipsis /></PaginationItem>;
+                                }
+
+                                return null;
+                              })}
+
+                              <PaginationItem>
+                                <PaginationNext
+                                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer hover:bg-primary/10 hover:text-primary'}
+                                />
+                              </PaginationItem>
+                            </PaginationContent>
+                          </Pagination>
+                        </div>
                       )}
 
-                      {/* All Properties Loaded Message */}
-                      {displayedProperties >= filteredListings.length && filteredListings.length > LOAD_MORE_COUNT && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-12 mb-8 text-center"
-                        >
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-center gap-2 text-green-600">
-                              <div className="w-2 h-2 bg-green-500 rounded-full" />
-                              <span className="text-sm font-medium">
-                                You've seen all {filteredListings.length} properties
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Try adjusting your filters to see more results
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
+                      {/* Empty Spacer to prevent footer overlap */}
+                      <div className="h-8"></div>
                     </>
                   )}
                 </AnimatePresence>

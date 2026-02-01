@@ -62,8 +62,8 @@ const App = () => (
             <Toaster />
             <Sonner />
             <ChatDrawer />
-            <ScrollToTop />
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <ScrollToTop />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
